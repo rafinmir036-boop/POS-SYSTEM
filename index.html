@@ -1849,34 +1849,68 @@
           </div>
         </div>
 
-        <!-- Add Items to Transfer -->
-        <div class="space-y-2">
+        <!-- Barcode Scanner Quick Scan Box -->
+        <div class="p-3.5 bg-gradient-to-r from-indigo-50 via-sky-50 to-blue-50 rounded-2xl border border-indigo-200 space-y-2">
           <div class="flex justify-between items-center">
-            <label class="font-bold text-slate-700">Select Products to Transfer (পণ্য নির্বাচন করুন)</label>
-            <span class="text-[11px] text-slate-400 font-semibold">Source Branch Stock</span>
+            <label class="font-bold text-indigo-950 flex items-center space-x-1.5 text-xs">
+              <i class="fa-solid fa-barcode text-indigo-600 text-sm animate-pulse"></i>
+              <span>Scan Product Barcode with Scanner (বারকোড স্ক্যানার দিয়ে স্ক্যান করুন)</span>
+            </label>
+            <span id="trf-scan-feedback-badge" class="hidden text-[11px] px-2.5 py-0.5 rounded-full font-black bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse flex items-center space-x-1">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i><span id="trf-scan-feedback-text">Scanned</span>
+            </span>
+          </div>
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-barcode absolute left-3.5 top-2.5 text-indigo-400 text-sm"></i>
+              <input type="text" id="trf-barcode-input" onkeydown="handleTransferBarcodeKey(event)" placeholder="Point Barcode Scanner here or type SKU / Barcode and press Enter..." class="w-full pl-10 pr-4 py-2 bg-white border-2 border-indigo-300 focus:border-indigo-600 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-400/20 shadow-2xs text-xs transition">
+            </div>
+            <button type="button" onclick="submitTransferScanFromInput()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold transition flex items-center space-x-1 cursor-pointer shadow-sm shadow-indigo-600/20">
+              <i class="fa-solid fa-bolt text-xs"></i><span>Scan & Add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual Dropdown Selection (Alternative) -->
+        <div class="space-y-1.5 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+          <div class="flex justify-between items-center">
+            <label class="font-bold text-slate-700 text-[11px] flex items-center space-x-1">
+              <i class="fa-solid fa-list-check text-slate-500"></i>
+              <span>Or Select Product Manually (অথবা তালিকা থেকে বেছে নিন)</span>
+            </label>
+            <span id="trf-selected-product-stock" class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">Source Stock</span>
           </div>
 
           <div class="flex gap-2">
-            <select id="trf-form-product-select" class="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 outline-none">
+            <select id="trf-form-product-select" onchange="onTransferProductDropdownChange()" class="flex-1 p-2 bg-white border border-slate-200 rounded-xl font-semibold text-slate-800 outline-none">
               <!-- Populated via JS -->
             </select>
-            <input type="number" id="trf-form-qty" min="1" value="1" placeholder="Qty" class="w-20 p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-center outline-none">
-            <button type="button" onclick="addItemToTransferCart()" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-xl font-bold transition flex items-center space-x-1 cursor-pointer">
+            <input type="number" id="trf-form-qty" min="1" value="1" placeholder="Qty" class="w-20 p-2 bg-white border border-slate-200 rounded-xl font-bold text-center outline-none">
+            <button type="button" onclick="addItemToTransferCart()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl font-bold transition flex items-center space-x-1 cursor-pointer">
               <i class="fa-solid fa-plus"></i><span>Add</span>
             </button>
           </div>
         </div>
 
         <!-- Transfer Items List Table -->
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
+          <div class="px-3.5 py-2 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+            <span class="font-bold text-slate-700 text-xs flex items-center space-x-1">
+              <i class="fa-solid fa-cart-flatbed text-indigo-600"></i>
+              <span>Transfer Item Cart (স্থানান্তরের জন্য নির্বাচিত পণ্য)</span>
+            </span>
+            <span id="trf-cart-total-units" class="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+              0 Units
+            </span>
+          </div>
           <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+            <thead class="bg-slate-50/50 text-slate-500 font-semibold border-b border-slate-200 text-[11px]">
               <tr>
-                <th class="p-2.5">Product</th>
-                <th class="p-2.5">Code</th>
-                <th class="p-2.5 text-center">Available in Source</th>
-                <th class="p-2.5 text-center">Transfer Qty</th>
-                <th class="p-2.5 text-right">Remove</th>
+                <th class="p-2.5">Product Name</th>
+                <th class="p-2.5 font-mono">SKU Code</th>
+                <th class="p-2.5 text-center">Available Stock</th>
+                <th class="p-2.5 text-center">Transfer Quantity</th>
+                <th class="p-2.5 text-right">Action</th>
               </tr>
             </thead>
             <tbody id="trf-form-items-tbody">
@@ -4404,12 +4438,18 @@ CREATE TABLE IF NOT EXISTS transactions (
 
       renderTransferCartTable();
       openModal('modal-transfer-create');
+      setTimeout(() => {
+        const scanInput = document.getElementById('trf-barcode-input');
+        if (scanInput) {
+          scanInput.value = '';
+          scanInput.focus();
+        }
+      }, 250);
     }
 
     function onTransferSourceBranchChange() {
       const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
       const select = document.getElementById('trf-form-product-select');
-      const stockBadge = document.getElementById('trf-selected-product-stock');
       if (!select) return;
 
       select.innerHTML = productsData.map(p => {
@@ -4417,75 +4457,128 @@ CREATE TABLE IF NOT EXISTS transactions (
         return `<option value="${p.id}">${p.product_name} [${p.product_code}] — (Available: ${bStock} pcs)</option>`;
       }).join('') || '<option value="">No products in database</option>';
 
-      if (stockBadge && productsData.length > 0) {
-        const firstProd = productsData[0];
-        const stock = getProductBranchStock(firstProd, fromBranchId);
-        stockBadge.innerText = `Available in Source: ${stock} pcs`;
+      onTransferProductDropdownChange();
+
+      // Focus back to barcode input
+      const scanInput = document.getElementById('trf-barcode-input');
+      if (scanInput) scanInput.focus();
+    }
+
+    function onTransferProductDropdownChange() {
+      const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
+      const prodId = Number(document.getElementById('trf-form-product-select')?.value);
+      const stockBadge = document.getElementById('trf-selected-product-stock');
+      const prod = productsData.find(p => p.id === prodId);
+
+      if (stockBadge) {
+        if (prod) {
+          const stock = getProductBranchStock(prod, fromBranchId);
+          stockBadge.innerText = `Available in Source: ${stock} pcs`;
+          stockBadge.className = `text-[10px] font-bold px-2 py-0.5 rounded-md border ${stock > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`;
+        } else {
+          stockBadge.innerText = 'No Stock Info';
+        }
       }
     }
 
-    function addItemToTransferCart() {
+    // --- Barcode Scanning in Transfer Modal ---
+    function handleTransferBarcodeKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitTransferScanFromInput();
+      }
+    }
+
+    function submitTransferScanFromInput() {
+      const input = document.getElementById('trf-barcode-input');
+      if (!input) return;
+      const code = input.value.trim().toLowerCase();
+      if (!code) return;
+
       const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
-      const prodId = Number(document.getElementById('trf-form-product-select')?.value);
-      const qty = Number(document.getElementById('trf-form-qty')?.value) || 1;
+      const fromBranchName = getBranchName(fromBranchId);
 
-      const prod = productsData.find(p => p.id === prodId);
-      if (!prod) return;
+      const prod = productsData.find(p => 
+        p.product_code.toLowerCase() === code || 
+        p.product_name.toLowerCase().includes(code) ||
+        String(p.id) === code
+      );
 
-      const availableStock = getProductBranchStock(prod, fromBranchId);
-      if (qty > availableStock) {
-        Swal.fire('Stock Limit Exceeded', `নির্বাচিত ব্রাঞ্চে মাত্র ${availableStock} টি পণ্য মজুত আছে!`, 'warning');
+      if (!prod) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: `Barcode "${code}" not found in catalog!`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+        input.select();
         return;
       }
 
-      const existing = transferCart.find(i => i.product_id === prodId);
+      const availableStock = getProductBranchStock(prod, fromBranchId);
+      if (availableStock <= 0) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: `❌ ${prod.product_name} এর কোনো স্টক ${fromBranchName} এ নেই!`,
+          showConfirmButton: false,
+          timer: 2500
+        });
+        input.value = '';
+        input.focus();
+        return;
+      }
+
+      const existing = transferCart.find(i => i.product_id === prod.id);
       if (existing) {
-        if (existing.qty + qty > availableStock) {
-          Swal.fire('Stock Limit Exceeded', `সর্বোচ্চ প্রাপ্তব্য স্টক: ${availableStock} টি`, 'warning');
+        if (existing.qty + 1 > availableStock) {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: `⚠️ সর্বোচ্চ স্টক সীমা পৌঁছেছে (${availableStock} pcs)`,
+            showConfirmButton: false,
+            timer: 2000
+          });
+          input.value = '';
+          input.focus();
           return;
         }
-        existing.qty += qty;
+        existing.qty += 1;
       } else {
         transferCart.push({
           product_id: prod.id,
           product_name: prod.product_name,
           product_code: prod.product_code,
-          qty: qty
+          qty: 1
         });
       }
 
-      renderTransferCartTable();
-      document.getElementById('trf-form-qty').value = '1';
-    }
+      playScanBeep();
 
-    function removeTransferCartItem(idx) {
-      transferCart.splice(idx, 1);
-      renderTransferCartTable();
-    }
-
-    function renderTransferCartTable() {
-      const tbody = document.getElementById('trf-cart-table-body');
-      const countLabel = document.getElementById('trf-cart-total-units');
-      if (!tbody) return;
-
-      const totalUnits = transferCart.reduce((sum, i) => sum + i.qty, 0);
-      if (countLabel) countLabel.innerText = `${totalUnits} Units`;
-
-      if (transferCart.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">কোনো পণ্য যোগ করা হয়নি</td></tr>`;
-        return;
+      const currentItemQty = transferCart.find(i => i.product_id === prod.id)?.qty || 1;
+      const badge = document.getElementById('trf-scan-feedback-badge');
+      const badgeText = document.getElementById('trf-scan-feedback-text');
+      if (badge && badgeText) {
+        badge.classList.remove('hidden');
+        badgeText.innerText = `Scanned: ${prod.product_name} (${currentItemQty} pcs)`;
       }
 
-      tbody.innerHTML = transferCart.map((item, idx) => `
-        <tr class="border-b border-slate-100">
-          <td class="px-4 py-2.5 font-bold text-slate-800">${item.product_name}</td>
-          <td class="px-4 py-2.5 font-mono text-indigo-600 font-bold">${item.product_code}</td>
-          <td class="px-4 py-2.5 text-center font-black text-slate-900">${item.qty} pcs</td>
-          <td class="px-4 py-2.5 text-right">
-            <button onclick="removeTransferCartItem(${idx})" class="p-1 text-rose-600 hover:bg-rose-50 rounded"><i class="fa-solid fa-trash-can"></i></button>
-          </td>
-        </tr>
-      `).join('');
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `+1 Scanned: ${prod.product_name} (Transfer Qty: ${currentItemQty})`,
+        showConfirmButton: false,
+        timer: 1200
+      });
+
+      renderTransferCartTable();
+      input.value = '';
+      input.focus();
     }
 
     async function handleDispatchTransferSubmit(e) {
