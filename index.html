@@ -147,6 +147,9 @@
       #printable-receipt-area, #printable-receipt-area * {
         visibility: visible !important;
       }
+      #printable-barcode-area, #printable-barcode-area * {
+        visibility: visible !important;
+      }
       #printable-receipt-area {
         position: absolute;
         left: 0;
@@ -155,6 +158,20 @@
         margin: 0;
         padding: 10px;
         box-shadow: none;
+      }
+      #printable-barcode-area {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 6px;
+        box-shadow: none;
+      }
+      .barcode-sticker-item {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
     }
   </style>
@@ -623,6 +640,11 @@
               <select id="prd-filter-cat" onchange="renderProductsTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none">
                 <option value="ALL">All Categories</option>
               </select>
+
+              <button onclick="openBarcodeGeneratorModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-barcode"></i>
+                <span>Print Barcodes</span>
+              </button>
 
               <button onclick="openAddProductModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
                 <i class="fa-solid fa-plus"></i>
@@ -1203,6 +1225,120 @@
 
     </div>
   </div>
+
+
+  <!-- 5. BARCODE LABEL GENERATOR & PRINT MODAL -->
+  <div id="modal-barcode-print" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-barcode"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 font-heading">Barcode Label Generator & Print (বারকোড প্রিন্টার)</h3>
+            <p class="text-[11px] text-slate-500">Thermal barcode stickers, single labels & multi-sheet printing</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-barcode-print')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Modal Body (Config + Preview) -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-5 overflow-y-auto pr-1">
+        
+        <!-- Left Column: Controls (5 cols) -->
+        <div class="md:col-span-5 space-y-3.5 text-xs">
+          
+          <!-- Product Select -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Select Product (পণ্য নির্বাচন)</label>
+            <select id="bc-product-select" onchange="onBarcodeProductSelectChange()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+              <!-- Injected by JS -->
+            </select>
+          </div>
+
+          <!-- Code & Quantity -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Barcode / SKU</label>
+              <input type="text" id="bc-input-code" oninput="updateBarcodePreview()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-700 outline-none focus:bg-white focus:ring-1 focus:ring-amber-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Sticker Qty (সংখ্যা)</label>
+              <input type="number" id="bc-input-qty" min="1" max="100" value="4" oninput="updateBarcodePreview()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white focus:ring-1 focus:ring-amber-500">
+            </div>
+          </div>
+
+          <!-- Paper Layout / Printer Type -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Printer / Paper Size Preset</label>
+            <select id="bc-paper-layout" onchange="updateBarcodePreview()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+              <option value="thermal-single">🏷️ Thermal Single Roll (38x25mm / 40x30mm)</option>
+              <option value="thermal-double">🏷️ Thermal 2-Up Roll (Dual Column 50x30mm)</option>
+              <option value="a4-sheet">📄 A4 Sticker Sheet (24 Labels Grid)</option>
+            </select>
+          </div>
+
+          <!-- Label Content Options -->
+          <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+            <div class="font-bold text-[11px] text-slate-600 uppercase tracking-wider">Include on Sticker</div>
+            <div class="space-y-1.5 text-[11px] font-semibold text-slate-700">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="bc-inc-store" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
+                <span>Store Name (APEX STORE)</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="bc-inc-name" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
+                <span>Product Name</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="bc-inc-price" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
+                <span>Price (৳ Sale Price)</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="bc-inc-sku" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
+                <span>SKU Text Below Barcode</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Live Sticker Preview (7 cols) -->
+        <div class="md:col-span-7 flex flex-col space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Live Sticker Preview</span>
+            <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200" id="bc-preview-count-label">4 Stickers</span>
+          </div>
+
+          <div class="flex-1 bg-slate-100/90 border border-slate-200 rounded-2xl p-3 overflow-y-auto max-h-[380px] flex flex-wrap gap-2.5 justify-center items-start content-start" id="bc-preview-container">
+            <!-- Stickers rendered here -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+        <div class="text-[11px] text-slate-500 flex items-center space-x-1.5">
+          <i class="fa-solid fa-circle-info text-amber-500"></i>
+          <span>Supports Xprinter, Zebra, Rongta, Gprinter & Desktop</span>
+        </div>
+        <div class="flex space-x-2">
+          <button type="button" onclick="closeModal('modal-barcode-print')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">Cancel</button>
+          <button type="button" onclick="printBarcodeSheet()" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-md transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-print"></i><span>Print Barcodes</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Dedicated Hidden Print Container for Barcode Labels -->
+  <div id="printable-barcode-area" class="hidden"></div>
 
 
   <!-- 5. SUPABASE / POSTGRESQL SETTINGS MODAL -->
@@ -2014,8 +2150,9 @@ CREATE TABLE IF NOT EXISTS transactions (
             <td class="px-6 py-3.5 font-bold text-slate-800">${p.stock} units</td>
             <td class="px-6 py-3.5">${statusBadge}</td>
             <td class="px-6 py-3.5 text-right space-x-1">
-              <button onclick="openEditProductModal(${p.id})" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="deleteProduct(${p.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
+              <button onclick="openSingleBarcodeModal(${p.id})" title="Print Barcode (বারকোড প্রিন্ট)" class="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs transition"><i class="fa-solid fa-barcode"></i></button>
+              <button onclick="openEditProductModal(${p.id})" title="Edit Product" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteProduct(${p.id})" title="Delete Product" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           </tr>
         `;
@@ -2112,6 +2249,131 @@ CREATE TABLE IF NOT EXISTS transactions (
         renderDashboard();
         Swal.fire('Deleted!', 'Product removed from database', 'success');
       }
+    }
+
+    // --- Barcode Generator & Printing Suite ---
+    function openBarcodeGeneratorModal(selectedId = null) {
+      const select = document.getElementById('bc-product-select');
+      if (!select) return;
+
+      select.innerHTML = productsData.map(p => `
+        <option value="${p.id}" ${selectedId === p.id ? 'selected' : ''}>
+          ${p.product_name} [${p.product_code}] - ৳${p.sale_price} (Stock: ${p.stock})
+        </option>
+      `).join('') || '<option value="">No products available</option>';
+
+      if (selectedId) {
+        select.value = selectedId;
+      }
+
+      onBarcodeProductSelectChange();
+      openModal('modal-barcode-print');
+    }
+
+    function openSingleBarcodeModal(id) {
+      openBarcodeGeneratorModal(id);
+    }
+
+    function onBarcodeProductSelectChange() {
+      const selId = Number(document.getElementById('bc-product-select')?.value);
+      const prod = productsData.find(p => p.id === selId);
+      if (prod) {
+        document.getElementById('bc-input-code').value = prod.product_code;
+        document.getElementById('bc-input-qty').value = prod.stock > 0 ? Math.min(prod.stock, 8) : 4;
+      }
+      updateBarcodePreview();
+    }
+
+    function updateBarcodePreview() {
+      const selId = Number(document.getElementById('bc-product-select')?.value);
+      const prod = productsData.find(p => p.id === selId);
+      const code = document.getElementById('bc-input-code')?.value.trim() || (prod ? prod.product_code : 'PRD-101');
+      const qty = Math.max(1, Math.min(100, Number(document.getElementById('bc-input-qty')?.value) || 1));
+      const paperLayout = document.getElementById('bc-paper-layout')?.value || 'thermal-single';
+      
+      const incStore = document.getElementById('bc-inc-store')?.checked;
+      const incName = document.getElementById('bc-inc-name')?.checked;
+      const incPrice = document.getElementById('bc-inc-price')?.checked;
+      const incSku = document.getElementById('bc-inc-sku')?.checked;
+
+      const container = document.getElementById('bc-preview-container');
+      const countLabel = document.getElementById('bc-preview-count-label');
+      if (!container) return;
+
+      if (countLabel) countLabel.innerText = `${qty} Sticker${qty > 1 ? 's' : ''}`;
+
+      const prodName = prod ? prod.product_name : 'Product Item';
+      const prodPrice = prod ? `৳ ${prod.sale_price}` : '৳ 0';
+
+      let stickerWidth = '145px';
+      let stickerHeight = '100px';
+
+      if (paperLayout === 'thermal-double') {
+        stickerWidth = '160px';
+        stickerHeight = '110px';
+      } else if (paperLayout === 'a4-sheet') {
+        stickerWidth = '135px';
+        stickerHeight = '95px';
+      }
+
+      let stickersHtml = '';
+      for (let i = 0; i < qty; i++) {
+        stickersHtml += `
+          <div class="barcode-sticker-item bg-white border border-slate-300 rounded-lg p-2 text-center shadow-xs flex flex-col items-center justify-between" style="width: ${stickerWidth}; min-height: ${stickerHeight};">
+            ${incStore ? '<div class="text-[9px] font-black tracking-wider text-slate-800 uppercase leading-none truncate w-full">APEX STORE</div>' : ''}
+            ${incName ? `<div class="text-[10px] font-bold text-slate-700 truncate w-full px-0.5 leading-tight my-0.5">${prodName}</div>` : ''}
+            <div class="w-full flex justify-center my-0.5">
+              <svg class="barcode-svg-node-${i}" style="max-height: 38px; width: 100%;"></svg>
+            </div>
+            ${incPrice ? `<div class="text-xs font-black text-slate-900 leading-none">${prodPrice}</div>` : ''}
+          </div>
+        `;
+      }
+
+      container.innerHTML = stickersHtml;
+
+      // Render barcode lines on each SVG node using JsBarcode
+      for (let i = 0; i < qty; i++) {
+        try {
+          if (window.JsBarcode) {
+            JsBarcode(`.barcode-svg-node-${i}`, code, {
+              format: "CODE128",
+              width: 1.2,
+              height: 28,
+              displayValue: incSku,
+              fontSize: 9,
+              textMargin: 1,
+              margin: 0
+            });
+          }
+        } catch (e) {
+          console.warn('JsBarcode render error:', e);
+        }
+      }
+    }
+
+    function printBarcodeSheet() {
+      const container = document.getElementById('bc-preview-container');
+      const printArea = document.getElementById('printable-barcode-area');
+      const receiptArea = document.getElementById('printable-receipt-area');
+
+      if (!container || !printArea) return;
+
+      if (receiptArea) receiptArea.style.display = 'none';
+      printArea.style.display = 'block';
+      printArea.innerHTML = `
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; padding: 10px;">
+          ${container.innerHTML}
+        </div>
+      `;
+
+      window.print();
+
+      setTimeout(() => {
+        if (receiptArea) receiptArea.style.display = '';
+        printArea.innerHTML = '';
+        printArea.style.display = 'none';
+      }, 1000);
     }
 
     // --- Employees CRUD ---
