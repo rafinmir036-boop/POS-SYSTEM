@@ -2318,29 +2318,42 @@
 
       <form onsubmit="handleSaveSupabaseConfig(event)" class="space-y-3 text-xs">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Project URL *</label>
-          <input type="text" id="supabase-url" placeholder="https://xyzcompany.supabase.co" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+          <label class="block font-bold text-slate-700 mb-1">Project URL (আপনার সুপাবেস URL) *</label>
+          <input type="text" id="supabase-url" value="https://sosvfzxxlipjihdillca.supabase.co" placeholder="https://sosvfzxxlipjihdillca.supabase.co" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-bold text-slate-800">
         </div>
 
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Publishable / Anon Key *</label>
-          <textarea id="supabase-key" rows="2" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></textarea>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block font-bold text-slate-700">Publishable / Anon API Key (সুপাবেস Anon Key) *</label>
+            <a href="https://supabase.com/dashboard/project/sosvfzxxlipjihdillca/settings/api" target="_blank" class="text-[10px] text-emerald-600 font-bold hover:underline flex items-center space-x-1">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i><span>Get Key from Supabase</span>
+            </a>
+          </div>
+          <textarea id="supabase-key" rows="2" placeholder="Paste your anon public key here" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold">sb_publishable_kg2r94FaoM354xSZjVoUZQ_gUBoOU0w</textarea>
         </div>
 
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
           <div class="flex justify-between items-center">
-            <span class="font-bold text-slate-700">📋 SQL Table Creation Query:</span>
-            <button type="button" onclick="copySqlSchemaQuery()" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[10px] font-bold">Copy SQL</button>
+            <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+              <i class="fa-solid fa-terminal text-emerald-600"></i>
+              <span>📋 Step 1: Run SQL in Supabase SQL Editor (এক ক্লিকে কপি করুন):</span>
+            </span>
+            <button type="button" onclick="copySqlSchemaQuery()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-bold shadow-xs cursor-pointer">
+              <i class="fa-solid fa-copy mr-1"></i>Copy SQL
+            </button>
           </div>
-          <pre id="sql-schema-box" class="bg-slate-900 text-emerald-400 p-2.5 rounded-xl text-[10px] overflow-x-auto max-h-28 font-mono">-- Run this once in Supabase SQL Editor:
+          <pre id="sql-schema-box" class="bg-slate-900 text-emerald-400 p-3 rounded-xl text-[10px] overflow-x-auto max-h-36 font-mono leading-relaxed">-- Copy & Run in Supabase SQL Editor:
 CREATE TABLE IF NOT EXISTS employees (
   id BIGSERIAL PRIMARY KEY,
   employee_id TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   email TEXT,
   phone TEXT,
+  password TEXT,
+  branch_id BIGINT DEFAULT 1,
   department TEXT,
   designation TEXT,
+  role TEXT DEFAULT 'Staff',
   salary NUMERIC DEFAULT 0,
   joining_date DATE,
   status TEXT DEFAULT 'Active',
@@ -2356,6 +2369,7 @@ CREATE TABLE IF NOT EXISTS products (
   purchase_price NUMERIC DEFAULT 0,
   sale_price NUMERIC NOT NULL,
   stock INT DEFAULT 0,
+  branch_stocks JSONB DEFAULT '{"1": 0, "2": 0, "3": 0, "4": 0}'::jsonb,
   image_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -2365,14 +2379,35 @@ CREATE TABLE IF NOT EXISTS sales (
   invoice_no TEXT UNIQUE NOT NULL,
   customer_name TEXT,
   customer_phone TEXT,
+  branch_id BIGINT DEFAULT 1,
+  branch_name TEXT,
+  salesperson_name TEXT,
+  employee_code TEXT,
+  subtotal NUMERIC DEFAULT 0,
+  discount NUMERIC DEFAULT 0,
+  tax NUMERIC DEFAULT 0,
   total_amount NUMERIC NOT NULL,
   payment_method TEXT,
-  sale_date TIMESTAMPTZ DEFAULT NOW(),
   items JSONB,
-  cashier_name TEXT
+  cashier_name TEXT,
+  sale_date TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS transactions (
+CREATE TABLE IF NOT EXISTS transfers (
+  id BIGSERIAL PRIMARY KEY,
+  transfer_no TEXT UNIQUE NOT NULL,
+  from_branch_id BIGINT NOT NULL,
+  to_branch_id BIGINT NOT NULL,
+  status TEXT DEFAULT 'In-Transit',
+  items JSONB,
+  dispatched_by TEXT,
+  received_by TEXT,
+  date_dispatched TIMESTAMPTZ DEFAULT NOW(),
+  date_received TIMESTAMPTZ,
+  note TEXT
+);
+
+CREATE TABLE IF NOT EXISTS accounts (
   id BIGSERIAL PRIMARY KEY,
   type TEXT NOT NULL,
   category TEXT,
@@ -2381,7 +2416,20 @@ CREATE TABLE IF NOT EXISTS transactions (
   payment_method TEXT,
   note TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
-);</pre>
+);
+
+-- Enable public RLS for easy connection:
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transfers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to employees" ON employees FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to products" ON products FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to sales" ON sales FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to transfers" ON transfers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WITH CHECK (true);</pre>
         </div>
 
         <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
@@ -2773,9 +2821,12 @@ CREATE TABLE IF NOT EXISTS transactions (
     }
 
     // --- Supabase Config & Initialization ---
+    const DEFAULT_SUPABASE_URL = 'https://sosvfzxxlipjihdillca.supabase.co';
+    const DEFAULT_SUPABASE_KEY = 'sb_publishable_kg2r94FaoM354xSZjVoUZQ_gUBoOU0w';
+
     function loadStoredCredentialsAndSupabase() {
-      const savedUrl = localStorage.getItem('apex_supabase_url') || '';
-      const savedKey = localStorage.getItem('apex_supabase_key') || '';
+      const savedUrl = localStorage.getItem('apex_supabase_url') || DEFAULT_SUPABASE_URL;
+      const savedKey = localStorage.getItem('apex_supabase_key') || DEFAULT_SUPABASE_KEY;
 
       if (document.getElementById('supabase-url')) document.getElementById('supabase-url').value = savedUrl;
       if (document.getElementById('supabase-key')) document.getElementById('supabase-key').value = savedKey;
@@ -2783,14 +2834,14 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (savedUrl && savedKey && window.supabase) {
         try {
           supabaseClient = window.supabase.createClient(savedUrl, savedKey);
-          updateDbStatusBadge(true, 'Supabase Connected');
+          updateDbStatusBadge(true, 'PostgreSQL: Live Connected');
           fetchCloudDataRealtime();
         } catch (err) {
           console.warn('Supabase init error:', err);
-          updateDbStatusBadge(false, 'Local Database (Ready)');
+          updateDbStatusBadge(false, 'Local DB (Ready to Connect)');
         }
       } else {
-        updateDbStatusBadge(false, 'Local Database (Ready)');
+        updateDbStatusBadge(false, 'Local DB (Ready to Connect)');
       }
     }
 
@@ -2808,16 +2859,54 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (!supabaseClient) return;
 
       try {
-        const { data: prods } = await supabaseClient.from('products').select('*');
-        if (prods && prods.length > 0) productsData = prods;
+        const { data: prods, error: pErr } = await supabaseClient.from('products').select('*');
+        if (prods && prods.length > 0) {
+          productsData = prods;
+        } else if (!pErr && productsData.length > 0) {
+          // Cloud database is clean/new, seed initial catalog
+          await supabaseClient.from('products').upsert(productsData.map(p => ({
+            id: p.id,
+            product_code: p.product_code,
+            product_name: p.product_name,
+            category: p.category,
+            purchase_price: p.purchase_price,
+            sale_price: p.sale_price,
+            stock: p.stock,
+            branch_stocks: p.branch_stocks || {},
+            image_url: p.image_url
+          })));
+        }
 
-        const { data: emps } = await supabaseClient.from('employees').select('*');
-        if (emps && emps.length > 0) employeesData = emps;
+        const { data: emps, error: eErr } = await supabaseClient.from('employees').select('*');
+        if (emps && emps.length > 0) {
+          employeesData = emps;
+        } else if (!eErr && employeesData.length > 0) {
+          // Seed initial employee roster
+          await supabaseClient.from('employees').upsert(employeesData.map(e => ({
+            id: e.id,
+            employee_id: e.employee_id,
+            name: e.name,
+            email: e.email,
+            phone: e.phone,
+            password: e.password,
+            branch_id: e.branch_id,
+            department: e.department,
+            designation: e.designation,
+            role: e.role,
+            salary: e.salary,
+            joining_date: e.joining_date,
+            status: e.status,
+            photo_url: e.photo_url
+          })));
+        }
 
         const { data: sls } = await supabaseClient.from('sales').select('*').order('id', { ascending: false });
         if (sls && sls.length > 0) salesData = sls;
 
-        const { data: txs } = await supabaseClient.from('transactions').select('*').order('id', { ascending: false });
+        const { data: trfs } = await supabaseClient.from('transfers').select('*').order('id', { ascending: false });
+        if (trfs && trfs.length > 0) transfersData = trfs;
+
+        const { data: txs } = await supabaseClient.from('accounts').select('*').order('id', { ascending: false });
         if (txs && txs.length > 0) accountsData = txs;
 
         renderDashboard();
@@ -2827,21 +2916,51 @@ CREATE TABLE IF NOT EXISTS transactions (
         renderSalesTable();
         renderAccountsTable();
         renderTransfersTable();
+        updateTransferBadges();
         populateCategoryFilters();
         populatePosSalesEmployees();
         populateBranchDropdowns();
+
+        // Subscribe to live cloud realtime changes
+        supabaseClient.channel('realtime-pos-sync')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, payload => {
+            if (payload.eventType === 'INSERT' && !salesData.some(s => s.id === payload.new.id)) {
+              salesData.unshift(payload.new);
+              renderDashboard();
+              renderSalesTable();
+              if (document.getElementById('sec-reports') && !document.getElementById('sec-reports').classList.contains('hidden')) {
+                applyReportFilters();
+              }
+            }
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
+            const idx = productsData.findIndex(p => p.id === payload.new.id);
+            if (idx >= 0) productsData[idx] = payload.new;
+            else productsData.push(payload.new);
+            renderPosProducts();
+            renderProductsTable();
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'transfers' }, payload => {
+            const idx = transfersData.findIndex(t => t.id === payload.new.id);
+            if (idx >= 0) transfersData[idx] = payload.new;
+            else transfersData.unshift(payload.new);
+            renderTransfersTable();
+            updateTransferBadges();
+          })
+          .subscribe();
+
       } catch (err) {
         console.warn('Cloud sync note:', err.message);
       }
     }
 
-    function handleSaveSupabaseConfig(e) {
+    async function handleSaveSupabaseConfig(e) {
       e.preventDefault();
-      const url = document.getElementById('supabase-url').value.trim();
+      const url = document.getElementById('supabase-url').value.trim() || DEFAULT_SUPABASE_URL;
       const key = document.getElementById('supabase-key').value.trim();
 
-      if (!url || !key) {
-        Swal.fire('Required', 'Please enter both Project URL and Publishable Key', 'warning');
+      if (!key) {
+        Swal.fire('API Key Required', 'অনুগ্রহ করে আপনার Supabase এর <b>Anon Public Key</b> টি পেস্ট করুন।', 'warning');
         return;
       }
 
@@ -2850,12 +2969,28 @@ CREATE TABLE IF NOT EXISTS transactions (
 
       try {
         supabaseClient = window.supabase.createClient(url, key);
-        updateDbStatusBadge(true, 'Supabase Connected');
+
+        // Test connection by reading products
+        const { error } = await supabaseClient.from('products').select('id').limit(1);
+        if (error) throw error;
+
+        updateDbStatusBadge(true, 'PostgreSQL: Live Connected');
         closeModal('modal-supabase');
-        Swal.fire('Connected!', 'Supabase PostgreSQL Client is successfully initialized!', 'success');
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Database Connected Successfully!',
+          html: `<p class="text-xs">আপনার সুপাবেস ক্লাউড ডাটাবেস <b>${url}</b> সফলভাবে যুক্ত হয়েছে। এখন সকল সেলস ও স্টক সরাসরি ক্লাউডে সেভ হবে।</p>`,
+          confirmButtonText: 'Great!'
+        });
+
         fetchCloudDataRealtime();
       } catch (err) {
-        Swal.fire('Connection Failed', err.message, 'error');
+        Swal.fire({
+          icon: 'error',
+          title: 'Connection Notice',
+          html: `<p class="text-xs">Supabase এর সাথে যুক্ত হতে সমস্যা হয়েছে: <b>${err.message}</b></p><p class="text-[11px] text-slate-500 mt-2">টিপস: আপনি কি Supabase এর <b>SQL Editor</b> এ টেবিল তৈরির কোডটি Run করেছেন?</p>`
+        });
       }
     }
 
@@ -3573,7 +3708,13 @@ CREATE TABLE IF NOT EXISTS transactions (
             invoice_no: saleRecord.invoice_no,
             customer_name: saleRecord.customer_name,
             customer_phone: saleRecord.customer_phone,
+            branch_id: saleRecord.branch_id,
+            branch_name: saleRecord.branch_name,
             salesperson_name: saleRecord.salesperson_name,
+            employee_code: saleRecord.employee_code,
+            subtotal: saleRecord.subtotal,
+            discount: saleRecord.discount,
+            tax: saleRecord.tax,
             total_amount: saleRecord.total_amount,
             payment_method: saleRecord.payment_method,
             sale_date: saleRecord.sale_date,
@@ -5086,6 +5227,21 @@ CREATE TABLE IF NOT EXISTS transactions (
 
       transfersData.unshift(newTransfer);
 
+      if (supabaseClient) {
+        supabaseClient.from('transfers').insert([{
+          transfer_no: newTransfer.transfer_no,
+          from_branch_id: newTransfer.from_branch_id,
+          to_branch_id: newTransfer.to_branch_id,
+          status: newTransfer.status,
+          items: newTransfer.items,
+          dispatched_by: newTransfer.dispatched_by,
+          received_by: newTransfer.received_by,
+          date_dispatched: newTransfer.date_dispatched,
+          date_received: newTransfer.date_received,
+          note: newTransfer.note
+        }]).then();
+      }
+
       closeModal('modal-transfer-create');
       renderTransfersTable();
       updateTransferBadges();
@@ -5148,6 +5304,14 @@ CREATE TABLE IF NOT EXISTS transactions (
         trf.status = 'Received';
         trf.received_by = currentUser ? `${currentUser.name} (${toName.split('(')[0].trim()})` : 'Branch Staff';
         trf.date_received = new Date().toISOString();
+
+        if (supabaseClient) {
+          supabaseClient.from('transfers').update({
+            status: 'Received',
+            received_by: trf.received_by,
+            date_received: trf.date_received
+          }).eq('transfer_no', trf.transfer_no).then();
+        }
 
         renderTransfersTable();
         updateTransferBadges();
