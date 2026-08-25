@@ -668,41 +668,80 @@
                 </div>
 
                 <!-- Split Payment Breakdown Box (Shown when Split is Selected) -->
-                <div id="pos-split-pay-box" class="hidden p-3 bg-amber-50/80 rounded-2xl border border-amber-200 text-xs space-y-2.5">
-                  <div class="flex items-center justify-between text-[11px] font-bold text-amber-900">
-                    <span><i class="fa-solid fa-coins text-amber-600 mr-1"></i>Split Payment Breakdown (Cash + Card/Digital)</span>
-                    <span class="text-[9px] font-bold text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded">Dual Pay</span>
+                <div id="pos-split-pay-box" class="hidden p-3.5 bg-gradient-to-br from-amber-50/90 to-orange-50/90 rounded-2xl border border-amber-200 text-xs space-y-3 shadow-xs">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-amber-950">
+                    <span class="flex items-center space-x-1.5">
+                      <i class="fa-solid fa-coins text-amber-600"></i>
+                      <span>Split Payment (কার্ড + ক্যাশ পেমেন্ট)</span>
+                    </span>
+                    <span class="text-[10px] font-black text-indigo-700 bg-white px-2 py-0.5 rounded-lg border border-amber-200 shadow-2xs" id="pos-split-total-bill-badge">Total Bill: ৳ 0</span>
                   </div>
 
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Cash Paid (৳)</label>
-                      <input type="number" id="pos-split-cash" min="0" oninput="calculateSplitBalance()" placeholder="0" class="w-full bg-white p-1.5 border border-amber-300 rounded-lg text-xs font-bold text-emerald-700 outline-none">
+                  <!-- 1. Card Input & Bank Selector -->
+                  <div class="bg-white p-2.5 rounded-xl border border-amber-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                      <label class="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
+                        <i class="fa-solid fa-credit-card text-sky-600"></i>
+                        <span>১. কার্ড / ডিজিটাল এ কত টাকা দিচ্ছেন? (Card Amount)</span>
+                      </label>
+                      <button type="button" onclick="setSplitCardFull()" class="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded border border-sky-200 transition cursor-pointer">
+                        পুরোটা কার্ডে
+                      </button>
                     </div>
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Card / Digital Paid (৳)</label>
-                      <input type="number" id="pos-split-card" min="0" oninput="calculateSplitBalance()" placeholder="0" class="w-full bg-white p-1.5 border border-amber-300 rounded-lg text-xs font-bold text-indigo-700 outline-none">
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Card POS Bank</label>
-                      <select id="pos-split-bank-select" class="w-full bg-white p-1.5 border border-amber-300 rounded-lg text-[11px] font-semibold text-slate-800 outline-none">
-                        <option value="City Bank POS">City Bank</option>
-                        <option value="BRAC Bank POS">BRAC Bank</option>
-                        <option value="DBBL Nexus POS">DBBL Nexus</option>
-                        <option value="EBL POS">Eastern Bank</option>
-                        <option value="bKash Merchant">bKash QR</option>
-                        <option value="Other Bank POS">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Total Paid / Balance</label>
-                      <div class="p-1 bg-white border border-amber-200 rounded-lg text-[11px] font-bold flex justify-between">
-                        <span>Paid: <b id="pos-split-paid-label" class="text-slate-800">৳0</b></span>
-                        <span id="pos-split-status-label" class="text-amber-600">Due: ৳0</span>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="relative">
+                        <span class="absolute left-2.5 top-1.5 font-bold text-slate-400">৳</span>
+                        <input type="number" id="pos-split-card" min="0" oninput="onSplitCardInput()" placeholder="0" class="w-full bg-slate-50 pl-6 pr-2 py-1.5 border border-sky-300 rounded-lg text-xs font-black text-sky-700 outline-none focus:bg-white focus:ring-2 focus:ring-sky-500">
                       </div>
+                      <div>
+                        <select id="pos-split-bank-select" class="w-full bg-slate-50 p-1.5 border border-sky-300 rounded-lg text-[11px] font-bold text-slate-800 outline-none focus:bg-white">
+                          <option value="City Bank POS">City Bank (AMEX/VISA)</option>
+                          <option value="BRAC Bank POS">BRAC Bank POS</option>
+                          <option value="DBBL Nexus POS">DBBL Nexus/Visa</option>
+                          <option value="EBL POS">Eastern Bank (EBL)</option>
+                          <option value="IBBL POS">Islami Bank (IBBL)</option>
+                          <option value="bKash Merchant">bKash QR</option>
+                          <option value="Nagad Merchant">Nagad QR</option>
+                          <option value="Other Bank POS">Other POS</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 2. Remaining Due & Cash Input -->
+                  <div class="bg-white p-2.5 rounded-xl border border-amber-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                      <label class="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
+                        <i class="fa-solid fa-money-bill-1-wave text-emerald-600"></i>
+                        <span>২. অবশিষ্ট ক্যাশ কত টাকা দিচ্ছেন? (Cash Amount)</span>
+                      </label>
+                      <button type="button" onclick="autoFillRemainingCash()" id="btn-autofill-cash" class="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition flex items-center space-x-1 cursor-pointer">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i>
+                        <span id="label-autofill-cash">বাকি ক্যাশ বসান</span>
+                      </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="relative">
+                        <span class="absolute left-2.5 top-1.5 font-bold text-slate-400">৳</span>
+                        <input type="number" id="pos-split-cash" min="0" oninput="onSplitCashInput()" placeholder="0" class="w-full bg-slate-50 pl-6 pr-2 py-1.5 border border-emerald-300 rounded-lg text-xs font-black text-emerald-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                      </div>
+
+                      <div class="p-1.5 bg-amber-50/80 rounded-lg border border-amber-200 text-center flex flex-col justify-center">
+                        <span class="text-[9px] font-bold text-slate-500">বাকি দিতে হবে:</span>
+                        <span id="pos-split-remaining-badge" class="text-xs font-black text-amber-700">৳ 0</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 3. Live Summary Bar -->
+                  <div class="p-2 bg-white rounded-xl border border-amber-200 text-[11px] font-bold flex items-center justify-between shadow-2xs">
+                    <div class="space-x-1 text-slate-600">
+                      <span>মোট জমা:</span>
+                      <b id="pos-split-paid-label" class="text-slate-900">৳0</b>
+                    </div>
+                    <div>
+                      <span id="pos-split-status-label" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800">Due: ৳0</span>
                     </div>
                   </div>
                 </div>
@@ -2182,6 +2221,14 @@ CREATE TABLE IF NOT EXISTS transactions (
       }
     }
 
+    function getPosGrandTotal() {
+      const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
+      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
+      const tax = Math.round(subtotal * (taxRate / 100));
+      return Math.max(0, subtotal - discount + tax);
+    }
+
     function setPosPaymentMethod(method) {
       currentPayMethod = method;
       document.querySelectorAll('.pay-method-btn').forEach(b => {
@@ -2199,24 +2246,75 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (splitBox) {
         splitBox.classList.toggle('hidden', method !== 'Split');
         if (method === 'Split') {
-          const grandTotal = Math.max(0, (posCart.reduce((sum, i) => sum + i.total, 0) - (Number(document.getElementById('pos-discount')?.value) || 0)) + Math.round(posCart.reduce((sum, i) => sum + i.total, 0) * ((Number(document.getElementById('pos-tax-rate')?.value) || 0) / 100)));
-          const half = Math.round(grandTotal / 2);
-          if (!document.getElementById('pos-split-cash').value) {
-            document.getElementById('pos-split-cash').value = half;
-            document.getElementById('pos-split-card').value = grandTotal - half;
+          const grandTotal = getPosGrandTotal();
+          if (document.getElementById('pos-split-total-bill-badge')) {
+            document.getElementById('pos-split-total-bill-badge').innerText = `Total Bill: ৳ ${grandTotal.toLocaleString()}`;
+          }
+          const cardVal = Number(document.getElementById('pos-split-card')?.value) || 0;
+          if (cardVal === 0) {
+            document.getElementById('pos-split-card').value = '';
+            document.getElementById('pos-split-cash').value = '';
+            if (document.getElementById('pos-split-remaining-badge')) {
+              document.getElementById('pos-split-remaining-badge').innerText = `৳ ${grandTotal.toLocaleString()}`;
+            }
+            if (document.getElementById('label-autofill-cash')) {
+              document.getElementById('label-autofill-cash').innerText = `বাকি ৳${grandTotal.toLocaleString()} ক্যাশে বসান`;
+            }
           }
           calculateSplitBalance();
         }
       }
     }
 
-    function calculateSplitBalance() {
-      const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
-      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
-      const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
-      const tax = Math.round(subtotal * (taxRate / 100));
-      const grandTotal = Math.max(0, subtotal - discount + tax);
+    function onSplitCardInput() {
+      const grandTotal = getPosGrandTotal();
+      const card = Number(document.getElementById('pos-split-card')?.value) || 0;
+      const remainingForCash = Math.max(0, grandTotal - card);
 
+      // Instantly deduct from total and auto-fill remaining cash!
+      if (document.getElementById('pos-split-cash')) {
+        document.getElementById('pos-split-cash').value = remainingForCash > 0 ? remainingForCash : 0;
+      }
+      if (document.getElementById('pos-split-remaining-badge')) {
+        document.getElementById('pos-split-remaining-badge').innerText = `৳ ${remainingForCash.toLocaleString()}`;
+      }
+      if (document.getElementById('label-autofill-cash')) {
+        document.getElementById('label-autofill-cash').innerText = `বাকি ৳${remainingForCash.toLocaleString()} ক্যাশে বসান`;
+      }
+
+      calculateSplitBalance();
+    }
+
+    function onSplitCashInput() {
+      calculateSplitBalance();
+    }
+
+    function autoFillRemainingCash() {
+      const grandTotal = getPosGrandTotal();
+      const card = Number(document.getElementById('pos-split-card')?.value) || 0;
+      const remaining = Math.max(0, grandTotal - card);
+      if (document.getElementById('pos-split-cash')) {
+        document.getElementById('pos-split-cash').value = remaining;
+      }
+      calculateSplitBalance();
+    }
+
+    function setSplitCardFull() {
+      const grandTotal = getPosGrandTotal();
+      if (document.getElementById('pos-split-card')) {
+        document.getElementById('pos-split-card').value = grandTotal;
+      }
+      if (document.getElementById('pos-split-cash')) {
+        document.getElementById('pos-split-cash').value = 0;
+      }
+      if (document.getElementById('pos-split-remaining-badge')) {
+        document.getElementById('pos-split-remaining-badge').innerText = `৳ 0`;
+      }
+      calculateSplitBalance();
+    }
+
+    function calculateSplitBalance() {
+      const grandTotal = getPosGrandTotal();
       const cash = Number(document.getElementById('pos-split-cash')?.value) || 0;
       const card = Number(document.getElementById('pos-split-card')?.value) || 0;
       const paid = cash + card;
@@ -2224,18 +2322,31 @@ CREATE TABLE IF NOT EXISTS transactions (
 
       const paidLabel = document.getElementById('pos-split-paid-label');
       const statusLabel = document.getElementById('pos-split-status-label');
+      const billBadge = document.getElementById('pos-split-total-bill-badge');
+      const remBadge = document.getElementById('pos-split-remaining-badge');
 
-      if (paidLabel) paidLabel.innerText = `৳${paid.toLocaleString()}`;
+      if (billBadge) billBadge.innerText = `Total Bill: ৳ ${grandTotal.toLocaleString()}`;
+      if (paidLabel) paidLabel.innerText = `৳ ${paid.toLocaleString()}`;
+
+      if (diff > 0) {
+        if (remBadge) remBadge.innerText = `৳ ${diff.toLocaleString()}`;
+      } else {
+        if (remBadge) remBadge.innerText = `৳ 0`;
+      }
+
       if (statusLabel) {
-        if (diff === 0) {
-          statusLabel.className = 'text-emerald-600 font-black';
-          statusLabel.innerText = '✓ Fully Paid';
+        if (diff === 0 && paid > 0) {
+          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-800';
+          statusLabel.innerText = '✓ Fully Paid (পরিশোধ সম্পন্ন)';
         } else if (diff > 0) {
-          statusLabel.className = 'text-rose-600 font-bold';
-          statusLabel.innerText = `Due: ৳${diff.toLocaleString()}`;
+          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-100 text-rose-800';
+          statusLabel.innerText = `Due (বাকি): ৳${diff.toLocaleString()}`;
+        } else if (diff < 0) {
+          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-sky-100 text-sky-800';
+          statusLabel.innerText = `Change (ফেরত): ৳${Math.abs(diff).toLocaleString()}`;
         } else {
-          statusLabel.className = 'text-indigo-600 font-bold';
-          statusLabel.innerText = `Change: ৳${Math.abs(diff).toLocaleString()}`;
+          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800';
+          statusLabel.innerText = `Due: ৳${grandTotal.toLocaleString()}`;
         }
       }
     }
@@ -2274,7 +2385,8 @@ CREATE TABLE IF NOT EXISTS transactions (
           Swal.fire('Incomplete Payment', `পরিশোধিত টাকা মোট বিলের চেয়ে কম! বকেয়া: ৳${(grandTotal - totalPaid).toLocaleString()}`, 'warning');
           return;
         }
-        formattedPaymentMethod = `Split (Cash: ৳${cashPaid.toLocaleString()} + Card: ৳${cardPaid.toLocaleString()} [${splitBank}])`;
+        const changeAmt = totalPaid > grandTotal ? (totalPaid - grandTotal) : 0;
+        formattedPaymentMethod = `Split (Card: ৳${cardPaid.toLocaleString()} [${splitBank}] + Cash: ৳${cashPaid.toLocaleString()}${changeAmt > 0 ? ` - Change: ৳${changeAmt}` : ''})`;
       }
 
       // Salesperson
