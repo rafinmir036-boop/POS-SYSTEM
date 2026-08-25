@@ -150,7 +150,10 @@
       #printable-barcode-area, #printable-barcode-area * {
         visibility: visible !important;
       }
-      #printable-receipt-area {
+      #printable-transfer-area, #printable-transfer-area * {
+        visibility: visible !important;
+      }
+      #printable-receipt-area, #printable-transfer-area {
         position: absolute;
         left: 0;
         top: 0;
@@ -210,17 +213,20 @@
       <!-- Quick Role Preset Pills for Fast Demo -->
       <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
         <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center mb-1.5">
-          <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Quick Demo Login (Select Role)
+          <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Quick Demo Login (Select Role / Branch)
         </div>
-        <div class="grid grid-cols-3 gap-1.5">
-          <button type="button" onclick="fillDemoCredentials('admin@system.com', 'admin123', 'Admin')" class="px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg transition border border-indigo-200">
-            👑 Admin
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          <button type="button" onclick="fillDemoCredentials('admin@system.com', 'admin123')" class="px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-lg transition border border-indigo-200 text-center">
+            👑 Super Admin
           </button>
-          <button type="button" onclick="fillDemoCredentials('cashier@system.com', 'cashier123', 'Cashier')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] rounded-lg transition border border-emerald-200">
-            🛒 Cashier
+          <button type="button" onclick="fillDemoCredentials('01722-000002', '123456')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] rounded-lg transition border border-emerald-200 text-center">
+            🏬 Dhanmondi
           </button>
-          <button type="button" onclick="fillDemoCredentials('accountant@system.com', 'acc123', 'Accountant')" class="px-2 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] rounded-lg transition border border-purple-200">
-            💰 Accounts
+          <button type="button" onclick="fillDemoCredentials('01933-000003', '123456')" class="px-2 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] rounded-lg transition border border-purple-200 text-center">
+            🏬 Uttara Outlet
+          </button>
+          <button type="button" onclick="fillDemoCredentials('01811-000001', '123456')" class="px-2 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold text-[10px] rounded-lg transition border border-cyan-200 text-center">
+            🏭 Warehouse
           </button>
         </div>
       </div>
@@ -228,10 +234,10 @@
       <!-- Form -->
       <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Address *</label>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Address or Phone Number (ইমেইল বা ফোন নম্বর) *</label>
           <div class="relative">
-            <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-            <input type="email" id="login-email" required placeholder="admin@system.com" value="admin@system.com" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+            <i class="fa-solid fa-id-card-clip absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+            <input type="text" id="login-email" required placeholder="admin@system.com or 01722-000002" value="admin@system.com" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
           </div>
         </div>
 
@@ -325,6 +331,12 @@
             </div>
             <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-orange-500/20 text-orange-400 border border-orange-500/30">AUDIT</span>
           </button>
+          <button id="nav-transfers" onclick="switchNav('transfers')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-truck-ramp-box text-cyan-400 w-4"></i><span>Stock Transfer (স্থানান্তর)</span>
+            </div>
+            <span id="sidebar-incoming-transfer-badge" class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">0</span>
+          </button>
           <button id="nav-reports" onclick="switchNav('reports')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
             <i class="fa-solid fa-file-excel text-violet-400 w-4"></i><span>Reports & Export</span>
           </button>
@@ -361,6 +373,17 @@
         </div>
 
         <div class="flex items-center space-x-3">
+          <!-- Operating Branch Selector / Badge -->
+          <div class="flex items-center space-x-2 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 px-3 py-1.5 rounded-xl shadow-2xs">
+            <i class="fa-solid fa-building-circle-arrow-right text-indigo-600 text-xs"></i>
+            <div class="text-left">
+              <span class="text-[9px] font-bold text-slate-400 block leading-none">Operating Branch:</span>
+              <select id="header-branch-select" onchange="changeActiveBranch(this.value)" class="bg-transparent text-xs font-black text-indigo-900 outline-none cursor-pointer">
+                <option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>
+              </select>
+            </div>
+          </div>
+
           <!-- PostgreSQL / Supabase Live Pill -->
           <div onclick="openSupabaseSettingsModal()" class="cursor-pointer flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition">
             <span class="w-2 h-2 rounded-full bg-emerald-500" id="header-db-dot"></span>
@@ -529,6 +552,10 @@
                   <select id="pos-category-filter" onchange="renderPosProducts()" class="py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none">
                     <option value="ALL">All Categories</option>
                   </select>
+                  <button type="button" onclick="openGlobalStockModal()" title="Check stock in all branches" class="py-2.5 px-3.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shrink-0">
+                    <i class="fa-solid fa-magnifying-glass-location"></i>
+                    <span>All Branch Stocks</span>
+                  </button>
                 </div>
               </div>
 
@@ -694,12 +721,13 @@
                         <input type="number" id="pay-input-card" min="0" oninput="onMultiPaymentInputChange('card')" placeholder="0" class="w-full bg-slate-50 pl-7 pr-2 py-1.5 border border-sky-200 rounded-lg text-xs font-black text-sky-700 outline-none focus:bg-white focus:ring-2 focus:ring-sky-500">
                       </div>
                       <select id="pay-card-bank" class="w-full bg-slate-50 p-1.5 border border-slate-200 rounded-lg text-[11px] font-bold text-slate-800 outline-none focus:bg-white">
+                        <option value="UCB Bank POS">UCB Bank POS</option>
                         <option value="City Bank (AMEX/VISA)">City Bank POS</option>
+                        <option value="DBBL Nexus/Visa POS">DBBL (Dutch-Bangla) POS</option>
+                        <option value="IBBL POS">IBBL (Islami Bank) POS</option>
                         <option value="BRAC Bank POS">BRAC Bank POS</option>
-                        <option value="DBBL Nexus POS">DBBL Nexus/Visa</option>
-                        <option value="EBL POS">Eastern Bank (EBL)</option>
-                        <option value="IBBL POS">Islami Bank (IBBL)</option>
-                        <option value="Other Bank POS">Other POS</option>
+                        <option value="EBL POS">EBL (Eastern Bank) POS</option>
+                        <option value="Others Bank POS">Others Bank POS</option>
                       </select>
                     </div>
                   </div>
@@ -774,6 +802,11 @@
               <select id="prd-filter-cat" onchange="renderProductsTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none">
                 <option value="ALL">All Categories</option>
               </select>
+
+              <button onclick="openGlobalStockModal()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
+                <i class="fa-solid fa-magnifying-glass-location"></i>
+                <span>All Branch Stocks</span>
+              </button>
 
               <button onclick="openBarcodeGeneratorModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
                 <i class="fa-solid fa-barcode"></i>
@@ -1207,6 +1240,112 @@
 
         </section>
 
+
+        <!-- ============================================================ -->
+        <!-- TAB 9: MULTI-BRANCH STOCK TRANSFERS & RECEIVING -->
+        <!-- ============================================================ -->
+        <section id="sec-transfers" class="hidden space-y-6">
+
+          <!-- Top Action Bar -->
+          <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="p-2 bg-cyan-100 text-cyan-700 rounded-xl font-bold text-sm">
+                  <i class="fa-solid fa-truck-ramp-box"></i>
+                </span>
+                <h2 class="text-base font-black text-slate-900 font-heading">Inter-Branch & Warehouse Transfers (পণ্য স্থানান্তর ও চালান)</h2>
+              </div>
+              <p class="text-xs text-slate-500 font-medium mt-1">
+                ওয়্যারহাউজ ও সকল ব্রাঞ্চের মধ্যে পণ্য প্রেরণ, ইন-ট্রানজিট ট্র্যাকিং এবং পণ্য গ্রহণ (Receive) করে স্বয়ংক্রিয়ভাবে স্টক আপডেট করুন।
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openGlobalStockModal()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3.5 py-2.5 rounded-xl font-bold text-xs transition flex items-center space-x-1.5 cursor-pointer">
+                <i class="fa-solid fa-magnifying-glass-location"></i>
+                <span>Global Stock Lookup (সব ব্রাঞ্চে স্টক)</span>
+              </button>
+
+              <button onclick="openCreateTransferModal()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-cyan-500/20 transition flex items-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>+ New Transfer Dispatch (নতুন চালান)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Metrics for Transfers -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Incoming for Active Branch</span>
+              <div class="text-lg font-black text-cyan-600 mt-1" id="trf-kpi-incoming">0 shipments</div>
+              <span class="text-[10px] text-cyan-600 font-semibold">Pending verification</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">In-Transit Dispatches (চলমান)</span>
+              <div class="text-lg font-black text-amber-600 mt-1" id="trf-kpi-intransit">0 shipments</div>
+              <span class="text-[10px] text-slate-500 font-semibold">On the road</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Completed (গৃহীত চালান)</span>
+              <div class="text-lg font-black text-emerald-600 mt-1" id="trf-kpi-received">0 shipments</div>
+              <span class="text-[10px] text-emerald-600 font-semibold">Fully reconciled</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Branches / Outlets</span>
+              <div class="text-lg font-black text-indigo-600 mt-1" id="trf-kpi-branches">4 Locations</div>
+              <span class="text-[10px] text-slate-500 font-semibold">Multi-location network</span>
+            </div>
+          </div>
+
+          <!-- Transfer Tabs & Filter -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto">
+              <button onclick="setTransferFilter('ALL')" id="tab-trf-ALL" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-cyan-50 text-cyan-800 border border-cyan-300">
+                All Transfers (সকল)
+              </button>
+              <button onclick="setTransferFilter('INCOMING')" id="tab-trf-INCOMING" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200">
+                📥 Incoming (রিসিভ করুন)
+              </button>
+              <button onclick="setTransferFilter('OUTGOING')" id="tab-trf-OUTGOING" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200">
+                📤 Dispatched (প্রেরিত)
+              </button>
+              <button onclick="setTransferFilter('RECEIVED')" id="tab-trf-RECEIVED" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200">
+                ✓ Completed (গৃহীত)
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-2 w-full md:w-auto">
+              <input type="text" id="trf-search-input" oninput="renderTransfersTable()" placeholder="Search Challan #, Branch..." class="w-full md:w-64 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:ring-2 focus:ring-cyan-500 font-semibold">
+            </div>
+          </div>
+
+          <!-- Transfer Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Challan / Transfer #</th>
+                    <th class="px-6 py-3.5">From Source (প্রেরক)</th>
+                    <th class="px-6 py-3.5">To Destination (প্রাপক)</th>
+                    <th class="px-6 py-3.5">Transferred Items</th>
+                    <th class="px-6 py-3.5">Dispatch Date & Staff</th>
+                    <th class="px-6 py-3.5 text-center">Status</th>
+                    <th class="px-6 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="transfers-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
       </div>
     </main>
 
@@ -1356,6 +1495,28 @@
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 p-3 bg-pink-50/50 rounded-2xl border border-pink-100">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Assigned Branch *</label>
+            <select id="emp-form-branch" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+              <!-- populated via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Access Role *</label>
+            <select id="emp-form-role" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+              <option value="Cashier">Cashier</option>
+              <option value="Branch Manager">Branch Manager</option>
+              <option value="Accountant">Accountant</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Login Password *</label>
+            <input type="text" id="emp-form-password" placeholder="123456" value="123456" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-800 outline-none">
           </div>
         </div>
 
@@ -1624,6 +1785,184 @@
   <div id="printable-barcode-area" class="hidden"></div>
 
 
+  <!-- 6. GLOBAL MULTI-BRANCH STOCK LOOKUP MODAL -->
+  <div id="modal-global-stock" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">
+            <i class="fa-solid fa-magnifying-glass-location"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 font-heading">Global Inter-Branch Stock Lookup (সকল ব্রাঞ্চের স্টক)</h3>
+            <p class="text-[11px] text-slate-500 font-medium">বারকোড স্ক্যান বা পণ্য নাম লিখে সকল ব্রাঞ্চ ও ওয়্যারহাউজের বর্তমান স্টক দেখুন</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-global-stock')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Live Search & Barcode input -->
+      <div class="relative">
+        <i class="fa-solid fa-barcode absolute left-3.5 top-3.5 text-indigo-500 text-base"></i>
+        <input type="text" id="global-stock-search-input" oninput="handleGlobalStockSearch()" placeholder="Scan barcode / SKU or type product name (e.g. Polo, Jeans, PRD-101)..." class="w-full bg-slate-50 pl-11 pr-4 py-3 border-2 border-indigo-100 rounded-2xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition shadow-2xs">
+      </div>
+
+      <!-- Results Display Container -->
+      <div id="global-stock-results-container" class="space-y-3">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 7. CREATE STOCK TRANSFER MODAL -->
+  <div id="modal-transfer-create" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center text-base">
+            <i class="fa-solid fa-truck-ramp-box"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 font-heading">New Stock Transfer Dispatch (নতুন চালান তৈরি)</h3>
+            <p class="text-[11px] text-slate-500 font-medium">ওয়্যারহাউজ বা অন্য ব্রাঞ্চ থেকে পণ্য স্থানান্তর চালান প্রেরণ করুন</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-transfer-create')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleDispatchTransferSubmit(event)" class="space-y-4 text-xs">
+        
+        <!-- Source & Destination Selection -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">From Source (প্রেরক স্থান) *</label>
+            <select id="trf-form-from-branch" onchange="onTransferSourceBranchChange()" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 outline-none">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">To Destination (প্রাপক ব্রাঞ্চ) *</label>
+            <select id="trf-form-to-branch" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 outline-none">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Add Items to Transfer -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="font-bold text-slate-700">Select Products to Transfer (পণ্য নির্বাচন করুন)</label>
+            <span class="text-[11px] text-slate-400 font-semibold">Source Branch Stock</span>
+          </div>
+
+          <div class="flex gap-2">
+            <select id="trf-form-product-select" class="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 outline-none">
+              <!-- Populated via JS -->
+            </select>
+            <input type="number" id="trf-form-qty" min="1" value="1" placeholder="Qty" class="w-20 p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-center outline-none">
+            <button type="button" onclick="addItemToTransferCart()" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-xl font-bold transition flex items-center space-x-1 cursor-pointer">
+              <i class="fa-solid fa-plus"></i><span>Add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Transfer Items List Table -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">Product</th>
+                <th class="p-2.5">Code</th>
+                <th class="p-2.5 text-center">Available in Source</th>
+                <th class="p-2.5 text-center">Transfer Qty</th>
+                <th class="p-2.5 text-right">Remove</th>
+              </tr>
+            </thead>
+            <tbody id="trf-form-items-tbody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Transfer Note / Vehicle & Driver (চালান মন্তব্য / গাড়ী নং)</label>
+          <input type="text" id="trf-form-note" placeholder="e.g. Sent via Delivery Van #Dhaka-Metro-1234, Driver: Kamal" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white">
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modal-transfer-create')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl font-bold transition shadow-md shadow-cyan-600/20 flex items-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Dispatch Shipment (চালান পাঠান)</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 8. PRINTABLE TRANSFER CHALLAN / GATE PASS MODAL -->
+  <div id="modal-transfer-receipt" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Transfer Gate Pass / চালান পত্র</span>
+        <button onclick="closeModal('modal-transfer-receipt')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div id="printable-transfer-area" class="receipt-paper p-5 text-slate-900 text-xs space-y-3">
+        <div class="text-center space-y-1">
+          <h2 class="font-black text-base uppercase tracking-wider font-heading">APEX ENTERPRISE</h2>
+          <p class="text-[10px] text-slate-600 font-bold">STOCK TRANSFER CHALLAN & GATE PASS</p>
+          <div class="border-b border-dashed border-slate-400 pt-1"></div>
+        </div>
+
+        <div class="text-[11px] space-y-1">
+          <div class="flex justify-between"><span>Challan No:</span><b id="trf-rec-no" class="font-black text-cyan-900">TRF-001</b></div>
+          <div class="flex justify-between"><span>Dispatch Date:</span><span id="trf-rec-date">2026-08-25</span></div>
+          <div class="flex justify-between"><span>From Source:</span><b id="trf-rec-from">Warehouse</b></div>
+          <div class="flex justify-between"><span>To Destination:</span><b id="trf-rec-to" class="text-indigo-900">Dhanmondi Branch</b></div>
+          <div class="flex justify-between"><span>Dispatched By:</span><span id="trf-rec-sender">Admin</span></div>
+          <div class="flex justify-between"><span>Status:</span><b id="trf-rec-status" class="text-amber-600 font-black">In-Transit</b></div>
+          <div class="border-b border-dashed border-slate-400 pt-1"></div>
+        </div>
+
+        <table class="w-full text-left text-[11px]">
+          <thead>
+            <tr class="border-b border-slate-300">
+              <th class="py-1">Product</th>
+              <th class="py-1">Code</th>
+              <th class="py-1 text-right">Transfer Qty</th>
+            </tr>
+          </thead>
+          <tbody id="trf-rec-items-body">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+
+        <div class="border-t border-dashed border-slate-400 pt-2 text-[11px] flex justify-between font-black">
+          <span>Total Units:</span>
+          <span id="trf-rec-total-qty">0 pcs</span>
+        </div>
+
+        <div class="pt-6 grid grid-cols-2 gap-4 text-center text-[10px] text-slate-600">
+          <div class="border-t border-slate-400 pt-1">Dispatched By Signature</div>
+          <div class="border-t border-slate-400 pt-1">Received By Signature</div>
+        </div>
+      </div>
+
+      <div class="pt-2 flex space-x-2">
+        <button onclick="window.print()" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-md">
+          <i class="fa-solid fa-print"></i><span>Print Challan / Gate Pass</span>
+        </button>
+        <button onclick="closeModal('modal-transfer-receipt')" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+
   <!-- 5. SUPABASE / POSTGRESQL SETTINGS MODAL -->
   <div id="modal-supabase" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
@@ -1734,21 +2073,67 @@ CREATE TABLE IF NOT EXISTS transactions (
     let currentUser = null;
     let posCart = [];
 
+    // Multi-Branch Registry
+    let branchesData = [
+      { id: 1, code: 'WH-01', name: 'Central Warehouse (প্রধান গুদাম)', type: 'Warehouse', phone: '01811-000001', address: 'Tejgaon Industrial Area, Dhaka' },
+      { id: 2, code: 'BR-01', name: 'Dhanmondi Branch (ধানমন্ডি)', type: 'Branch', phone: '01722-000002', address: 'Road 27, Dhanmondi, Dhaka' },
+      { id: 3, code: 'BR-02', name: 'Uttara Branch (উত্তরা)', type: 'Branch', phone: '01933-000003', address: 'Sector 3, Uttara, Dhaka' },
+      { id: 4, code: 'BR-03', name: 'Mirpur Outlet (মিরপুর)', type: 'Branch', phone: '01644-000004', address: 'Mirpur 10 Circle, Dhaka' }
+    ];
+
+    let currentBranchId = 'ALL'; // 'ALL' for Super Admin or specific branch ID (1, 2, 3, 4)
+    let currentTransferFilter = 'ALL';
+    let transferCart = [];
+
     // Memory Store (Local Fallback + Live Synced Cache)
     let employeesData = [
-      { id: 1, employee_id: 'EMP-01', name: 'Tanvir Ahmed Rifat', email: 'tanvir@system.com', phone: '01811-000001', department: 'Operations', designation: 'Branch Manager', salary: 35000, joining_date: '2024-01-15', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=6366f1&color=fff' },
-      { id: 2, employee_id: 'EMP-02', name: 'Sadia Akter', email: 'sadia@system.com', phone: '01722-000002', department: 'Sales', designation: 'Senior Cashier', salary: 22000, joining_date: '2024-03-01', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sadia+Akter&background=ec4899&color=fff' },
-      { id: 3, employee_id: 'EMP-03', name: 'Sanim Ahmed', email: 'sanim@system.com', phone: '01933-000003', department: 'Accounts', designation: 'Accountant', salary: 28000, joining_date: '2024-02-10', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sanim+Ahmed&background=10b981&color=fff' },
-      { id: 4, employee_id: 'EMP-04', name: 'Mariom Begum', email: 'mariom@system.com', phone: '01644-000004', department: 'Sales', designation: 'Sales Associate', salary: 18000, joining_date: '2024-06-20', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Mariom+Begum&background=f59e0b&color=fff' }
+      { id: 1, employee_id: 'EMP-01', name: 'Tanvir Ahmed Rifat', email: 'tanvir@system.com', phone: '01811-000001', password: 'wh123', branch_id: 1, department: 'Operations', designation: 'Warehouse In-Charge', role: 'Branch Manager', salary: 35000, joining_date: '2024-01-15', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=6366f1&color=fff' },
+      { id: 2, employee_id: 'EMP-02', name: 'Sadia Akter', email: 'sadia@system.com', phone: '01722-000002', password: '123456', branch_id: 2, department: 'Sales', designation: 'Dhanmondi Senior Cashier', role: 'Cashier', salary: 22000, joining_date: '2024-03-01', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sadia+Akter&background=ec4899&color=fff' },
+      { id: 3, employee_id: 'EMP-03', name: 'Sanim Ahmed', email: 'sanim@system.com', phone: '01933-000003', password: '123456', branch_id: 3, department: 'Sales', designation: 'Uttara Branch Cashier', role: 'Cashier', salary: 22000, joining_date: '2024-02-10', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sanim+Ahmed&background=10b981&color=fff' },
+      { id: 4, employee_id: 'EMP-04', name: 'Mariom Begum', email: 'mariom@system.com', phone: '01644-000004', password: '123456', branch_id: 4, department: 'Sales', designation: 'Mirpur Sales Associate', role: 'Cashier', salary: 18000, joining_date: '2024-06-20', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Mariom+Begum&background=f59e0b&color=fff' }
     ];
 
     let productsData = [
-      { id: 1, product_code: 'PRD-101', product_name: 'Premium Cotton Polo Shirt', category: 'Clothing', purchase_price: 350, sale_price: 650, stock: 45, image_url: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=200' },
-      { id: 2, product_code: 'PRD-102', product_name: 'Slim Fit Denim Jeans', category: 'Clothing', purchase_price: 600, sale_price: 1250, stock: 28, image_url: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=200' },
-      { id: 3, product_code: 'PRD-103', product_name: 'Wireless Bluetooth Earbuds', category: 'Electronics', purchase_price: 850, sale_price: 1550, stock: 18, image_url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=200' },
-      { id: 4, product_code: 'PRD-104', product_name: 'Leather Executive Wallet', category: 'Accessories', purchase_price: 250, sale_price: 550, stock: 3, image_url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=200' },
-      { id: 5, product_code: 'PRD-105', product_name: 'Casual Canvas Sneakers', category: 'Footwear', purchase_price: 700, sale_price: 1400, stock: 20, image_url: 'https://images.unsplash.com/photo-1525966226566-35c3443e7a6f?w=200' },
-      { id: 6, product_code: 'PRD-106', product_name: 'Stainless Steel Water Flask', category: 'Accessories', purchase_price: 220, sale_price: 480, stock: 2, image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=200' }
+      { id: 1, product_code: 'PRD-101', product_name: 'Premium Cotton Polo Shirt', category: 'Clothing', purchase_price: 350, sale_price: 650, stock: 45, branch_stocks: { 1: 20, 2: 15, 3: 6, 4: 4 }, image_url: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=200' },
+      { id: 2, product_code: 'PRD-102', product_name: 'Slim Fit Denim Jeans', category: 'Clothing', purchase_price: 600, sale_price: 1250, stock: 28, branch_stocks: { 1: 10, 2: 8, 3: 6, 4: 4 }, image_url: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=200' },
+      { id: 3, product_code: 'PRD-103', product_name: 'Wireless Bluetooth Earbuds', category: 'Electronics', purchase_price: 850, sale_price: 1550, stock: 18, branch_stocks: { 1: 8, 2: 5, 3: 3, 4: 2 }, image_url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=200' },
+      { id: 4, product_code: 'PRD-104', product_name: 'Leather Executive Wallet', category: 'Accessories', purchase_price: 250, sale_price: 550, stock: 12, branch_stocks: { 1: 6, 2: 3, 3: 2, 4: 1 }, image_url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=200' },
+      { id: 5, product_code: 'PRD-105', product_name: 'Casual Canvas Sneakers', category: 'Footwear', purchase_price: 700, sale_price: 1400, stock: 20, branch_stocks: { 1: 8, 2: 6, 3: 4, 4: 2 }, image_url: 'https://images.unsplash.com/photo-1525966226566-35c3443e7a6f?w=200' },
+      { id: 6, product_code: 'PRD-106', product_name: 'Stainless Steel Water Flask', category: 'Accessories', purchase_price: 220, sale_price: 480, stock: 15, branch_stocks: { 1: 5, 2: 4, 3: 3, 4: 3 }, image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=200' }
+    ];
+
+    let transfersData = [
+      {
+        id: 1,
+        transfer_no: 'TRF-20260825-001',
+        from_branch_id: 1, // Central Warehouse
+        to_branch_id: 2, // Dhanmondi
+        status: 'In-Transit',
+        items: [
+          { product_id: 1, product_name: 'Premium Cotton Polo Shirt', product_code: 'PRD-101', qty: 5 },
+          { product_id: 2, product_name: 'Slim Fit Denim Jeans', product_code: 'PRD-102', qty: 3 }
+        ],
+        dispatched_by: 'Tanvir Ahmed (Warehouse)',
+        received_by: '',
+        date_dispatched: '2026-08-25T16:00:00Z',
+        date_received: '',
+        note: 'Urgent restocking for Dhanmondi Outlet via Van #52'
+      },
+      {
+        id: 2,
+        transfer_no: 'TRF-20260824-002',
+        from_branch_id: 1,
+        to_branch_id: 3, // Uttara
+        status: 'Received',
+        items: [
+          { product_id: 3, product_name: 'Wireless Bluetooth Earbuds', product_code: 'PRD-103', qty: 4 }
+        ],
+        dispatched_by: 'Tanvir Ahmed (Warehouse)',
+        received_by: 'Sanim Ahmed (Uttara)',
+        date_dispatched: '2026-08-24T11:00:00Z',
+        date_received: '2026-08-24T14:30:00Z',
+        note: 'Weekly stock replenishment'
+      }
     ];
 
     let salesData = [
@@ -1795,9 +2180,93 @@ CREATE TABLE IF NOT EXISTS transactions (
     // --- Init App on Page Load ---
     window.addEventListener('DOMContentLoaded', () => {
       loadStoredCredentialsAndSupabase();
+      populateBranchDropdowns();
+      updateTransferBadges();
       renderDashboard();
       populateCategoryFilters();
     });
+
+    // --- Branch Stock Helpers ---
+    function getProductBranchStock(product, branchId) {
+      if (!product) return 0;
+      if (!product.branch_stocks) {
+        product.branch_stocks = { 1: product.stock || 0 };
+      }
+      if (branchId === 'ALL' || !branchId) {
+        let sum = 0;
+        Object.values(product.branch_stocks).forEach(v => sum += (Number(v) || 0));
+        return sum;
+      }
+      return Number(product.branch_stocks[branchId]) || 0;
+    }
+
+    function setProductBranchStock(product, branchId, count) {
+      if (!product) return;
+      if (!product.branch_stocks) product.branch_stocks = {};
+      const targetBId = (branchId === 'ALL' || !branchId) ? 1 : branchId;
+      product.branch_stocks[targetBId] = Math.max(0, Number(count) || 0);
+      let total = 0;
+      Object.values(product.branch_stocks).forEach(v => total += (Number(v) || 0));
+      product.stock = total;
+    }
+
+    function getBranchName(branchId) {
+      const b = branchesData.find(br => br.id == branchId);
+      return b ? b.name : `Branch #${branchId}`;
+    }
+
+    function populateBranchDropdowns() {
+      const headerSelect = document.getElementById('header-branch-select');
+      const empBranchSelect = document.getElementById('emp-form-branch');
+      const trfFromSelect = document.getElementById('trf-form-from-branch');
+      const trfToSelect = document.getElementById('trf-form-to-branch');
+
+      if (headerSelect) {
+        let headerOpts = '<option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>';
+        branchesData.forEach(b => {
+          headerOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
+        });
+        headerSelect.innerHTML = headerOpts;
+        headerSelect.value = String(currentBranchId);
+      }
+
+      if (empBranchSelect) {
+        empBranchSelect.innerHTML = branchesData.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+      }
+
+      if (trfFromSelect && trfToSelect) {
+        const fromOpts = branchesData.map(b => `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`).join('');
+        const toOpts = branchesData.map(b => `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`).join('');
+        trfFromSelect.innerHTML = fromOpts;
+        trfToSelect.innerHTML = toOpts;
+        if (branchesData.length > 1) {
+          trfToSelect.selectedIndex = 1;
+        }
+      }
+    }
+
+    function changeActiveBranch(branchVal) {
+      currentBranchId = (branchVal === 'ALL') ? 'ALL' : Number(branchVal);
+      const bName = currentBranchId === 'ALL' ? 'All Branches (সকল ব্রাঞ্চ)' : getBranchName(currentBranchId);
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: `Active Branch: ${bName}`,
+        showConfirmButton: false,
+        timer: 1500
+      });
+
+      renderDashboard();
+      renderPosProducts();
+      renderProductsTable();
+      renderTransfersTable();
+      updateTransferBadges();
+      if (document.getElementById('sec-inventory') && !document.getElementById('sec-inventory').classList.contains('hidden')) {
+        renderInventoryAuditTable();
+      }
+    }
 
     // --- Supabase Config & Initialization ---
     function loadStoredCredentialsAndSupabase() {
@@ -1835,19 +2304,15 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (!supabaseClient) return;
 
       try {
-        // Fetch products
         const { data: prods } = await supabaseClient.from('products').select('*');
         if (prods && prods.length > 0) productsData = prods;
 
-        // Fetch employees
         const { data: emps } = await supabaseClient.from('employees').select('*');
         if (emps && emps.length > 0) employeesData = emps;
 
-        // Fetch sales
         const { data: sls } = await supabaseClient.from('sales').select('*').order('id', { ascending: false });
         if (sls && sls.length > 0) salesData = sls;
 
-        // Fetch transactions
         const { data: txs } = await supabaseClient.from('transactions').select('*').order('id', { ascending: false });
         if (txs && txs.length > 0) accountsData = txs;
 
@@ -1857,8 +2322,10 @@ CREATE TABLE IF NOT EXISTS transactions (
         renderEmployeesTable();
         renderSalesTable();
         renderAccountsTable();
+        renderTransfersTable();
         populateCategoryFilters();
         populatePosSalesEmployees();
+        populateBranchDropdowns();
       } catch (err) {
         console.warn('Cloud sync note:', err.message);
       }
@@ -1896,57 +2363,94 @@ CREATE TABLE IF NOT EXISTS transactions (
     }
 
     // --- Authentication ---
-    function fillDemoCredentials(email, pass, role) {
-      document.getElementById('login-email').value = email;
+    function fillDemoCredentials(identifier, pass) {
+      document.getElementById('login-email').value = identifier;
       document.getElementById('login-password').value = pass;
     }
 
     function handleLoginSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('login-email').value.trim();
+      const identifier = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-password').value;
 
-      if (!email || !pass) {
-        Swal.fire('Error', 'Please enter email and password', 'warning');
+      if (!identifier || !pass) {
+        Swal.fire('Error', 'Please enter Email or Phone Number and Password', 'warning');
         return;
       }
 
       let role = 'Admin';
-      let name = 'Admin User';
+      let name = 'Super Administrator';
+      let email = identifier;
+      let branchId = 'ALL';
 
-      if (email.toLowerCase().includes('cashier')) {
+      // Find by Email or Phone in employeesData
+      const matchedEmp = employeesData.find(emp => 
+        (emp.email && emp.email.toLowerCase() === identifier.toLowerCase()) || 
+        (emp.phone && emp.phone.replace(/[^0-9]/g, '') === identifier.replace(/[^0-9]/g, '')) ||
+        (emp.employee_id && emp.employee_id.toLowerCase() === identifier.toLowerCase())
+      );
+
+      if (identifier.toLowerCase() === 'admin@system.com' || identifier.toLowerCase() === 'admin') {
+        role = 'Admin';
+        name = 'Super Administrator';
+        branchId = 'ALL';
+      } else if (matchedEmp) {
+        name = matchedEmp.name;
+        role = matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier');
+        email = matchedEmp.email || matchedEmp.phone;
+        branchId = matchedEmp.branch_id || 2;
+      } else if (identifier.toLowerCase().includes('cashier')) {
         role = 'Cashier';
         name = 'Sadia Akter (Cashier)';
-      } else if (email.toLowerCase().includes('acc')) {
+        branchId = 2;
+      } else if (identifier.toLowerCase().includes('acc')) {
         role = 'Accountant';
         name = 'Sanim Ahmed (Accounts)';
+        branchId = 'ALL';
       }
 
-      currentUser = { email, role, name };
+      currentUser = { email, role, name, branch_id: branchId };
+      currentBranchId = branchId;
       isDiscountApproved = (role === 'Admin');
 
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('main-app').classList.remove('hidden');
 
       document.getElementById('header-name').innerText = name;
-      document.getElementById('header-role').innerText = role;
+      document.getElementById('header-role').innerText = `${role} • ${currentBranchId === 'ALL' ? 'All Locations' : getBranchName(currentBranchId)}`;
       document.getElementById('header-avatar').innerText = name.charAt(0);
       if (document.getElementById('sidebar-user-name')) document.getElementById('sidebar-user-name').innerText = name;
       if (document.getElementById('sidebar-user-avatar')) document.getElementById('sidebar-user-avatar').innerText = name.charAt(0);
       if (document.getElementById('current-user-email-badge')) document.getElementById('current-user-email-badge').innerText = email;
       document.getElementById('current-user-role-label').innerText = `${role} Role`;
 
+      // Branch Switcher Permissions
+      const headerSelect = document.getElementById('header-branch-select');
+      if (headerSelect) {
+        headerSelect.value = String(currentBranchId);
+        if (role !== 'Admin') {
+          headerSelect.disabled = true;
+          headerSelect.classList.add('cursor-not-allowed', 'opacity-80');
+        } else {
+          headerSelect.disabled = false;
+          headerSelect.classList.remove('cursor-not-allowed', 'opacity-80');
+        }
+      }
+
       Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'success',
-        title: `Welcome back, ${name}!`,
+        title: `Welcome back, ${name}! (${currentBranchId === 'ALL' ? 'Enterprise All Locations' : getBranchName(currentBranchId)})`,
         showConfirmButton: false,
-        timer: 2000
+        timer: 2500
       });
 
+      populateBranchDropdowns();
       renderDashboard();
       populatePosSalesEmployees();
+      renderTransfersTable();
+      updateTransferBadges();
       switchNav('dashboard');
     }
 
@@ -1979,7 +2483,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
     // --- Navigation Switching ---
     function switchNav(tabId) {
-      const sections = ['dashboard', 'pos', 'products', 'sales', 'employees', 'accounts', 'reports', 'inventory'];
+      const sections = ['dashboard', 'pos', 'products', 'sales', 'employees', 'accounts', 'reports', 'inventory', 'transfers'];
       sections.forEach(s => {
         const el = document.getElementById(`sec-${s}`);
         const navBtn = document.getElementById(`nav-${s}`);
@@ -2006,7 +2510,8 @@ CREATE TABLE IF NOT EXISTS transactions (
         employees: { t: 'Employee & Staff Directory', sub: 'Department roles, contact directory and monthly salary' },
         accounts: { t: 'Accounts (আয় ও ব্যয়)', sub: 'Income & expense ledger, cashbook and net balance' },
         reports: { t: 'Reports & Export', sub: 'Download itemized statements in Excel (.xlsx)' },
-        inventory: { t: 'Inventory Stock & Physical Audit (ইনভেন্টরি অডিট)', sub: 'বারকোড স্ক্যানার দিয়ে বাস্তব স্টক গণনা করুন এবং সিস্টেম ঘাটতি (Shortage) মিলিয়ে নিন' }
+        inventory: { t: 'Inventory Stock & Physical Audit (ইনভেন্টরি অডিট)', sub: 'বারকোড স্ক্যানার দিয়ে বাস্তব স্টক গণনা করুন এবং সিস্টেম ঘাটতি (Shortage) মিলিয়ে নিন' },
+        transfers: { t: 'Stock Transfers & Receiving (পণ্য স্থানান্তর ও গ্রহণ)', sub: 'ওয়্যারহাউজ ও শাখাগুলোর মধ্যে স্টক ট্রান্সফার, চালান প্রিন্ট এবং রিসিভ করুন' }
       };
 
       if (titles[tabId]) {
@@ -2024,6 +2529,10 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (tabId === 'employees') renderEmployeesTable();
       if (tabId === 'accounts') renderAccountsTable();
       if (tabId === 'inventory') renderInventorySection();
+      if (tabId === 'transfers') {
+        renderTransfersTable();
+        updateTransferBadges();
+      }
     }
 
     // --- Dashboard Rendering ---
@@ -2148,16 +2657,18 @@ CREATE TABLE IF NOT EXISTS transactions (
       });
 
       container.innerHTML = filtered.map(p => {
-        const isOutOfStock = p.stock <= 0;
-        const isLow = p.stock > 0 && p.stock <= 5;
+        const branchStock = getProductBranchStock(p, currentBranchId);
+        const isOutOfStock = branchStock <= 0;
+        const isLow = branchStock > 0 && branchStock <= 5;
+        const branchBadgeLabel = currentBranchId === 'ALL' ? `Total Stock: ${branchStock}` : `Stock: ${branchStock}`;
 
         return `
-          <div onclick="${isOutOfStock ? '' : `addToPosCart(${p.id})`}" class="${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-400 hover:shadow-md'} bg-white p-3 rounded-2xl border border-slate-200/80 transition space-y-2 flex flex-col justify-between">
+          <div onclick="${isOutOfStock ? `openGlobalStockModal('${p.product_code}')` : `addToPosCart(${p.id})`}" class="${isOutOfStock ? 'opacity-65 hover:border-amber-400' : 'cursor-pointer hover:border-indigo-400 hover:shadow-md'} bg-white p-3 rounded-2xl border border-slate-200/80 transition space-y-2 flex flex-col justify-between">
             <div>
               <div class="relative">
                 <img src="${p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150'}" class="w-full h-24 object-cover rounded-xl border border-slate-100" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.product_name)}&background=6366f1&color=fff'">
                 <span class="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isOutOfStock ? 'bg-rose-600 text-white' : isLow ? 'bg-amber-500 text-white' : 'bg-slate-900/80 text-white'}">
-                  ${isOutOfStock ? 'Out of Stock' : `Stock: ${p.stock}`}
+                  ${isOutOfStock ? 'Out of Stock' : branchBadgeLabel}
                 </span>
               </div>
               <h4 class="font-bold text-slate-800 text-xs mt-2 line-clamp-1">${p.product_name}</h4>
@@ -2165,9 +2676,15 @@ CREATE TABLE IF NOT EXISTS transactions (
             </div>
             <div class="flex justify-between items-center pt-2 border-t border-slate-100">
               <span class="text-sm font-black text-indigo-600">৳ ${p.sale_price}</span>
-              <button type="button" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg flex items-center justify-center transition">
-                <i class="fa-solid fa-plus text-xs"></i>
-              </button>
+              ${isOutOfStock ? `
+                <button type="button" title="Check other branches" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-[10px] font-bold transition flex items-center space-x-1">
+                  <i class="fa-solid fa-magnifying-glass-location"></i><span>Find</span>
+                </button>
+              ` : `
+                <button type="button" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg flex items-center justify-center transition">
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+              `}
             </div>
           </div>
         `;
@@ -2178,10 +2695,21 @@ CREATE TABLE IF NOT EXISTS transactions (
       const product = productsData.find(p => p.id === productId);
       if (!product) return;
 
+      const branchStock = getProductBranchStock(product, currentBranchId);
+      if (branchStock <= 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Out of Stock in this Branch',
+          html: `<p class="text-xs">এই ব্রাঞ্চে <b>${product.product_name}</b> এর কোনো স্টক নেই!</p><button onclick="Swal.close(); openGlobalStockModal('${product.product_code}')" class="mt-3 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-xl font-bold">🔍 অন্যান্য ব্রাঞ্চে স্টক দেখুন</button>`,
+          showConfirmButton: false
+        });
+        return;
+      }
+
       const existing = posCart.find(item => item.product_id === productId);
       if (existing) {
-        if (existing.qty >= product.stock) {
-          Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `Max stock reached (${product.stock})`, showConfirmButton: false, timer: 1500 });
+        if (existing.qty >= branchStock) {
+          Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `Max branch stock reached (${branchStock})`, showConfirmButton: false, timer: 1500 });
           return;
         }
         existing.qty++;
@@ -2205,9 +2733,10 @@ CREATE TABLE IF NOT EXISTS transactions (
       const product = productsData.find(p => p.id === productId);
       if (!item) return;
 
+      const branchStock = getProductBranchStock(product, currentBranchId);
       item.qty += change;
-      if (product && item.qty > product.stock) {
-        item.qty = product.stock;
+      if (product && item.qty > branchStock) {
+        item.qty = branchStock;
       }
 
       if (item.qty <= 0) {
@@ -2496,6 +3025,9 @@ CREATE TABLE IF NOT EXISTS transactions (
       const custPhone = document.getElementById('pos-customer-phone')?.value.trim() || 'N/A';
       const invoiceNo = `INV-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${String(salesData.length + 1).padStart(3, '0')}`;
 
+      const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
+      const effectiveBranchName = getBranchName(effectiveBranchId);
+
       const saleRecord = {
         id: Date.now(),
         invoice_no: invoiceNo,
@@ -2511,16 +3043,19 @@ CREATE TABLE IF NOT EXISTS transactions (
         payment_method: formattedPaymentMethod,
         sale_date: new Date().toISOString(),
         items: [...posCart],
+        branch_id: effectiveBranchId,
+        branch_name: effectiveBranchName,
         cashier_name: currentUser ? currentUser.name : 'Admin'
       };
 
-      // Realtime Inventory stock deduction
+      // Realtime Branch stock & global stock deduction
       posCart.forEach(cartItem => {
         const prod = productsData.find(p => p.id === cartItem.product_id);
         if (prod) {
-          prod.stock = Math.max(0, prod.stock - cartItem.qty);
+          const currentBStock = getProductBranchStock(prod, effectiveBranchId);
+          setProductBranchStock(prod, effectiveBranchId, Math.max(0, currentBStock - cartItem.qty));
           if (supabaseClient) {
-            supabaseClient.from('products').update({ stock: prod.stock }).eq('id', prod.id).then();
+            supabaseClient.from('products').update({ stock: prod.stock, branch_stocks: prod.branch_stocks }).eq('id', prod.id).then();
           }
         }
       });
@@ -2629,8 +3164,9 @@ CREATE TABLE IF NOT EXISTS transactions (
       });
 
       tbody.innerHTML = filtered.map(p => {
-        const isOutOfStock = p.stock <= 0;
-        const isLow = p.stock > 0 && p.stock <= 5;
+        const branchStock = getProductBranchStock(p, currentBranchId);
+        const isOutOfStock = branchStock <= 0;
+        const isLow = branchStock > 0 && branchStock <= 5;
         const statusBadge = isOutOfStock
           ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Out of Stock</span>'
           : isLow
@@ -2641,17 +3177,25 @@ CREATE TABLE IF NOT EXISTS transactions (
           <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
             <td class="px-6 py-3.5 flex items-center space-x-3">
               <img src="${p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150'}" class="w-9 h-9 rounded-xl object-cover border border-slate-200" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.product_name)}&background=6366f1&color=fff'">
-              <div class="font-bold text-slate-800">${p.product_name}</div>
+              <div>
+                <div class="font-bold text-slate-800">${p.product_name}</div>
+                <div class="text-[10px] text-slate-400">Total System: <b>${p.stock} pcs</b> across enterprise</div>
+              </div>
             </td>
-            <td class="px-6 py-3.5 font-bold text-indigo-600">${p.product_code}</td>
+            <td class="px-6 py-3.5 font-bold text-indigo-600 font-mono">${p.product_code}</td>
             <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded-md bg-slate-100 font-semibold">${p.category}</span></td>
             <td class="px-6 py-3.5 font-semibold text-slate-600">৳ ${p.purchase_price}</td>
             <td class="px-6 py-3.5 font-black text-emerald-600">৳ ${p.sale_price}</td>
-            <td class="px-6 py-3.5 font-bold text-slate-800">${p.stock} units</td>
+            <td class="px-6 py-3.5">
+              <div class="font-black text-slate-800">${branchStock} units</div>
+              <div class="text-[10px] text-indigo-600 font-bold">${currentBranchId === 'ALL' ? 'All Locations' : getBranchName(currentBranchId)}</div>
+            </td>
             <td class="px-6 py-3.5">${statusBadge}</td>
             <td class="px-6 py-3.5 text-right space-x-1">
+              <button onclick="openGlobalStockModal('${p.product_code}')" title="Check All Branch Stocks (সকল ব্রাঞ্চে স্টক দেখুন)" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs transition"><i class="fa-solid fa-magnifying-glass-location"></i></button>
+              <button onclick="openCreateTransferModal(1, ${p.id})" title="Transfer Product (পণ্য স্থানান্তর)" class="p-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs transition"><i class="fa-solid fa-truck-ramp-box"></i></button>
               <button onclick="openSingleBarcodeModal(${p.id})" title="Print Barcode (বারকোড প্রিন্ট)" class="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs transition"><i class="fa-solid fa-barcode"></i></button>
-              <button onclick="openEditProductModal(${p.id})" title="Edit Product" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="openEditProductModal(${p.id})" title="Edit Product" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
               <button onclick="deleteProduct(${p.id})" title="Delete Product" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           </tr>
@@ -2900,8 +3444,14 @@ CREATE TABLE IF NOT EXISTS transactions (
             </div>
           </td>
           <td class="px-6 py-3.5 font-bold text-pink-600">${e.employee_id}</td>
-          <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold text-[11px]">${e.department}</span></td>
-          <td class="px-6 py-3.5 font-semibold text-slate-700">${e.designation}</td>
+          <td class="px-6 py-3.5">
+            <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[11px] flex items-center space-x-1 w-fit">
+              <i class="fa-solid fa-store text-[9px]"></i><span>${getBranchName(e.branch_id || 1)}</span>
+            </span>
+          </td>
+          <td class="px-6 py-3.5">
+            <span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold text-[11px]">${e.role || 'Cashier'}</span>
+          </td>
           <td class="px-6 py-3.5">
             <div class="font-medium text-slate-800">${e.phone || '-'}</div>
             <div class="text-[10px] text-slate-400">${e.email || '-'}</div>
@@ -2924,6 +3474,9 @@ CREATE TABLE IF NOT EXISTS transactions (
     function openAddEmployeeModal() {
       document.getElementById('form-employee').reset();
       document.getElementById('emp-form-id').value = '';
+      if (document.getElementById('emp-form-branch')) document.getElementById('emp-form-branch').value = '1';
+      if (document.getElementById('emp-form-role')) document.getElementById('emp-form-role').value = 'Cashier';
+      if (document.getElementById('emp-form-password')) document.getElementById('emp-form-password').value = '123456';
       document.getElementById('modal-employee-title').innerText = 'Add New Employee (কর্মী যোগ করুন)';
       document.getElementById('emp-image-preview').src = 'https://ui-avatars.com/api/?name=Staff&background=ec4899&color=fff';
       openModal('modal-employee');
@@ -2938,6 +3491,9 @@ CREATE TABLE IF NOT EXISTS transactions (
       document.getElementById('emp-form-code').value = emp.employee_id;
       document.getElementById('emp-form-email').value = emp.email || '';
       document.getElementById('emp-form-phone').value = emp.phone || '';
+      if (document.getElementById('emp-form-branch')) document.getElementById('emp-form-branch').value = emp.branch_id || 1;
+      if (document.getElementById('emp-form-role')) document.getElementById('emp-form-role').value = emp.role || 'Cashier';
+      if (document.getElementById('emp-form-password')) document.getElementById('emp-form-password').value = emp.password || '123456';
       document.getElementById('emp-form-dept').value = emp.department || '';
       document.getElementById('emp-form-desig').value = emp.designation || '';
       document.getElementById('emp-form-salary').value = emp.salary || 0;
@@ -2956,18 +3512,24 @@ CREATE TABLE IF NOT EXISTS transactions (
       const code = document.getElementById('emp-form-code').value.trim();
       const email = document.getElementById('emp-form-email').value.trim();
       const phone = document.getElementById('emp-form-phone').value.trim();
-      const dept = document.getElementById('emp-form-dept').value.trim();
-      const desig = document.getElementById('emp-form-desig').value.trim();
-      const salary = Number(document.getElementById('emp-form-salary').value) || 0;
-      const date = document.getElementById('emp-form-date').value;
-      const status = document.getElementById('emp-form-status').value;
-      const photo = document.getElementById('emp-image-preview').src;
+      const branchId = Number(document.getElementById('emp-form-branch')?.value) || 1;
+      const role = document.getElementById('emp-form-role')?.value || 'Cashier';
+      const password = document.getElementById('emp-form-password')?.value || '123456';
+      const dept = document.getElementById('emp-form-dept')?.value.trim() || 'General';
+      const desig = document.getElementById('emp-form-desig')?.value.trim() || 'Staff';
+      const salary = Number(document.getElementById('emp-form-salary')?.value) || 0;
+      const date = document.getElementById('emp-form-date')?.value || '';
+      const status = document.getElementById('emp-form-status')?.value || 'Active';
+      const photo = document.getElementById('emp-image-preview')?.src;
 
       const employeePayload = {
         employee_id: code,
         name: name,
         email: email,
         phone: phone,
+        branch_id: branchId,
+        role: role,
+        password: password,
         department: dept,
         designation: desig,
         salary: salary,
@@ -2995,7 +3557,7 @@ CREATE TABLE IF NOT EXISTS transactions (
       populatePosSalesEmployees();
       renderEmployeesTable();
       renderDashboard();
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Employee saved successfully!', showConfirmButton: false, timer: 1500 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Employee profile saved successfully!', showConfirmButton: false, timer: 1500 });
     }
 
     async function deleteEmployee(id) {
@@ -3567,6 +4129,529 @@ CREATE TABLE IF NOT EXISTS transactions (
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Stock_Audit');
       XLSX.writeFile(wb, `ApexPOS_Stock_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    // --- Global Multi-Branch Stock Lookup & Barcode Search ---
+    function openGlobalStockModal(prefillQuery = '') {
+      const input = document.getElementById('global-stock-search-input');
+      if (input) {
+        input.value = prefillQuery;
+      }
+      handleGlobalStockSearch();
+      openModal('modal-global-stock');
+      setTimeout(() => {
+        if (input) input.focus();
+      }, 200);
+    }
+
+    function handleGlobalStockSearch() {
+      const container = document.getElementById('global-stock-results-container');
+      const countBadge = document.getElementById('global-stock-count-badge');
+      if (!container) return;
+
+      const q = (document.getElementById('global-stock-search-input')?.value || '').toLowerCase().trim();
+
+      const matched = productsData.filter(p => {
+        if (!q) return true;
+        return p.product_code.toLowerCase().includes(q) || 
+               p.product_name.toLowerCase().includes(q) || 
+               p.category.toLowerCase().includes(q) || 
+               String(p.id) === q;
+      });
+
+      if (countBadge) countBadge.innerText = `${matched.length} Item${matched.length !== 1 ? 's' : ''} Found`;
+
+      if (matched.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-slate-400 space-y-2">
+            <i class="fa-solid fa-magnifying-glass text-4xl text-slate-300"></i>
+            <p class="font-bold text-slate-700">কোনো পণ্যের সন্ধান মেলেনি</p>
+            <p class="text-xs">বারকোড স্ক্যান করুন বা পণ্যের নাম/SKU কোড লিখে সার্চ করুন</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = matched.map(p => {
+        const totalStock = p.stock || 0;
+        
+        let branchCardsHtml = branchesData.map(b => {
+          const qty = getProductBranchStock(p, b.id);
+          const isAvailable = qty > 0;
+          const isCurrentBranch = (currentBranchId !== 'ALL' && currentBranchId == b.id);
+
+          return `
+            <div class="p-3 rounded-xl border ${isCurrentBranch ? 'border-indigo-400 bg-indigo-50/40 ring-2 ring-indigo-200' : isAvailable ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'} flex flex-col justify-between space-y-2 transition hover:shadow-xs">
+              <div>
+                <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+                  <span class="flex items-center space-x-1">
+                    <span>${b.type === 'Warehouse' ? '🏭' : '🏬'}</span>
+                    <span class="truncate max-w-[120px]">${b.name.split('(')[0].trim()}</span>
+                  </span>
+                  ${isCurrentBranch ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-600 text-white font-bold">Current</span>' : ''}
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">${b.phone}</div>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t ${isCurrentBranch ? 'border-indigo-100' : 'border-slate-100'}">
+                <span class="text-xs font-bold text-slate-500">Available:</span>
+                <span class="text-sm font-black ${qty > 0 ? 'text-emerald-700' : 'text-rose-600'}">${qty} pcs</span>
+              </div>
+              ${qty > 0 ? `
+                <button onclick="closeModal('modal-global-stock'); openCreateTransferModal(${b.id}, ${p.id})" class="w-full py-1 text-[11px] font-bold bg-white hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-200 rounded-lg shadow-2xs transition flex items-center justify-center space-x-1">
+                  <i class="fa-solid fa-truck-ramp-box text-[10px] text-indigo-600"></i><span>Request Transfer</span>
+                </button>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="p-4 rounded-2xl bg-white border border-slate-200 hover:border-indigo-200 transition space-y-3 shadow-2xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div class="flex items-center space-x-3">
+                <img src="${p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120'}" class="w-12 h-12 rounded-xl object-cover border border-slate-200" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.product_name)}&background=6366f1&color=fff'">
+                <div>
+                  <h4 class="font-bold text-slate-900 text-sm">${p.product_name}</h4>
+                  <div class="flex items-center space-x-2 text-xs mt-0.5">
+                    <span class="font-mono font-bold text-indigo-600">${p.product_code}</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-slate-500">${p.category}</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="font-black text-emerald-600">৳ ${p.sale_price}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <div class="text-right">
+                  <div class="text-[10px] uppercase font-bold text-slate-400">Total Enterprise Stock</div>
+                  <div class="text-base font-black ${totalStock > 0 ? 'text-indigo-900' : 'text-rose-600'}">${totalStock} Units</div>
+                </div>
+              </div>
+            </div>
+            <!-- Branch Wise Stock Breakdown Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              ${branchCardsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- Stock Transfers & Receiving Management ---
+    function updateTransferBadges() {
+      const incomingBadge = document.getElementById('sidebar-incoming-transfer-badge');
+      const kpiIncoming = document.getElementById('trf-kpi-incoming');
+      const kpiInTransit = document.getElementById('trf-kpi-intransit');
+      const kpiReceived = document.getElementById('trf-kpi-received');
+      const kpiBranches = document.getElementById('trf-kpi-branches');
+
+      let incomingCount = 0;
+      let inTransitTotal = 0;
+      let receivedTotal = 0;
+
+      transfersData.forEach(t => {
+        if (t.status === 'In-Transit') {
+          inTransitTotal++;
+          if (currentBranchId === 'ALL' || t.to_branch_id == currentBranchId) {
+            incomingCount++;
+          }
+        } else if (t.status === 'Received') {
+          receivedTotal++;
+        }
+      });
+
+      if (incomingBadge) {
+        if (incomingCount > 0) {
+          incomingBadge.classList.remove('hidden');
+          incomingBadge.innerText = incomingCount;
+        } else {
+          incomingBadge.classList.add('hidden');
+        }
+      }
+
+      if (kpiIncoming) kpiIncoming.innerText = incomingCount;
+      if (kpiInTransit) kpiInTransit.innerText = inTransitTotal;
+      if (kpiReceived) kpiReceived.innerText = receivedTotal;
+      if (kpiBranches) kpiBranches.innerText = branchesData.length;
+    }
+
+    function setTransferFilter(filter) {
+      currentTransferFilter = filter;
+      const filters = ['ALL', 'INCOMING', 'DISPATCHED', 'RECEIVED'];
+      filters.forEach(f => {
+        const btn = document.getElementById(`trf-tab-${f.toLowerCase()}`);
+        if (btn) {
+          if (f === filter) {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition';
+          }
+        }
+      });
+      renderTransfersTable();
+    }
+
+    function renderTransfersTable() {
+      const tbody = document.getElementById('transfers-table-body');
+      if (!tbody) return;
+
+      const search = (document.getElementById('trf-search-input')?.value || '').toLowerCase().trim();
+
+      const filtered = transfersData.filter(t => {
+        const fromName = getBranchName(t.from_branch_id).toLowerCase();
+        const toName = getBranchName(t.to_branch_id).toLowerCase();
+        const matchSearch = t.transfer_no.toLowerCase().includes(search) || fromName.includes(search) || toName.includes(search) || (t.dispatched_by && t.dispatched_by.toLowerCase().includes(search));
+        
+        let matchFilter = true;
+        if (currentTransferFilter === 'INCOMING') {
+          matchFilter = (currentBranchId === 'ALL' || t.to_branch_id == currentBranchId) && t.status === 'In-Transit';
+        } else if (currentTransferFilter === 'DISPATCHED') {
+          matchFilter = (currentBranchId === 'ALL' || t.from_branch_id == currentBranchId);
+        } else if (currentTransferFilter === 'RECEIVED') {
+          matchFilter = (t.status === 'Received');
+        }
+
+        return matchSearch && matchFilter;
+      });
+
+      tbody.innerHTML = filtered.map(t => {
+        const fromName = getBranchName(t.from_branch_id);
+        const toName = getBranchName(t.to_branch_id);
+        const isIncomingToMe = (currentBranchId === 'ALL' || t.to_branch_id == currentBranchId);
+        const canReceive = (t.status === 'In-Transit') && isIncomingToMe;
+        const totalItemsCount = t.items.reduce((sum, i) => sum + (Number(i.qty) || 0), 0);
+        const itemsSummary = t.items.map(i => `${i.qty}x ${i.product_name}`).join(', ');
+
+        const statusBadge = t.status === 'In-Transit'
+          ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 animate-pulse flex items-center space-x-1 w-fit"><i class="fa-solid fa-truck-fast text-[9px]"></i><span>In-Transit (পথে আছে)</span></span>'
+          : t.status === 'Received'
+          ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 flex items-center space-x-1 w-fit"><i class="fa-solid fa-circle-check text-[9px]"></i><span>Received (গৃহীত)</span></span>'
+          : '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-300">Cancelled</span>';
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+            <td class="px-6 py-4 font-mono font-bold text-indigo-700 text-xs">${t.transfer_no}</td>
+            <td class="px-6 py-4">
+              <div class="font-bold text-slate-800 text-xs">${fromName}</div>
+              <div class="text-[10px] text-slate-400">Sender: ${t.dispatched_by || 'Warehouse Staff'}</div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="font-bold text-slate-800 text-xs flex items-center space-x-1">
+                <i class="fa-solid fa-arrow-right text-slate-400 text-[10px]"></i>
+                <span>${toName}</span>
+              </div>
+              <div class="text-[10px] text-slate-400">${t.received_by ? `Received by: ${t.received_by}` : 'Pending Confirmation'}</div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="font-black text-slate-800 text-xs">${totalItemsCount} units total</div>
+              <div class="text-[10px] text-slate-500 max-w-[200px] truncate" title="${itemsSummary}">${itemsSummary}</div>
+            </td>
+            <td class="px-6 py-4 text-[11px] text-slate-500">
+              ${new Date(t.date_dispatched).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}
+            </td>
+            <td class="px-6 py-4">${statusBadge}</td>
+            <td class="px-6 py-4 text-right space-x-1.5">
+              ${canReceive ? `
+                <button onclick="confirmReceiveTransfer(${t.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1 inline-flex">
+                  <i class="fa-solid fa-circle-check text-[11px]"></i><span>Confirm & Receive</span>
+                </button>
+              ` : ''}
+              <button onclick="openTransferReceiptModal(${t.id})" title="Print Challan / Gate Pass" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1">
+                <i class="fa-solid fa-file-invoice"></i><span class="hidden sm:inline text-[10px]">Challan</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="7" class="text-center py-10 text-slate-400">কোনো ট্রান্সফার রেকর্ড পাওয়া যায়নি</td></tr>';
+    }
+
+    function openCreateTransferModal(prefillFromId = null, prefillProdId = null) {
+      populateBranchDropdowns();
+      const fromSelect = document.getElementById('trf-form-from-branch');
+      const toSelect = document.getElementById('trf-form-to-branch');
+
+      if (fromSelect && prefillFromId) {
+        fromSelect.value = String(prefillFromId);
+      } else if (fromSelect) {
+        fromSelect.value = currentBranchId === 'ALL' ? '1' : String(currentBranchId);
+      }
+
+      if (toSelect) {
+        const currFrom = Number(fromSelect.value);
+        const different = branchesData.find(b => b.id !== currFrom);
+        if (different) toSelect.value = String(different.id);
+      }
+
+      transferCart = [];
+      onTransferSourceBranchChange();
+
+      if (prefillProdId) {
+        const p = productsData.find(prod => prod.id === prefillProdId);
+        if (p) {
+          const select = document.getElementById('trf-form-product-select');
+          if (select) select.value = String(p.id);
+          const maxStock = getProductBranchStock(p, Number(fromSelect.value));
+          if (maxStock > 0) {
+            transferCart.push({
+              product_id: p.id,
+              product_name: p.product_name,
+              product_code: p.product_code,
+              qty: Math.min(5, maxStock)
+            });
+          }
+        }
+      }
+
+      renderTransferCartTable();
+      openModal('modal-transfer-create');
+    }
+
+    function onTransferSourceBranchChange() {
+      const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
+      const select = document.getElementById('trf-form-product-select');
+      const stockBadge = document.getElementById('trf-selected-product-stock');
+      if (!select) return;
+
+      select.innerHTML = productsData.map(p => {
+        const bStock = getProductBranchStock(p, fromBranchId);
+        return `<option value="${p.id}">${p.product_name} [${p.product_code}] — (Available: ${bStock} pcs)</option>`;
+      }).join('') || '<option value="">No products in database</option>';
+
+      if (stockBadge && productsData.length > 0) {
+        const firstProd = productsData[0];
+        const stock = getProductBranchStock(firstProd, fromBranchId);
+        stockBadge.innerText = `Available in Source: ${stock} pcs`;
+      }
+    }
+
+    function addItemToTransferCart() {
+      const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
+      const prodId = Number(document.getElementById('trf-form-product-select')?.value);
+      const qty = Number(document.getElementById('trf-form-qty')?.value) || 1;
+
+      const prod = productsData.find(p => p.id === prodId);
+      if (!prod) return;
+
+      const availableStock = getProductBranchStock(prod, fromBranchId);
+      if (qty > availableStock) {
+        Swal.fire('Stock Limit Exceeded', `নির্বাচিত ব্রাঞ্চে মাত্র ${availableStock} টি পণ্য মজুত আছে!`, 'warning');
+        return;
+      }
+
+      const existing = transferCart.find(i => i.product_id === prodId);
+      if (existing) {
+        if (existing.qty + qty > availableStock) {
+          Swal.fire('Stock Limit Exceeded', `সর্বোচ্চ প্রাপ্তব্য স্টক: ${availableStock} টি`, 'warning');
+          return;
+        }
+        existing.qty += qty;
+      } else {
+        transferCart.push({
+          product_id: prod.id,
+          product_name: prod.product_name,
+          product_code: prod.product_code,
+          qty: qty
+        });
+      }
+
+      renderTransferCartTable();
+      document.getElementById('trf-form-qty').value = '1';
+    }
+
+    function removeTransferCartItem(idx) {
+      transferCart.splice(idx, 1);
+      renderTransferCartTable();
+    }
+
+    function renderTransferCartTable() {
+      const tbody = document.getElementById('trf-cart-table-body');
+      const countLabel = document.getElementById('trf-cart-total-units');
+      if (!tbody) return;
+
+      const totalUnits = transferCart.reduce((sum, i) => sum + i.qty, 0);
+      if (countLabel) countLabel.innerText = `${totalUnits} Units`;
+
+      if (transferCart.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">কোনো পণ্য যোগ করা হয়নি</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = transferCart.map((item, idx) => `
+        <tr class="border-b border-slate-100">
+          <td class="px-4 py-2.5 font-bold text-slate-800">${item.product_name}</td>
+          <td class="px-4 py-2.5 font-mono text-indigo-600 font-bold">${item.product_code}</td>
+          <td class="px-4 py-2.5 text-center font-black text-slate-900">${item.qty} pcs</td>
+          <td class="px-4 py-2.5 text-right">
+            <button onclick="removeTransferCartItem(${idx})" class="p-1 text-rose-600 hover:bg-rose-50 rounded"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function handleDispatchTransferSubmit(e) {
+      e.preventDefault();
+      const fromBranch = Number(document.getElementById('trf-form-from-branch')?.value);
+      const toBranch = Number(document.getElementById('trf-form-to-branch')?.value);
+      const note = document.getElementById('trf-form-note')?.value.trim() || 'Inter-branch stock requisition';
+
+      if (fromBranch === toBranch) {
+        Swal.fire('Invalid Transfer', 'উৎস (Source) এবং গন্তব্য (Destination) ব্রাঞ্চ একই হতে পারবে না!', 'error');
+        return;
+      }
+
+      if (transferCart.length === 0) {
+        Swal.fire('Empty Transfer', 'অনুগ্রহ করে স্থানান্তরের জন্য পণ্য নির্বাচন করে (+) যোগ করুন।', 'warning');
+        return;
+      }
+
+      const transferNo = `TRF-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${String(transfersData.length + 1).padStart(3, '0')}`;
+
+      const newTransfer = {
+        id: Date.now(),
+        transfer_no: transferNo,
+        from_branch_id: fromBranch,
+        to_branch_id: toBranch,
+        status: 'In-Transit',
+        items: [...transferCart],
+        dispatched_by: currentUser ? `${currentUser.name} (${getBranchName(fromBranch).split('(')[0].trim()})` : 'Enterprise Dispatcher',
+        received_by: '',
+        date_dispatched: new Date().toISOString(),
+        date_received: '',
+        note: note
+      };
+
+      transfersData.unshift(newTransfer);
+
+      closeModal('modal-transfer-create');
+      renderTransfersTable();
+      updateTransferBadges();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Shipment Dispatched! (চালান প্রস্তুত)',
+        html: `<p class="text-xs">চালান নম্বর <b>${transferNo}</b> সফলভাবে <b>${getBranchName(toBranch)}</b> এর উদ্দেশ্যে পাঠানো হয়েছে।</p>`,
+        confirmButtonText: 'Print Challan / Gate Pass',
+        showCancelButton: true,
+        cancelButtonText: 'Close'
+      }).then(res => {
+        if (res.isConfirmed) {
+          openTransferReceiptModal(newTransfer.id);
+        }
+      });
+    }
+
+    async function confirmReceiveTransfer(transferId) {
+      const trf = transfersData.find(t => t.id === transferId);
+      if (!trf) return;
+
+      const fromName = getBranchName(trf.from_branch_id);
+      const toName = getBranchName(trf.to_branch_id);
+      const totalUnits = trf.items.reduce((sum, i) => sum + i.qty, 0);
+
+      const res = await Swal.fire({
+        title: 'Confirm Stock Receipt (পণ্য গ্রহণ নিশ্চিত করুন)',
+        html: `
+          <div class="text-left text-xs space-y-2 p-3 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-950">
+            <p>চালান নং: <b class="font-mono">${trf.transfer_no}</b></p>
+            <p>উৎস: <b>${fromName}</b> ➔ গন্তব্য: <b>${toName}</b></p>
+            <p>মোট গ্রহণকৃত পণ্য: <b class="text-emerald-700 font-bold">${totalUnits} units (${trf.items.length} SKUs)</b></p>
+            <p class="text-[11px] text-slate-500 pt-1 border-t border-indigo-100">যাচাই শেষে "Confirm" চাপলে স্বয়ংক্রিয়ভাবে আপনার ব্রাঞ্চের স্টকে পণ্যগুলো জমা হয়ে যাবে।</p>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Yes, Confirm & Add to Stock',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (res.isConfirmed) {
+        trf.items.forEach(item => {
+          const prod = productsData.find(p => p.id === item.product_id);
+          if (prod) {
+            const srcStock = getProductBranchStock(prod, trf.from_branch_id);
+            setProductBranchStock(prod, trf.from_branch_id, Math.max(0, srcStock - item.qty));
+
+            const destStock = getProductBranchStock(prod, trf.to_branch_id);
+            setProductBranchStock(prod, trf.to_branch_id, destStock + item.qty);
+
+            if (supabaseClient) {
+              supabaseClient.from('products').update({ stock: prod.stock, branch_stocks: prod.branch_stocks }).eq('id', prod.id).then();
+            }
+          }
+        });
+
+        trf.status = 'Received';
+        trf.received_by = currentUser ? `${currentUser.name} (${toName.split('(')[0].trim()})` : 'Branch Staff';
+        trf.date_received = new Date().toISOString();
+
+        renderTransfersTable();
+        updateTransferBadges();
+        renderProductsTable();
+        renderPosProducts();
+        renderDashboard();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Stock Received & Reconciled!',
+          html: `<p class="text-xs">চালান <b>${trf.transfer_no}</b> এর সকল পণ্য সফলভাবে <b>${toName}</b> স্টকে যোগ করা হয়েছে।</p>`,
+          confirmButtonText: 'View Challan',
+          showCancelButton: true,
+          cancelButtonText: 'Done'
+        }).then(r => {
+          if (r.isConfirmed) openTransferReceiptModal(trf.id);
+        });
+      }
+    }
+
+    function openTransferReceiptModal(transferId) {
+      const trf = transfersData.find(t => t.id === transferId);
+      if (!trf) return;
+
+      const fromName = getBranchName(trf.from_branch_id);
+      const toName = getBranchName(trf.to_branch_id);
+
+      document.getElementById('rcpt-trf-no').innerText = trf.transfer_no;
+      document.getElementById('rcpt-trf-date').innerText = new Date(trf.date_dispatched).toLocaleString();
+      document.getElementById('rcpt-trf-from').innerText = fromName;
+      document.getElementById('rcpt-trf-to').innerText = toName;
+      document.getElementById('rcpt-trf-dispatcher').innerText = trf.dispatched_by || '-';
+      document.getElementById('rcpt-trf-receiver').innerText = trf.received_by || 'Pending';
+      document.getElementById('rcpt-trf-status').innerText = trf.status;
+      document.getElementById('rcpt-trf-status').className = `px-2 py-0.5 rounded text-[10px] font-black uppercase ${trf.status === 'Received' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`;
+
+      const totalQty = trf.items.reduce((sum, i) => sum + i.qty, 0);
+      document.getElementById('rcpt-trf-total-qty').innerText = `${totalQty} Units`;
+
+      const tbody = document.getElementById('rcpt-trf-items-tbody');
+      if (tbody) {
+        tbody.innerHTML = trf.items.map((item, i) => `
+          <tr class="border-b border-slate-200">
+            <td class="py-1.5 font-bold">${i + 1}</td>
+            <td class="py-1.5">
+              <div class="font-bold text-slate-800">${item.product_name}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${item.product_code}</div>
+            </td>
+            <td class="py-1.5 text-center font-bold">${item.qty} pcs</td>
+            <td class="py-1.5 text-right text-[10px] text-slate-400">Verified</td>
+          </tr>
+        `).join('');
+      }
+
+      openModal('modal-transfer-receipt');
+    }
+
+    function printTransferChallan() {
+      const printableArea = document.getElementById('printable-transfer-area');
+      const modalContent = document.getElementById('transfer-challan-paper');
+      if (!printableArea || !modalContent) return;
+
+      printableArea.innerHTML = modalContent.innerHTML;
+      printableArea.style.display = 'block';
+      window.print();
+      setTimeout(() => {
+        printableArea.style.display = 'none';
+      }, 1000);
     }
 
     // --- Helpers ---
