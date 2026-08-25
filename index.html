@@ -319,6 +319,12 @@
           <button id="nav-accounts" onclick="switchNav('accounts')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
             <i class="fa-solid fa-wallet text-teal-400 w-4"></i><span>Accounts (আয় / ব্যয়)</span>
           </button>
+          <button id="nav-inventory" onclick="switchNav('inventory')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-clipboard-check text-orange-400 w-4"></i><span>Inventory Audit (অডিট)</span>
+            </div>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-orange-500/20 text-orange-400 border border-orange-500/30">AUDIT</span>
+          </button>
           <button id="nav-reports" onclick="switchNav('reports')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
             <i class="fa-solid fa-file-excel text-violet-400 w-4"></i><span>Reports & Export</span>
           </button>
@@ -1068,6 +1074,153 @@
               </div>
             </div>
           </div>
+        </section>
+
+
+        <!-- ============================================================ -->
+        <!-- TAB 8: INVENTORY STOCK & AUDIT (ইনভেন্টরি অডিট) -->
+        <!-- ============================================================ -->
+        <section id="sec-inventory" class="hidden space-y-6">
+
+          <!-- Top Toolbar & Action Buttons -->
+          <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="p-2 bg-orange-100 text-orange-700 rounded-xl font-bold text-sm">
+                  <i class="fa-solid fa-boxes-stacked"></i>
+                </span>
+                <h2 class="text-base font-black text-slate-900 font-heading">Inventory Stock & Physical Audit (ইনভেন্টরি স্টক অডিট)</h2>
+              </div>
+              <p class="text-xs text-slate-500 font-medium mt-1">
+                বারকোড স্ক্যানার দিয়ে সরাসরি বাস্তব পণ্য স্ক্যান করুন এবং সিস্টেম স্টকের সাথে ঘাটতি (Shortage) ও উদ্বৃত্ত (Excess) লাইভ তুলনা করুন।
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="startInventoryAudit()" id="btn-start-audit" class="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-orange-500/20 transition flex items-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-play"></i>
+                <span id="label-start-audit">Start Inventory Audit (অডিট শুরু)</span>
+              </button>
+
+              <button onclick="applyStockAdjustment()" id="btn-apply-adjustment" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+                <i class="fa-solid fa-check-double"></i>
+                <span>Apply Stock Adjustment (স্টক আপডেট)</span>
+              </button>
+
+              <button onclick="exportAuditToExcel()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3.5 py-2.5 rounded-xl font-bold text-xs transition flex items-center space-x-1.5 cursor-pointer">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                <span>Export Audit .xlsx</span>
+              </button>
+
+              <button onclick="resetInventoryAudit()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer" title="Reset all scanned counts">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Summary Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Products (আইটেম)</span>
+              <div class="text-lg font-black text-slate-900 mt-1" id="inv-kpi-total-skus">0</div>
+              <span class="text-[10px] text-slate-500 font-semibold">Active SKUs</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">System Stock (সিস্টেম)</span>
+              <div class="text-lg font-black text-indigo-600 mt-1" id="inv-kpi-system-units">0</div>
+              <span class="text-[10px] text-slate-500 font-semibold">Total database units</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Scanned Stock (গণনাকৃত)</span>
+              <div class="text-lg font-black text-emerald-600 mt-1" id="inv-kpi-scanned-units">0</div>
+              <span class="text-[10px] text-slate-500 font-semibold">Physical units counted</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-rose-100 bg-rose-50/30 shadow-2xs">
+              <span class="text-[10px] font-bold text-rose-500 uppercase tracking-wider block">Shortage (ঘাটতি পণ্য)</span>
+              <div class="text-lg font-black text-rose-600 mt-1" id="inv-kpi-shortage-units">0 pcs</div>
+              <span class="text-[10px] text-rose-500 font-bold" id="inv-kpi-shortage-skus">0 items short</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-rose-100 bg-rose-50/40 shadow-2xs">
+              <span class="text-[10px] font-bold text-rose-600 uppercase tracking-wider block">Shortage Value (ঘাটতি টাকা)</span>
+              <div class="text-lg font-black text-rose-700 mt-1 font-heading" id="inv-kpi-shortage-val">৳ 0</div>
+              <span class="text-[10px] text-rose-500 font-semibold">Total financial gap</span>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-emerald-100 bg-emerald-50/30 shadow-2xs">
+              <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Matched (মিল আছে)</span>
+              <div class="text-lg font-black text-emerald-700 mt-1" id="inv-kpi-matched-skus">0</div>
+              <span class="text-[10px] text-emerald-600 font-semibold">100% accurate items</span>
+            </div>
+          </div>
+
+          <!-- Active Audit Scanner & Filter Toolbar -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+            <div class="flex flex-col md:flex-row items-center gap-3">
+              <!-- Live Barcode Scanner Input -->
+              <div class="relative flex-1 w-full">
+                <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-orange-500 text-lg"></i>
+                <input type="text" id="inv-barcode-input" onkeydown="handleInventoryBarcodeKey(event)" placeholder="Scan product barcode / SKU or type code and press Enter..." class="w-full bg-slate-50 pl-11 pr-28 py-2.5 border-2 border-orange-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition shadow-2xs">
+                <button type="button" onclick="submitInventoryScanFromInput()" class="absolute right-1.5 top-1.5 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                  <i class="fa-solid fa-scanner"></i>
+                  <span>Scan +1</span>
+                </button>
+              </div>
+
+              <!-- Filter Selector -->
+              <div class="flex items-center space-x-2 w-full md:w-auto">
+                <select id="inv-filter-status" onchange="renderInventoryAuditTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none">
+                  <option value="ALL">All Items (সব পণ্য)</option>
+                  <option value="SHORT">🔴 Only Short Items (শুধু ঘাটতি)</option>
+                  <option value="MATCH">🟢 Only Matched (হিসাব মিলেছে)</option>
+                  <option value="EXCESS">🔵 Only Excess (বেশি আছে)</option>
+                  <option value="UNSCANNED">⚪ Unscanned (স্ক্যান বাকি)</option>
+                </select>
+
+                <select id="inv-filter-category" onchange="renderInventoryAuditTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none">
+                  <option value="ALL">All Categories</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
+              <span class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-circle-info text-indigo-500"></i>
+                <span>টিপস: বারকোড স্ক্যানার দিয়ে প্রোডাক্টের গায়ে স্ক্যান করলেই লাইভ গণনা বাড়বে এবং সিস্টেম স্টকের সাথে স্বয়ংক্রিয়ভাবে ঘাটতি হিসাব হবে।</span>
+              </span>
+              <span id="inv-last-scanned-badge" class="font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-200 hidden">
+                Last Scanned: None
+              </span>
+            </div>
+          </div>
+
+          <!-- Stock Audit Discrepancy Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Product & Photo</th>
+                    <th class="px-6 py-3.5">Barcode / SKU</th>
+                    <th class="px-6 py-3.5">Unit Cost</th>
+                    <th class="px-6 py-3.5 text-center font-bold text-indigo-900 bg-indigo-50/40">System Stock 📦</th>
+                    <th class="px-6 py-3.5 text-center font-bold text-emerald-900 bg-emerald-50/40">Physical Scanned 🔍</th>
+                    <th class="px-6 py-3.5 text-center font-bold text-slate-900">Variance / Difference ⚖️</th>
+                    <th class="px-6 py-3.5 text-right font-bold text-slate-900">Shortage Value (ঘাটতি ৳)</th>
+                    <th class="px-6 py-3.5 text-center">Status</th>
+                    <th class="px-6 py-3.5 text-right">Quick Action</th>
+                  </tr>
+                </thead>
+                <tbody id="inventory-audit-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </section>
 
       </div>
@@ -1842,7 +1995,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
     // --- Navigation Switching ---
     function switchNav(tabId) {
-      const sections = ['dashboard', 'pos', 'products', 'sales', 'employees', 'accounts', 'reports'];
+      const sections = ['dashboard', 'pos', 'products', 'sales', 'employees', 'accounts', 'reports', 'inventory'];
       sections.forEach(s => {
         const el = document.getElementById(`sec-${s}`);
         const navBtn = document.getElementById(`nav-${s}`);
@@ -1868,7 +2021,8 @@ CREATE TABLE IF NOT EXISTS transactions (
         sales: { t: 'Sales Invoices Log', sub: 'Complete sales history, thermal receipts and cashier audit' },
         employees: { t: 'Employee & Staff Directory', sub: 'Department roles, contact directory and monthly salary' },
         accounts: { t: 'Accounts (আয় ও ব্যয়)', sub: 'Income & expense ledger, cashbook and net balance' },
-        reports: { t: 'Reports & Export', sub: 'Download itemized statements in Excel (.xlsx)' }
+        reports: { t: 'Reports & Export', sub: 'Download itemized statements in Excel (.xlsx)' },
+        inventory: { t: 'Inventory Stock & Physical Audit (ইনভেন্টরি অডিট)', sub: 'বারকোড স্ক্যানার দিয়ে বাস্তব স্টক গণনা করুন এবং সিস্টেম ঘাটতি (Shortage) মিলিয়ে নিন' }
       };
 
       if (titles[tabId]) {
@@ -1885,6 +2039,7 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (tabId === 'sales') renderSalesTable();
       if (tabId === 'employees') renderEmployeesTable();
       if (tabId === 'accounts') renderAccountsTable();
+      if (tabId === 'inventory') renderInventorySection();
     }
 
     // --- Dashboard Rendering ---
@@ -3107,6 +3262,400 @@ CREATE TABLE IF NOT EXISTS transactions (
       XLSX.writeFile(wb, `ApexPOS_Employees_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
+    // ============================================================
+    // INVENTORY STOCK & PHYSICAL AUDIT SYSTEM
+    // ============================================================
+    let inventoryAuditState = {
+      isAuditActive: false,
+      scannedCounts: {}, // { [productId]: number }
+      lastScannedId: null
+    };
+
+    function playScanBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      } catch (e) {}
+    }
+
+    function renderInventorySection() {
+      populateCategoryFilters();
+      renderInventoryAuditTable();
+    }
+
+    function startInventoryAudit() {
+      inventoryAuditState.isAuditActive = true;
+      const btn = document.getElementById('btn-start-audit');
+      if (btn) {
+        btn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center space-x-2 cursor-pointer';
+        document.getElementById('label-start-audit').innerText = 'Audit in Progress (চলমান অডিট)';
+      }
+      const scannerInput = document.getElementById('inv-barcode-input');
+      if (scannerInput) {
+        scannerInput.focus();
+      }
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'Physical Stock Audit Started! Scan or enter counts.',
+        showConfirmButton: false,
+        timer: 2000
+      });
+      renderInventoryAuditTable();
+    }
+
+    function handleInventoryBarcodeKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitInventoryScanFromInput();
+      }
+    }
+
+    function submitInventoryScanFromInput() {
+      const input = document.getElementById('inv-barcode-input');
+      if (!input) return;
+      const code = input.value.trim().toLowerCase();
+      if (!code) return;
+
+      const prod = productsData.find(p => 
+        p.product_code.toLowerCase() === code || 
+        p.product_name.toLowerCase().includes(code) ||
+        String(p.id) === code
+      );
+
+      if (prod) {
+        inventoryAuditState.isAuditActive = true;
+        inventoryAuditState.scannedCounts[prod.id] = (inventoryAuditState.scannedCounts[prod.id] || 0) + 1;
+        inventoryAuditState.lastScannedId = prod.id;
+        playScanBeep();
+
+        const badge = document.getElementById('inv-last-scanned-badge');
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>Scanned: <b>${prod.product_name}</b> (Count: ${inventoryAuditState.scannedCounts[prod.id]})`;
+        }
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `+1 Scanned: ${prod.product_name} (Total: ${inventoryAuditState.scannedCounts[prod.id]})`,
+          showConfirmButton: false,
+          timer: 1200
+        });
+
+        input.value = '';
+        input.focus();
+        renderInventoryAuditTable();
+      } else {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: `Product with barcode "${code}" not found!`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+      }
+    }
+
+    function updateAuditItemCount(prodId, delta) {
+      const current = inventoryAuditState.scannedCounts[prodId] || 0;
+      const next = Math.max(0, current + delta);
+      inventoryAuditState.scannedCounts[prodId] = next;
+      inventoryAuditState.lastScannedId = prodId;
+      renderInventoryAuditTable();
+    }
+
+    function setAuditItemCountExact(prodId, val) {
+      const count = Math.max(0, Number(val) || 0);
+      inventoryAuditState.scannedCounts[prodId] = count;
+      inventoryAuditState.lastScannedId = prodId;
+      renderInventoryAuditTable();
+    }
+
+    function matchSystemStock(prodId) {
+      const prod = productsData.find(p => p.id === prodId);
+      if (prod) {
+        inventoryAuditState.scannedCounts[prodId] = prod.stock;
+        renderInventoryAuditTable();
+      }
+    }
+
+    function resetInventoryAudit() {
+      Swal.fire({
+        title: 'Reset Audit Counts?',
+        text: 'All scanned counts in current session will be cleared.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Reset'
+      }).then(res => {
+        if (res.isConfirmed) {
+          inventoryAuditState.scannedCounts = {};
+          inventoryAuditState.isAuditActive = false;
+          const badge = document.getElementById('inv-last-scanned-badge');
+          if (badge) badge.classList.add('hidden');
+          const btn = document.getElementById('btn-start-audit');
+          if (btn) {
+            btn.className = 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-orange-500/20 transition flex items-center space-x-2 cursor-pointer';
+            document.getElementById('label-start-audit').innerText = 'Start Inventory Audit (অডিট শুরু)';
+          }
+          renderInventoryAuditTable();
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Audit reset complete', showConfirmButton: false, timer: 1500 });
+        }
+      });
+    }
+
+    function renderInventoryAuditTable() {
+      const tbody = document.getElementById('inventory-audit-table-body');
+      if (!tbody) return;
+
+      const statusFilter = document.getElementById('inv-filter-status')?.value || 'ALL';
+      const catFilter = document.getElementById('inv-filter-category')?.value || 'ALL';
+
+      let totalSystemUnits = 0;
+      let totalScannedUnits = 0;
+      let totalShortageUnits = 0;
+      let totalShortageValue = 0;
+      let totalShortageSkus = 0;
+      let matchedSkus = 0;
+
+      const processedRows = productsData.map(p => {
+        const sysStock = Number(p.stock) || 0;
+        const scanned = inventoryAuditState.scannedCounts[p.id] !== undefined ? inventoryAuditState.scannedCounts[p.id] : 0;
+        const hasScanned = inventoryAuditState.scannedCounts[p.id] !== undefined;
+        const variance = scanned - sysStock;
+        const unitCost = Number(p.purchase_price) || 0;
+        const shortageLoss = variance < 0 ? Math.abs(variance) * unitCost : 0;
+
+        totalSystemUnits += sysStock;
+        totalScannedUnits += scanned;
+
+        if (hasScanned) {
+          if (variance < 0) {
+            totalShortageUnits += Math.abs(variance);
+            totalShortageValue += shortageLoss;
+            totalShortageSkus += 1;
+          } else if (variance === 0) {
+            matchedSkus += 1;
+          }
+        }
+
+        let statusType = 'UNSCANNED';
+        if (hasScanned) {
+          if (variance < 0) statusType = 'SHORT';
+          else if (variance === 0) statusType = 'MATCH';
+          else statusType = 'EXCESS';
+        }
+
+        return {
+          product: p,
+          sysStock,
+          scanned,
+          hasScanned,
+          variance,
+          unitCost,
+          shortageLoss,
+          statusType
+        };
+      });
+
+      // Update KPI Badges
+      if (document.getElementById('inv-kpi-total-skus')) document.getElementById('inv-kpi-total-skus').innerText = productsData.length;
+      if (document.getElementById('inv-kpi-system-units')) document.getElementById('inv-kpi-system-units').innerText = `${totalSystemUnits} pcs`;
+      if (document.getElementById('inv-kpi-scanned-units')) document.getElementById('inv-kpi-scanned-units').innerText = `${totalScannedUnits} pcs`;
+      if (document.getElementById('inv-kpi-shortage-units')) document.getElementById('inv-kpi-shortage-units').innerText = `-${totalShortageUnits} pcs`;
+      if (document.getElementById('inv-kpi-shortage-skus')) document.getElementById('inv-kpi-shortage-skus').innerText = `${totalShortageSkus} items short`;
+      if (document.getElementById('inv-kpi-shortage-val')) document.getElementById('inv-kpi-shortage-val').innerText = `৳ ${totalShortageValue.toLocaleString()}`;
+      if (document.getElementById('inv-kpi-matched-skus')) document.getElementById('inv-kpi-matched-skus').innerText = `${matchedSkus} SKUs`;
+
+      // Filter rows
+      const filtered = processedRows.filter(r => {
+        const matchStatus = statusFilter === 'ALL' || r.statusType === statusFilter;
+        const matchCat = catFilter === 'ALL' || r.product.category === catFilter;
+        return matchStatus && matchCat;
+      });
+
+      tbody.innerHTML = filtered.map(r => {
+        const p = r.product;
+        const isHighlight = inventoryAuditState.lastScannedId === p.id;
+
+        let varianceBadge = '';
+        let statusBadge = '';
+
+        if (!r.hasScanned) {
+          varianceBadge = `<span class="text-slate-400 font-semibold text-[11px]">Not Scanned Yet</span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Pending</span>`;
+        } else if (r.variance < 0) {
+          varianceBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-black bg-rose-50 text-rose-700 border border-rose-200 flex items-center justify-center space-x-1"><i class="fa-solid fa-arrow-trend-down text-[10px]"></i><span>${r.variance} pcs (Short / ঘাটতি)</span></span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">Shortage</span>`;
+        } else if (r.variance === 0) {
+          varianceBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center space-x-1"><i class="fa-solid fa-check text-[10px]"></i><span>0 pcs (Exact Match)</span></span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">Perfect Match</span>`;
+        } else {
+          varianceBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-black bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center space-x-1"><i class="fa-solid fa-arrow-trend-up text-[10px]"></i><span>+${r.variance} pcs (Excess / অতিরিক্ত)</span></span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-300">Excess Stock</span>`;
+        }
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition ${isHighlight ? 'bg-orange-50/50' : ''}">
+            <td class="px-6 py-3.5 flex items-center space-x-3">
+              <img src="${p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+              <div>
+                <div class="font-bold text-slate-800">${p.product_name}</div>
+                <div class="text-[10px] text-slate-400">${p.category}</div>
+              </div>
+            </td>
+            <td class="px-6 py-3.5 font-bold text-indigo-700 font-mono">${p.product_code}</td>
+            <td class="px-6 py-3.5 font-semibold text-slate-600">৳ ${r.unitCost}</td>
+            <td class="px-6 py-3.5 text-center font-black text-indigo-900 bg-indigo-50/30 text-sm">
+              ${r.sysStock} pcs
+            </td>
+            <td class="px-6 py-3.5 text-center bg-emerald-50/30">
+              <div class="flex items-center justify-center space-x-1">
+                <button onclick="updateAuditItemCount(${p.id}, -1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 font-bold border border-slate-200 flex items-center justify-center transition cursor-pointer">-</button>
+                <input type="number" min="0" value="${r.scanned}" onchange="setAuditItemCountExact(${p.id}, this.value)" class="w-14 p-1 text-center font-black text-emerald-800 bg-white border border-emerald-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+                <button onclick="updateAuditItemCount(${p.id}, 1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 font-bold border border-slate-200 flex items-center justify-center transition cursor-pointer">+</button>
+              </div>
+            </td>
+            <td class="px-6 py-3.5 text-center">${varianceBadge}</td>
+            <td class="px-6 py-3.5 text-right font-black ${r.shortageLoss > 0 ? 'text-rose-600 text-sm' : 'text-slate-400'}">
+              ${r.shortageLoss > 0 ? `-৳ ${r.shortageLoss.toLocaleString()}` : '৳ 0'}
+            </td>
+            <td class="px-6 py-3.5 text-center">${statusBadge}</td>
+            <td class="px-6 py-3.5 text-right space-x-1">
+              <button onclick="matchSystemStock(${p.id})" title="Set count equal to system stock" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition">
+                Match
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="9" class="text-center py-8 text-slate-400">No products match current filter</td></tr>';
+    }
+
+    async function applyStockAdjustment() {
+      const scannedKeys = Object.keys(inventoryAuditState.scannedCounts);
+      if (scannedKeys.length === 0) {
+        Swal.fire('No Counts', 'কোনো পণ্য গণনা বা স্ক্যান করা হয়নি! প্রথমে ফিজিক্যাল স্টক গণনা করুন।', 'warning');
+        return;
+      }
+
+      let adjustmentCount = 0;
+      let totalShortLoss = 0;
+
+      scannedKeys.forEach(id => {
+        const prod = productsData.find(p => p.id == id);
+        if (prod) {
+          const scanned = inventoryAuditState.scannedCounts[id];
+          if (scanned !== prod.stock) {
+            adjustmentCount++;
+            if (scanned < prod.stock) {
+              totalShortLoss += (prod.stock - scanned) * (prod.purchase_price || 0);
+            }
+          }
+        }
+      });
+
+      if (adjustmentCount === 0) {
+        Swal.fire('Perfect Match', 'সকল পণ্যের ফিজিক্যাল স্টক এবং সিস্টেম স্টক পুরোপুরি মিলে গেছে! কোনো অ্যাডজাস্টমেন্টের প্রয়োজন নেই।', 'success');
+        return;
+      }
+
+      const res = await Swal.fire({
+        title: 'Apply Stock Adjustment?',
+        html: `
+          <div class="text-left text-xs space-y-2 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-950">
+            <p><b>${adjustmentCount} টি পণ্যের</b> সিস্টেম স্টক পরিবর্তন হয়ে বাস্তব গণনাকৃত স্টকে আপডেট হবে।</p>
+            ${totalShortLoss > 0 ? `<p class="text-rose-600 font-bold">⚠️ মোট ঘাটতি টাকার ক্ষতি: ৳${totalShortLoss.toLocaleString()}</p>` : ''}
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Yes, Update Database Stock',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (res.isConfirmed) {
+        scannedKeys.forEach(id => {
+          const prod = productsData.find(p => p.id == id);
+          if (prod) {
+            prod.stock = inventoryAuditState.scannedCounts[id];
+            if (supabaseClient) {
+              supabaseClient.from('products').update({ stock: prod.stock }).eq('id', prod.id).then();
+            }
+          }
+        });
+
+        if (totalShortLoss > 0) {
+          const auditExpense = {
+            id: Date.now(),
+            date: new Date().toISOString().split('T')[0],
+            type: 'Expense',
+            category: 'Inventory Loss / Shortage',
+            amount: totalShortLoss,
+            note: `Stock audit reconciliation adjustment (${adjustmentCount} items short)`,
+            payment_method: 'Internal Adjustment'
+          };
+          accountsData.unshift(auditExpense);
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('transactions').insert([auditExpense]);
+            } catch (err) {}
+          }
+        }
+
+        renderDashboard();
+        renderProductsTable();
+        renderPosProducts();
+        renderAccountsTable();
+        renderInventoryAuditTable();
+
+        Swal.fire('Stock Reconciled!', 'ইনভেন্টরি স্টক সফলভাবে আপডেট করা হয়েছে।', 'success');
+      }
+    }
+
+    function exportAuditToExcel() {
+      const rows = productsData.map(p => {
+        const sysStock = Number(p.stock) || 0;
+        const scanned = inventoryAuditState.scannedCounts[p.id] !== undefined ? inventoryAuditState.scannedCounts[p.id] : sysStock;
+        const variance = scanned - sysStock;
+        const unitCost = Number(p.purchase_price) || 0;
+        const loss = variance < 0 ? Math.abs(variance) * unitCost : 0;
+        const status = variance < 0 ? 'Shortage' : (variance === 0 ? 'Match' : 'Excess');
+
+        return {
+          'Product Code': p.product_code,
+          'Product Name': p.product_name,
+          'Category': p.category,
+          'Unit Cost Price (BDT)': unitCost,
+          'System Stock (Units)': sysStock,
+          'Physical Count (Units)': scanned,
+          'Variance (Diff)': variance,
+          'Shortage Value Loss (BDT)': loss,
+          'Status': status,
+          'Audit Date': new Date().toLocaleString(),
+          'Auditor': currentUser ? currentUser.name : 'Admin'
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Stock_Audit');
+      XLSX.writeFile(wb, `ApexPOS_Stock_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
     // --- Helpers ---
     function populateCategoryFilters() {
       const cats = [...new Set(productsData.map(p => p.category).filter(Boolean))];
@@ -3118,6 +3667,8 @@ CREATE TABLE IF NOT EXISTS transactions (
 
       if (posCatSelect) posCatSelect.innerHTML = opts;
       if (prdCatSelect) prdCatSelect.innerHTML = opts;
+      const invCatSelect = document.getElementById('inv-filter-category');
+      if (invCatSelect) invCatSelect.innerHTML = opts;
 
       const depts = [...new Set(employeesData.map(e => e.department).filter(Boolean))];
       const empDeptSelect = document.getElementById('emp-filter-dept');
