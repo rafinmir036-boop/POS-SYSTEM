@@ -625,133 +625,118 @@
                 </div>
               </div>
 
-              <!-- Payment Method Selector -->
-              <div class="space-y-2">
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Payment Method (মূল্য পরিশোধ)</label>
-                <div class="grid grid-cols-5 gap-1">
-                  <button type="button" onclick="setPosPaymentMethod('Cash')" id="btn-pay-Cash" class="pay-method-btn active py-2 rounded-xl text-[11px] font-bold border border-emerald-300 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center">
-                    <i class="fa-solid fa-money-bill-1-wave mb-0.5"></i>Cash
-                  </button>
-                  <button type="button" onclick="setPosPaymentMethod('bKash')" id="btn-pay-bKash" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
-                    <i class="fa-solid fa-mobile-screen mb-0.5"></i>bKash
-                  </button>
-                  <button type="button" onclick="setPosPaymentMethod('Card')" id="btn-pay-Card" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
-                    <i class="fa-solid fa-credit-card mb-0.5"></i>Card
-                  </button>
-                  <button type="button" onclick="setPosPaymentMethod('Nagad')" id="btn-pay-Nagad" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
-                    <i class="fa-solid fa-wallet mb-0.5"></i>Nagad
-                  </button>
-                  <button type="button" onclick="setPosPaymentMethod('Split')" id="btn-pay-Split" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
-                    <i class="fa-solid fa-layer-group mb-0.5"></i>Split
+              <!-- Direct Multi-Tender Payment Methods (সরাসরি পেমেন্ট মাধ্যমসমূহ) -->
+              <div class="space-y-2.5 pt-2 border-t border-slate-100">
+                <div class="flex justify-between items-center">
+                  <label class="block text-xs font-black text-slate-800 uppercase tracking-wider flex items-center space-x-1.5 font-heading">
+                    <i class="fa-solid fa-money-bill-transfer text-emerald-600"></i>
+                    <span>Payment Breakdown (টাকা পরিশোধ)</span>
+                  </label>
+                  <button type="button" onclick="clearAllPaymentInputs()" class="text-[10px] font-bold text-slate-400 hover:text-rose-600 transition cursor-pointer">
+                    <i class="fa-solid fa-rotate-left mr-0.5"></i>Reset
                   </button>
                 </div>
 
-                <!-- Card Bank Selection Box (Shown when Card is Selected) -->
-                <div id="pos-card-bank-box" class="hidden p-2.5 bg-sky-50 rounded-2xl border border-sky-200 text-xs space-y-2">
-                  <div class="flex items-center justify-between text-[11px] font-bold text-sky-900">
-                    <span><i class="fa-solid fa-building-columns text-sky-600 mr-1"></i>Card / POS Bank Terminal</span>
-                    <span class="text-[9px] text-sky-600">Swipe / Tap</span>
+                <!-- Payment Channels Container -->
+                <div class="space-y-2 bg-slate-50/90 p-3 rounded-2xl border border-slate-200/90 text-xs shadow-2xs">
+
+                  <!-- 1. Cash (ক্যাশ টাকা) -->
+                  <div class="bg-white p-2 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+                        <i class="fa-solid fa-money-bill-1-wave text-emerald-600"></i>
+                        <span>💵 Cash (ক্যাশ টাকা)</span>
+                      </span>
+                      <button type="button" onclick="fillRemainingToMethod('cash')" class="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 transition cursor-pointer">
+                        বাকি টাকা ক্যাশে
+                      </button>
+                    </div>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-1.5 font-black text-slate-400">৳</span>
+                      <input type="number" id="pay-input-cash" min="0" oninput="onMultiPaymentInputChange('cash')" placeholder="0" class="w-full bg-slate-50 pl-7 pr-3 py-1.5 border border-emerald-200 rounded-lg text-xs font-black text-emerald-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                    </div>
                   </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Select Bank *</label>
-                      <select id="pos-card-bank-select" class="w-full bg-white p-1.5 border border-sky-300 rounded-lg text-xs font-bold text-slate-800 outline-none">
-                        <option value="City Bank (AMEX / VISA POS)">City Bank (AMEX/VISA/Master)</option>
+
+                  <!-- 2. bKash (বিকাশ) -->
+                  <div class="bg-white p-2 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+                        <i class="fa-solid fa-mobile-screen text-pink-600"></i>
+                        <span>📱 bKash (বিকাশ)</span>
+                      </span>
+                      <button type="button" onclick="fillRemainingToMethod('bkash')" class="text-[10px] font-bold text-pink-700 hover:text-pink-900 bg-pink-50 hover:bg-pink-100 px-2 py-0.5 rounded-md border border-pink-200 transition cursor-pointer">
+                        বাকিটা বিকাশে
+                      </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="relative">
+                        <span class="absolute left-2.5 top-1.5 font-black text-slate-400">৳</span>
+                        <input type="number" id="pay-input-bkash" min="0" oninput="onMultiPaymentInputChange('bkash')" placeholder="0" class="w-full bg-slate-50 pl-7 pr-2 py-1.5 border border-pink-200 rounded-lg text-xs font-black text-pink-700 outline-none focus:bg-white focus:ring-2 focus:ring-pink-500">
+                      </div>
+                      <input type="text" id="pay-bkash-txnid" placeholder="Txn ID / No" class="w-full bg-slate-50 px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-800 outline-none focus:bg-white">
+                    </div>
+                  </div>
+
+                  <!-- 3. Card / Bank (কার্ড / POS) -->
+                  <div class="bg-white p-2 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+                        <i class="fa-solid fa-credit-card text-sky-600"></i>
+                        <span>💳 Card / POS (কার্ড)</span>
+                      </span>
+                      <button type="button" onclick="fillRemainingToMethod('card')" class="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-md border border-sky-200 transition cursor-pointer">
+                        বাকিটা কার্ডে
+                      </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="relative">
+                        <span class="absolute left-2.5 top-1.5 font-black text-slate-400">৳</span>
+                        <input type="number" id="pay-input-card" min="0" oninput="onMultiPaymentInputChange('card')" placeholder="0" class="w-full bg-slate-50 pl-7 pr-2 py-1.5 border border-sky-200 rounded-lg text-xs font-black text-sky-700 outline-none focus:bg-white focus:ring-2 focus:ring-sky-500">
+                      </div>
+                      <select id="pay-card-bank" class="w-full bg-slate-50 p-1.5 border border-slate-200 rounded-lg text-[11px] font-bold text-slate-800 outline-none focus:bg-white">
+                        <option value="City Bank (AMEX/VISA)">City Bank POS</option>
                         <option value="BRAC Bank POS">BRAC Bank POS</option>
-                        <option value="Dutch-Bangla Bank (DBBL Nexus/Visa)">Dutch-Bangla Bank (DBBL)</option>
-                        <option value="Eastern Bank (EBL POS)">Eastern Bank (EBL)</option>
-                        <option value="Islami Bank (IBBL POS)">Islami Bank (IBBL)</option>
-                        <option value="Mutual Trust Bank (MTB POS)">Mutual Trust Bank (MTB)</option>
-                        <option value="Standard Chartered POS">Standard Chartered</option>
-                        <option value="Other Bank POS Terminal">Other Bank POS</option>
+                        <option value="DBBL Nexus POS">DBBL Nexus/Visa</option>
+                        <option value="EBL POS">Eastern Bank (EBL)</option>
+                        <option value="IBBL POS">Islami Bank (IBBL)</option>
+                        <option value="Other Bank POS">Other POS</option>
                       </select>
                     </div>
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Card Last 4 Digits / Txn Slip #</label>
-                      <input type="text" id="pos-card-txn-no" placeholder="e.g. 4829 / SLIP-12" class="w-full bg-white p-1.5 border border-sky-300 rounded-lg text-xs font-bold text-slate-800 outline-none">
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Split Payment Breakdown Box (Shown when Split is Selected) -->
-                <div id="pos-split-pay-box" class="hidden p-3.5 bg-gradient-to-br from-amber-50/90 to-orange-50/90 rounded-2xl border border-amber-200 text-xs space-y-3 shadow-xs">
-                  <div class="flex items-center justify-between text-[11px] font-bold text-amber-950">
-                    <span class="flex items-center space-x-1.5">
-                      <i class="fa-solid fa-coins text-amber-600"></i>
-                      <span>Split Payment (কার্ড + ক্যাশ পেমেন্ট)</span>
-                    </span>
-                    <span class="text-[10px] font-black text-indigo-700 bg-white px-2 py-0.5 rounded-lg border border-amber-200 shadow-2xs" id="pos-split-total-bill-badge">Total Bill: ৳ 0</span>
                   </div>
 
-                  <!-- 1. Card Input & Bank Selector -->
-                  <div class="bg-white p-2.5 rounded-xl border border-amber-200 space-y-2">
-                    <div class="flex items-center justify-between">
-                      <label class="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
-                        <i class="fa-solid fa-credit-card text-sky-600"></i>
-                        <span>১. কার্ড / ডিজিটাল এ কত টাকা দিচ্ছেন? (Card Amount)</span>
-                      </label>
-                      <button type="button" onclick="setSplitCardFull()" class="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded border border-sky-200 transition cursor-pointer">
-                        পুরোটা কার্ডে
+                  <!-- 4. Nagad (নগদ) -->
+                  <div class="bg-white p-2 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+                        <i class="fa-solid fa-wallet text-orange-600"></i>
+                        <span>📱 Nagad (নগদ)</span>
+                      </span>
+                      <button type="button" onclick="fillRemainingToMethod('nagad')" class="text-[10px] font-bold text-orange-700 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-2 py-0.5 rounded-md border border-orange-200 transition cursor-pointer">
+                        বাকিটা নগদে
                       </button>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div class="relative">
-                        <span class="absolute left-2.5 top-1.5 font-bold text-slate-400">৳</span>
-                        <input type="number" id="pos-split-card" min="0" oninput="onSplitCardInput()" placeholder="0" class="w-full bg-slate-50 pl-6 pr-2 py-1.5 border border-sky-300 rounded-lg text-xs font-black text-sky-700 outline-none focus:bg-white focus:ring-2 focus:ring-sky-500">
+                        <span class="absolute left-2.5 top-1.5 font-black text-slate-400">৳</span>
+                        <input type="number" id="pay-input-nagad" min="0" oninput="onMultiPaymentInputChange('nagad')" placeholder="0" class="w-full bg-slate-50 pl-7 pr-2 py-1.5 border border-orange-200 rounded-lg text-xs font-black text-orange-700 outline-none focus:bg-white focus:ring-2 focus:ring-orange-500">
                       </div>
-                      <div>
-                        <select id="pos-split-bank-select" class="w-full bg-slate-50 p-1.5 border border-sky-300 rounded-lg text-[11px] font-bold text-slate-800 outline-none focus:bg-white">
-                          <option value="City Bank POS">City Bank (AMEX/VISA)</option>
-                          <option value="BRAC Bank POS">BRAC Bank POS</option>
-                          <option value="DBBL Nexus POS">DBBL Nexus/Visa</option>
-                          <option value="EBL POS">Eastern Bank (EBL)</option>
-                          <option value="IBBL POS">Islami Bank (IBBL)</option>
-                          <option value="bKash Merchant">bKash QR</option>
-                          <option value="Nagad Merchant">Nagad QR</option>
-                          <option value="Other Bank POS">Other POS</option>
-                        </select>
-                      </div>
+                      <input type="text" id="pay-nagad-txnid" placeholder="Txn ID / No" class="w-full bg-slate-50 px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-800 outline-none focus:bg-white">
                     </div>
                   </div>
 
-                  <!-- 2. Remaining Due & Cash Input -->
-                  <div class="bg-white p-2.5 rounded-xl border border-amber-200 space-y-2">
-                    <div class="flex items-center justify-between">
-                      <label class="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
-                        <i class="fa-solid fa-money-bill-1-wave text-emerald-600"></i>
-                        <span>২. অবশিষ্ট ক্যাশ কত টাকা দিচ্ছেন? (Cash Amount)</span>
-                      </label>
-                      <button type="button" onclick="autoFillRemainingCash()" id="btn-autofill-cash" class="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition flex items-center space-x-1 cursor-pointer">
-                        <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i>
-                        <span id="label-autofill-cash">বাকি ক্যাশ বসান</span>
-                      </button>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <div class="relative">
-                        <span class="absolute left-2.5 top-1.5 font-bold text-slate-400">৳</span>
-                        <input type="number" id="pos-split-cash" min="0" oninput="onSplitCashInput()" placeholder="0" class="w-full bg-slate-50 pl-6 pr-2 py-1.5 border border-emerald-300 rounded-lg text-xs font-black text-emerald-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
-                      </div>
-
-                      <div class="p-1.5 bg-amber-50/80 rounded-lg border border-amber-200 text-center flex flex-col justify-center">
-                        <span class="text-[9px] font-bold text-slate-500">বাকি দিতে হবে:</span>
-                        <span id="pos-split-remaining-badge" class="text-xs font-black text-amber-700">৳ 0</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 3. Live Summary Bar -->
-                  <div class="p-2 bg-white rounded-xl border border-amber-200 text-[11px] font-bold flex items-center justify-between shadow-2xs">
-                    <div class="space-x-1 text-slate-600">
-                      <span>মোট জমা:</span>
-                      <b id="pos-split-paid-label" class="text-slate-900">৳0</b>
-                    </div>
-                    <div>
-                      <span id="pos-split-status-label" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800">Due: ৳0</span>
-                    </div>
-                  </div>
                 </div>
 
+                <!-- Live Auto-Calculation Balance Box -->
+                <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                  <div class="flex justify-between items-center text-xs font-bold">
+                    <span class="text-slate-600">মোট জমা (Total Paid):</span>
+                    <span id="pos-total-paid-display" class="font-black text-slate-900 text-sm">৳ 0</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs pt-1.5 border-t border-slate-100">
+                    <span class="text-slate-500 font-semibold" id="pos-payment-status-label">বাকি পরিশোধ করতে হবে (Due):</span>
+                    <span id="pos-payment-balance-display" class="font-black text-rose-600 text-sm">৳ 0</span>
+                  </div>
+                </div>
               </div>
 
               <!-- Checkout Submit Button -->
@@ -2371,9 +2356,7 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (document.getElementById('pos-tax')) document.getElementById('pos-tax').innerText = `৳ ${tax.toLocaleString()}`;
       if (document.getElementById('pos-grand-total')) document.getElementById('pos-grand-total').innerText = `৳ ${grandTotal.toLocaleString()}`;
 
-      if (currentPayMethod === 'Split') {
-        calculateSplitBalance();
-      }
+      onMultiPaymentInputChange();
     }
 
     function getPosGrandTotal() {
@@ -2384,126 +2367,73 @@ CREATE TABLE IF NOT EXISTS transactions (
       return Math.max(0, subtotal - discount + tax);
     }
 
-    function setPosPaymentMethod(method) {
-      currentPayMethod = method;
-      document.querySelectorAll('.pay-method-btn').forEach(b => {
-        b.className = 'pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center transition';
-      });
-      const activeBtn = document.getElementById(`btn-pay-${method}`);
-      if (activeBtn) {
-        activeBtn.className = 'pay-method-btn active py-2 rounded-xl text-[11px] font-bold border border-emerald-400 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center transition ring-1 ring-emerald-500';
-      }
-
-      const cardBox = document.getElementById('pos-card-bank-box');
-      const splitBox = document.getElementById('pos-split-pay-box');
-
-      if (cardBox) cardBox.classList.toggle('hidden', method !== 'Card');
-      if (splitBox) {
-        splitBox.classList.toggle('hidden', method !== 'Split');
-        if (method === 'Split') {
-          const grandTotal = getPosGrandTotal();
-          if (document.getElementById('pos-split-total-bill-badge')) {
-            document.getElementById('pos-split-total-bill-badge').innerText = `Total Bill: ৳ ${grandTotal.toLocaleString()}`;
-          }
-          const cardVal = Number(document.getElementById('pos-split-card')?.value) || 0;
-          if (cardVal === 0) {
-            document.getElementById('pos-split-card').value = '';
-            document.getElementById('pos-split-cash').value = '';
-            if (document.getElementById('pos-split-remaining-badge')) {
-              document.getElementById('pos-split-remaining-badge').innerText = `৳ ${grandTotal.toLocaleString()}`;
-            }
-            if (document.getElementById('label-autofill-cash')) {
-              document.getElementById('label-autofill-cash').innerText = `বাকি ৳${grandTotal.toLocaleString()} ক্যাশে বসান`;
-            }
-          }
-          calculateSplitBalance();
-        }
-      }
-    }
-
-    function onSplitCardInput() {
+    // --- Multi-Tender Live Payment Logic ---
+    function onMultiPaymentInputChange(changedMethod) {
       const grandTotal = getPosGrandTotal();
-      const card = Number(document.getElementById('pos-split-card')?.value) || 0;
-      const remainingForCash = Math.max(0, grandTotal - card);
+      const cash = Number(document.getElementById('pay-input-cash')?.value) || 0;
+      const bkash = Number(document.getElementById('pay-input-bkash')?.value) || 0;
+      const card = Number(document.getElementById('pay-input-card')?.value) || 0;
+      const nagad = Number(document.getElementById('pay-input-nagad')?.value) || 0;
 
-      // Instantly deduct from total and auto-fill remaining cash!
-      if (document.getElementById('pos-split-cash')) {
-        document.getElementById('pos-split-cash').value = remainingForCash > 0 ? remainingForCash : 0;
-      }
-      if (document.getElementById('pos-split-remaining-badge')) {
-        document.getElementById('pos-split-remaining-badge').innerText = `৳ ${remainingForCash.toLocaleString()}`;
-      }
-      if (document.getElementById('label-autofill-cash')) {
-        document.getElementById('label-autofill-cash').innerText = `বাকি ৳${remainingForCash.toLocaleString()} ক্যাশে বসান`;
-      }
+      const totalPaid = cash + bkash + card + nagad;
+      const diff = grandTotal - totalPaid;
 
-      calculateSplitBalance();
-    }
+      const paidEl = document.getElementById('pos-total-paid-display');
+      const statusLabelEl = document.getElementById('pos-payment-status-label');
+      const balanceEl = document.getElementById('pos-payment-balance-display');
 
-    function onSplitCashInput() {
-      calculateSplitBalance();
-    }
+      if (paidEl) paidEl.innerText = `৳ ${totalPaid.toLocaleString()}`;
 
-    function autoFillRemainingCash() {
-      const grandTotal = getPosGrandTotal();
-      const card = Number(document.getElementById('pos-split-card')?.value) || 0;
-      const remaining = Math.max(0, grandTotal - card);
-      if (document.getElementById('pos-split-cash')) {
-        document.getElementById('pos-split-cash').value = remaining;
-      }
-      calculateSplitBalance();
-    }
-
-    function setSplitCardFull() {
-      const grandTotal = getPosGrandTotal();
-      if (document.getElementById('pos-split-card')) {
-        document.getElementById('pos-split-card').value = grandTotal;
-      }
-      if (document.getElementById('pos-split-cash')) {
-        document.getElementById('pos-split-cash').value = 0;
-      }
-      if (document.getElementById('pos-split-remaining-badge')) {
-        document.getElementById('pos-split-remaining-badge').innerText = `৳ 0`;
-      }
-      calculateSplitBalance();
-    }
-
-    function calculateSplitBalance() {
-      const grandTotal = getPosGrandTotal();
-      const cash = Number(document.getElementById('pos-split-cash')?.value) || 0;
-      const card = Number(document.getElementById('pos-split-card')?.value) || 0;
-      const paid = cash + card;
-      const diff = grandTotal - paid;
-
-      const paidLabel = document.getElementById('pos-split-paid-label');
-      const statusLabel = document.getElementById('pos-split-status-label');
-      const billBadge = document.getElementById('pos-split-total-bill-badge');
-      const remBadge = document.getElementById('pos-split-remaining-badge');
-
-      if (billBadge) billBadge.innerText = `Total Bill: ৳ ${grandTotal.toLocaleString()}`;
-      if (paidLabel) paidLabel.innerText = `৳ ${paid.toLocaleString()}`;
-
-      if (diff > 0) {
-        if (remBadge) remBadge.innerText = `৳ ${diff.toLocaleString()}`;
-      } else {
-        if (remBadge) remBadge.innerText = `৳ 0`;
-      }
-
-      if (statusLabel) {
-        if (diff === 0 && paid > 0) {
-          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-800';
-          statusLabel.innerText = '✓ Fully Paid (পরিশোধ সম্পন্ন)';
+      if (statusLabelEl && balanceEl) {
+        if (grandTotal === 0) {
+          statusLabelEl.innerText = 'বাকি পরিশোধ করতে হবে (Due):';
+          balanceEl.className = 'font-black text-slate-400 text-sm';
+          balanceEl.innerText = '৳ 0';
+        } else if (diff === 0 && totalPaid > 0) {
+          statusLabelEl.innerText = 'পরিশোধ স্ট্যাটাস (Status):';
+          balanceEl.className = 'font-black text-emerald-600 text-sm flex items-center space-x-1';
+          balanceEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i><span>✓ Fully Paid (পরিশোধ সম্পন্ন)</span>';
         } else if (diff > 0) {
-          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-100 text-rose-800';
-          statusLabel.innerText = `Due (বাকি): ৳${diff.toLocaleString()}`;
+          statusLabelEl.innerText = 'বাকি পরিশোধ করতে হবে (Due):';
+          balanceEl.className = 'font-black text-rose-600 text-sm';
+          balanceEl.innerText = `৳ ${diff.toLocaleString()}`;
         } else if (diff < 0) {
-          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-sky-100 text-sky-800';
-          statusLabel.innerText = `Change (ফেরত): ৳${Math.abs(diff).toLocaleString()}`;
-        } else {
-          statusLabel.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800';
-          statusLabel.innerText = `Due: ৳${grandTotal.toLocaleString()}`;
+          statusLabelEl.innerText = 'কাস্টমারকে ফেরত দিন (Change):';
+          balanceEl.className = 'font-black text-sky-600 text-sm';
+          balanceEl.innerText = `৳ ${Math.abs(diff).toLocaleString()}`;
         }
       }
+    }
+
+    function fillRemainingToMethod(targetMethod) {
+      const grandTotal = getPosGrandTotal();
+      if (grandTotal === 0) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'কার্টে কোনো পণ্য নেই!', showConfirmButton: false, timer: 1500 });
+        return;
+      }
+
+      let otherPaid = 0;
+      if (targetMethod !== 'cash') otherPaid += Number(document.getElementById('pay-input-cash')?.value) || 0;
+      if (targetMethod !== 'bkash') otherPaid += Number(document.getElementById('pay-input-bkash')?.value) || 0;
+      if (targetMethod !== 'card') otherPaid += Number(document.getElementById('pay-input-card')?.value) || 0;
+      if (targetMethod !== 'nagad') otherPaid += Number(document.getElementById('pay-input-nagad')?.value) || 0;
+
+      const remaining = Math.max(0, grandTotal - otherPaid);
+      const targetInput = document.getElementById(`pay-input-${targetMethod}`);
+      if (targetInput) {
+        targetInput.value = remaining > 0 ? remaining : 0;
+      }
+      onMultiPaymentInputChange(targetMethod);
+    }
+
+    function clearAllPaymentInputs() {
+      ['cash', 'bkash', 'card', 'nagad'].forEach(m => {
+        const input = document.getElementById(`pay-input-${m}`);
+        if (input) input.value = '';
+      });
+      if (document.getElementById('pay-bkash-txnid')) document.getElementById('pay-bkash-txnid').value = '';
+      if (document.getElementById('pay-nagad-txnid')) document.getElementById('pay-nagad-txnid').value = '';
+      onMultiPaymentInputChange();
     }
 
     async function processPosCheckout() {
@@ -2524,24 +2454,37 @@ CREATE TABLE IF NOT EXISTS transactions (
         if (!isDiscountApproved) return;
       }
 
-      // Check Split Payment validity
-      let formattedPaymentMethod = currentPayMethod;
-      if (currentPayMethod === 'Card') {
-        const bankName = document.getElementById('pos-card-bank-select')?.value || 'City Bank';
-        const txnSlip = document.getElementById('pos-card-txn-no')?.value.trim();
-        formattedPaymentMethod = `Card (${bankName}${txnSlip ? ` - Slip: #${txnSlip}` : ''})`;
-      } else if (currentPayMethod === 'Split') {
-        const cashPaid = Number(document.getElementById('pos-split-cash')?.value) || 0;
-        const cardPaid = Number(document.getElementById('pos-split-card')?.value) || 0;
-        const splitBank = document.getElementById('pos-split-bank-select')?.value || 'City Bank';
-        const totalPaid = cashPaid + cardPaid;
+      const cash = Number(document.getElementById('pay-input-cash')?.value) || 0;
+      const bkash = Number(document.getElementById('pay-input-bkash')?.value) || 0;
+      const bkashTxn = document.getElementById('pay-bkash-txnid')?.value.trim();
+      const card = Number(document.getElementById('pay-input-card')?.value) || 0;
+      const cardBank = document.getElementById('pay-card-bank')?.value || 'City Bank POS';
+      const nagad = Number(document.getElementById('pay-input-nagad')?.value) || 0;
+      const nagadTxn = document.getElementById('pay-nagad-txnid')?.value.trim();
 
-        if (totalPaid < grandTotal) {
-          Swal.fire('Incomplete Payment', `পরিশোধিত টাকা মোট বিলের চেয়ে কম! বকেয়া: ৳${(grandTotal - totalPaid).toLocaleString()}`, 'warning');
-          return;
-        }
-        const changeAmt = totalPaid > grandTotal ? (totalPaid - grandTotal) : 0;
-        formattedPaymentMethod = `Split (Card: ৳${cardPaid.toLocaleString()} [${splitBank}] + Cash: ৳${cashPaid.toLocaleString()}${changeAmt > 0 ? ` - Change: ৳${changeAmt}` : ''})`;
+      const totalPaid = cash + bkash + card + nagad;
+
+      if (totalPaid < grandTotal) {
+        const due = grandTotal - totalPaid;
+        Swal.fire({
+          icon: 'warning',
+          title: 'Incomplete Payment (বকেয়া রয়েছে)',
+          html: `<p>মোট বিল <b>৳${grandTotal.toLocaleString()}</b> কিন্তু জমা হয়েছে <b>৳${totalPaid.toLocaleString()}</b>।</p><p class="text-rose-600 font-bold mt-1">বাকি বকেয়া: ৳${due.toLocaleString()}</p>`,
+          confirmButtonText: 'ঠিক আছে'
+        });
+        return;
+      }
+
+      const paymentParts = [];
+      if (cash > 0) paymentParts.push(`Cash: ৳${cash.toLocaleString()}`);
+      if (bkash > 0) paymentParts.push(`bKash: ৳${bkash.toLocaleString()}${bkashTxn ? ` (${bkashTxn})` : ''}`);
+      if (card > 0) paymentParts.push(`Card: ৳${card.toLocaleString()} [${cardBank}]`);
+      if (nagad > 0) paymentParts.push(`Nagad: ৳${nagad.toLocaleString()}${nagadTxn ? ` (${nagadTxn})` : ''}`);
+
+      let formattedPaymentMethod = paymentParts.join(' + ') || 'Cash';
+      const changeAmt = totalPaid > grandTotal ? (totalPaid - grandTotal) : 0;
+      if (changeAmt > 0) {
+        formattedPaymentMethod += ` (Change: ৳${changeAmt.toLocaleString()})`;
       }
 
       // Salesperson
@@ -2617,8 +2560,7 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (document.getElementById('pos-discount')) document.getElementById('pos-discount').value = '0';
       if (document.getElementById('pos-customer-name')) document.getElementById('pos-customer-name').value = '';
       if (document.getElementById('pos-customer-phone')) document.getElementById('pos-customer-phone').value = '';
-      if (document.getElementById('pos-split-cash')) document.getElementById('pos-split-cash').value = '';
-      if (document.getElementById('pos-split-card')) document.getElementById('pos-split-card').value = '';
+      clearAllPaymentInputs();
       
       renderPosCart();
       renderPosProducts();
