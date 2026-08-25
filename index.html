@@ -1,0 +1,2452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexPOS & ERP Enterprise Suite - PostgreSQL / Supabase</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Supabase JS Client v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- SheetJS for Excel Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- JsBarcode -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .sidebar-active {
+      background: linear-gradient(90deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.05)) !important;
+      color: #6366f1 !important;
+      border-left: 4px solid #6366f1;
+      font-weight: 700;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); }
+    }
+
+    @keyframes floatWatermark {
+      0%, 100% { transform: translate(-50%, -50%) rotate(-12deg) scale(1); opacity: 0.04; }
+      50% { transform: translate(-50%, -53%) rotate(-9deg) scale(1.05); opacity: 0.08; }
+    }
+
+    .watermark-login {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      font-size: clamp(4rem, 15vw, 12rem);
+      font-weight: 900;
+      color: #ffffff;
+      -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.12);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      pointer-events: none;
+      user-select: none;
+      animation: floatWatermark 12s ease-in-out infinite;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    .animated-title-gradient {
+      background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6, #06b6d4, #10b981, #ec4899);
+      background-size: 400% 400%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 6s ease infinite;
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .receipt-paper {
+      background: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    .receipt-paper::after {
+      content: "";
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: radial-gradient(circle, transparent, transparent 50%, #fff 50%, #fff 100%);
+      background-size: 16px 16px;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #printable-receipt-area, #printable-receipt-area * {
+        visibility: visible !important;
+      }
+      #printable-receipt-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 10px;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- ============================================================ -->
+  <!-- 1. LOGIN SCREEN -->
+  <!-- ============================================================ -->
+  <div id="login-screen" class="relative min-h-screen flex items-center justify-center bg-slate-950 p-4 overflow-hidden">
+    
+    <!-- Background Animated Glow Blobs -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/25 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+    <div class="absolute top-1/2 -right-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Watermark Text -->
+    <div class="watermark-login">APEX POS & ERP</div>
+
+    <!-- Login Container Card -->
+    <div class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-2xl p-8 sm:p-9 rounded-3xl shadow-2xl border border-white/30 space-y-6">
+      
+      <!-- Brand Header -->
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 rounded-2xl mx-auto flex items-center justify-center text-white text-3xl shadow-xl shadow-indigo-500/30">
+          <i class="fa-solid fa-store"></i>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight animated-title-gradient">
+          APEX POS & ERP
+        </h1>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          PostgreSQL Cloud Suite • Real-Time Database
+        </p>
+      </div>
+
+      <!-- Quick Role Preset Pills for Fast Demo -->
+      <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center mb-1.5">
+          <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Quick Demo Login (Select Role)
+        </div>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button type="button" onclick="fillDemoCredentials('admin@system.com', 'admin123', 'Admin')" class="px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg transition border border-indigo-200">
+            👑 Admin
+          </button>
+          <button type="button" onclick="fillDemoCredentials('cashier@system.com', 'cashier123', 'Cashier')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] rounded-lg transition border border-emerald-200">
+            🛒 Cashier
+          </button>
+          <button type="button" onclick="fillDemoCredentials('accountant@system.com', 'acc123', 'Accountant')" class="px-2 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] rounded-lg transition border border-purple-200">
+            💰 Accounts
+          </button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Address *</label>
+          <div class="relative">
+            <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+            <input type="email" id="login-email" required placeholder="admin@system.com" value="admin@system.com" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password *</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+            <input type="password" id="login-password" required placeholder="••••••••" value="admin123" class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+            <button type="button" onclick="togglePasswordView('login-password')" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="login-btn" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white py-3 rounded-xl font-bold text-xs shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-2">
+          <span>Sign In to POS Dashboard</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </form>
+
+      <!-- Supabase Cloud Indicator -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+        <span class="flex items-center space-x-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          <span class="font-semibold text-slate-600" id="login-db-status">PostgreSQL Ready</span>
+        </span>
+        <button type="button" onclick="openSupabaseSettingsModal()" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+          <i class="fa-solid fa-gear"></i><span>DB Config</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 2. MAIN APPLICATION WORKSPACE -->
+  <!-- ============================================================ -->
+  <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-100 font-sans">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-64 bg-slate-950 text-slate-300 flex flex-col justify-between border-r border-slate-800 shrink-0 z-20">
+      <div>
+        <!-- Logo & App Title -->
+        <div class="p-5 flex items-center justify-between border-b border-slate-800/80">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-lg shadow-md shadow-indigo-600/30">
+              <i class="fa-solid fa-store"></i>
+            </div>
+            <div>
+              <h2 class="font-extrabold text-sm text-white tracking-wide font-heading">Apex POS & ERP</h2>
+              <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Enterprise Suite</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role Badge -->
+        <div class="px-5 py-3 border-b border-slate-800/60 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span class="text-xs font-bold text-slate-300" id="current-user-role-label">Admin Role</span>
+          </div>
+          <span id="current-user-email-badge" class="text-[10px] text-slate-400 truncate max-w-[100px]">admin@system.com</span>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav id="sidebar-nav" class="p-3 space-y-1 text-xs font-semibold">
+          <button id="nav-dashboard" onclick="switchNav('dashboard')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 transition sidebar-active">
+            <i class="fa-solid fa-chart-pie text-indigo-400 w-4"></i><span>Dashboard</span>
+          </button>
+          <button id="nav-pos" onclick="switchNav('pos')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-cash-register text-emerald-400 w-4"></i><span>POS Terminal (বিক্রি)</span>
+          </button>
+          <button id="nav-products" onclick="switchNav('products')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-boxes-stacked text-amber-400 w-4"></i><span>Products & Stock</span>
+          </button>
+          <button id="nav-sales" onclick="switchNav('sales')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-file-invoice-dollar text-sky-400 w-4"></i><span>Sales & Invoices</span>
+          </button>
+          <button id="nav-employees" onclick="switchNav('employees')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-users-gear text-pink-400 w-4"></i><span>Employees (কর্মী)</span>
+          </button>
+          <button id="nav-accounts" onclick="switchNav('accounts')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-wallet text-teal-400 w-4"></i><span>Accounts (আয় / ব্যয়)</span>
+          </button>
+          <button id="nav-reports" onclick="switchNav('reports')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-file-excel text-violet-400 w-4"></i><span>Reports & Export</span>
+          </button>
+          <button id="nav-settings" onclick="openSupabaseSettingsModal()" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-database text-cyan-400 w-4"></i><span>PostgreSQL Database</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- User Logout Box -->
+      <div class="p-4 border-t border-slate-800 space-y-2">
+        <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 rounded-xl text-xs font-bold transition">
+          <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto max-h-screen">
+      
+      <!-- Top Header Bar -->
+      <header class="bg-white border-b border-slate-200/80 px-6 py-4 flex flex-wrap justify-between items-center gap-4 sticky top-0 z-10 shadow-xs">
+        <div class="flex items-center space-x-3">
+          <div>
+            <h1 id="page-title" class="text-xl font-black text-slate-900 tracking-tight font-heading">Dashboard</h1>
+            <p id="page-subtitle" class="text-xs text-slate-500 font-medium">Real-time enterprise overview & POS transactions</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <!-- PostgreSQL / Supabase Live Pill -->
+          <div onclick="openSupabaseSettingsModal()" class="cursor-pointer flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition">
+            <span class="w-2 h-2 rounded-full bg-emerald-500" id="header-db-dot"></span>
+            <span class="text-[11px] font-bold text-slate-700" id="header-db-label">PostgreSQL: Active</span>
+          </div>
+
+          <!-- POS Quick Trigger Button -->
+          <button onclick="switchNav('pos')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="hidden sm:inline">Open POS</span>
+          </button>
+
+          <!-- Current User Info -->
+          <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+            <div id="header-avatar" class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
+              A
+            </div>
+            <div class="hidden sm:block text-left">
+              <div id="header-name" class="text-xs font-bold text-slate-800">Admin User</div>
+              <div id="header-role" class="text-[10px] font-semibold text-indigo-600 uppercase">Administrator</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dynamic Page Container -->
+      <div class="p-6 flex-1 space-y-6">
+
+        <!-- ============================================================ -->
+        <!-- TAB 1: DASHBOARD -->
+        <!-- ============================================================ -->
+        <section id="sec-dashboard" class="space-y-6">
+          
+          <!-- Key Metrics Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Metric 1: Total Sales -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Today's Sales</span>
+                <h3 id="dash-today-sales" class="text-2xl font-black text-slate-900 mt-1">৳ 0</h3>
+                <span id="dash-today-orders" class="text-[11px] font-bold text-emerald-600 mt-1 inline-block">0 Invoices completed</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-cash-register"></i>
+              </div>
+            </div>
+
+            <!-- Metric 2: Total Revenue -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue</span>
+                <h3 id="dash-total-revenue" class="text-2xl font-black text-indigo-600 mt-1">৳ 0</h3>
+                <span class="text-[11px] font-bold text-indigo-500 mt-1 inline-block">Lifetime Sales</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+            </div>
+
+            <!-- Metric 3: Products in Stock -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Inventory & Stock</span>
+                <h3 id="dash-total-products" class="text-2xl font-black text-slate-900 mt-1">0</h3>
+                <span id="dash-low-stock-count" class="text-[11px] font-bold text-rose-500 mt-1 inline-block">0 Low stock alerts</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-box-open"></i>
+              </div>
+            </div>
+
+            <!-- Metric 4: Active Employees -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Employees</span>
+                <h3 id="dash-total-employees" class="text-2xl font-black text-purple-600 mt-1">0</h3>
+                <span class="text-[11px] font-bold text-slate-400 mt-1 inline-block">HR & Staff</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-users"></i>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Sales Chart -->
+            <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-base font-bold text-slate-800">Sales Trend & Performance</h3>
+                  <p class="text-xs text-slate-400 font-medium">Revenue history per transaction</p>
+                </div>
+                <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold">Live Visuals</span>
+              </div>
+              <div class="h-64">
+                <canvas id="chart-sales-trend"></canvas>
+              </div>
+            </div>
+
+            <!-- Category / Product Chart -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+              <div>
+                <h3 class="text-base font-bold text-slate-800">Inventory by Category</h3>
+                <p class="text-xs text-slate-400 font-medium">Stock volume breakdown</p>
+              </div>
+              <div class="h-64 flex items-center justify-center">
+                <canvas id="chart-categories"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Invoices Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 class="text-base font-bold text-slate-800">Recent POS Invoices</h3>
+                <p class="text-xs text-slate-400 font-medium">Latest sales completed</p>
+              </div>
+              <button onclick="switchNav('sales')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                View All Sales &rarr;
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Invoice #</th>
+                    <th class="px-6 py-3.5">Customer</th>
+                    <th class="px-6 py-3.5">Date & Time</th>
+                    <th class="px-6 py-3.5">Items</th>
+                    <th class="px-6 py-3.5">Payment</th>
+                    <th class="px-6 py-3.5 font-extrabold">Amount</th>
+                    <th class="px-6 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-sales-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ============================================================ -->
+        <!-- TAB 2: POS SALES TERMINAL -->
+        <!-- ============================================================ -->
+        <section id="sec-pos" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left 7 Cols: Product Catalog & Fast Search -->
+            <div class="lg:col-span-7 space-y-4">
+              
+              <!-- POS Top Control Toolbar -->
+              <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-3">
+                <div class="flex-1 min-w-[200px] relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                  <input type="text" id="pos-search-input" oninput="renderPosProducts()" placeholder="পণ্য খুঁজুন বা বারকোড স্ক্যান করুন..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition">
+                </div>
+
+                <div class="flex items-center space-x-2">
+                  <select id="pos-category-filter" onchange="renderPosProducts()" class="py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none">
+                    <option value="ALL">All Categories</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Product Grid -->
+              <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
+                <!-- Products injected via JS -->
+              </div>
+
+            </div>
+
+            <!-- Right 5 Cols: Live Cart & Instant Checkout -->
+            <div class="lg:col-span-5 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-lg space-y-4 sticky top-20">
+              
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 class="text-base font-black text-slate-900 flex items-center space-x-2 font-heading">
+                    <i class="fa-solid fa-cart-shopping text-indigo-600"></i>
+                    <span>Current Cart (অর্ডার তালিকা)</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-400 font-medium" id="pos-cart-count">0 items added</p>
+                </div>
+                <button onclick="clearPosCart()" class="text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition">
+                  <i class="fa-solid fa-trash-can mr-1"></i>Clear
+                </button>
+              </div>
+
+              <!-- Customer Info Inputs -->
+              <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 text-xs">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase">Customer Name</label>
+                  <input type="text" id="pos-customer-name" placeholder="Walk-in Customer" class="w-full bg-white p-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase">Customer Phone</label>
+                  <input type="text" id="pos-customer-phone" placeholder="017xxxxxxxx" class="w-full bg-white p-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none">
+                </div>
+              </div>
+
+              <!-- Cart Items List Scrollable -->
+              <div id="pos-cart-items-container" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                <!-- Cart items injected via JS -->
+              </div>
+
+              <!-- Calculation Summary -->
+              <div class="space-y-2 pt-3 border-t border-slate-100 text-xs">
+                <div class="flex justify-between font-semibold text-slate-600">
+                  <span>Subtotal</span>
+                  <span id="pos-subtotal">৳ 0</span>
+                </div>
+                <div class="flex justify-between items-center font-semibold text-slate-600">
+                  <span>Discount (ছাড় ৳)</span>
+                  <input type="number" id="pos-discount" min="0" value="0" oninput="calculatePosTotals()" class="w-24 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none">
+                </div>
+                <div class="flex justify-between items-center font-semibold text-slate-600">
+                  <span>Tax / VAT (5%)</span>
+                  <span id="pos-tax">৳ 0</span>
+                </div>
+                <div class="flex justify-between font-black text-lg text-slate-900 pt-2 border-t border-slate-200">
+                  <span>Net Payable (মোট)</span>
+                  <span id="pos-grand-total" class="text-indigo-600">৳ 0</span>
+                </div>
+              </div>
+
+              <!-- Payment Method Selector -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Payment Method (মূল্য পরিশোধ)</label>
+                <div class="grid grid-cols-4 gap-1.5">
+                  <button type="button" onclick="setPosPaymentMethod('Cash')" id="btn-pay-Cash" class="pay-method-btn active py-2 rounded-xl text-xs font-bold border border-emerald-300 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-money-bill-1-wave mb-0.5"></i>Cash
+                  </button>
+                  <button type="button" onclick="setPosPaymentMethod('bKash')" id="btn-pay-bKash" class="pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-mobile-screen mb-0.5"></i>bKash
+                  </button>
+                  <button type="button" onclick="setPosPaymentMethod('Card')" id="btn-pay-Card" class="pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-credit-card mb-0.5"></i>Card
+                  </button>
+                  <button type="button" onclick="setPosPaymentMethod('Nagad')" id="btn-pay-Nagad" class="pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-wallet mb-0.5"></i>Nagad
+                  </button>
+                </div>
+              </div>
+
+              <!-- Checkout Submit Button -->
+              <button onclick="processPosCheckout()" id="pos-checkout-btn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-emerald-600/30 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-receipt"></i>
+                <span>Complete Sale & Print Receipt</span>
+              </button>
+
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ============================================================ -->
+        <!-- TAB 3: PRODUCTS & STOCK MANAGEMENT -->
+        <!-- ============================================================ -->
+        <section id="sec-products" class="hidden space-y-6">
+          
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap justify-between items-center gap-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+                <i class="fa-solid fa-boxes-stacked text-amber-500"></i>
+                <span>Product & Stock Inventory Management (পণ্য ও স্টক)</span>
+              </h2>
+              <p class="text-xs text-slate-500">Add, edit, adjust stock, and generate barcodes</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="prd-search-input" oninput="renderProductsTable()" placeholder="Search product / code..." class="pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:ring-1 focus:ring-amber-500">
+              </div>
+
+              <select id="prd-filter-cat" onchange="renderProductsTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none">
+                <option value="ALL">All Categories</option>
+              </select>
+
+              <button onclick="openAddProductModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Product</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Products Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Product & Photo</th>
+                    <th class="px-6 py-3.5">Code / SKU</th>
+                    <th class="px-6 py-3.5">Category</th>
+                    <th class="px-6 py-3.5">Purchase Price</th>
+                    <th class="px-6 py-3.5">Sale Price</th>
+                    <th class="px-6 py-3.5">Stock Level</th>
+                    <th class="px-6 py-3.5">Status</th>
+                    <th class="px-6 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="products-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ============================================================ -->
+        <!-- TAB 4: SALES & INVOICES -->
+        <!-- ============================================================ -->
+        <section id="sec-sales" class="hidden space-y-6">
+          
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap justify-between items-center gap-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+                <i class="fa-solid fa-file-invoice-dollar text-sky-500"></i>
+                <span>Sales Invoices History (বিক্রয় রশিদ ও রিপোর্ট)</span>
+              </h2>
+              <p class="text-xs text-slate-500">View transactions, reprint invoices, and audit cashier sales</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="sales-search-input" oninput="renderSalesTable()" placeholder="Invoice # or customer..." class="pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:ring-1 focus:ring-sky-500">
+              </div>
+
+              <select id="sales-filter-payment" onchange="renderSalesTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none">
+                <option value="ALL">All Payments</option>
+                <option value="Cash">Cash</option>
+                <option value="bKash">bKash</option>
+                <option value="Card">Card</option>
+                <option value="Nagad">Nagad</option>
+              </select>
+
+              <button onclick="exportSalesToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Export Excel</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sales Invoices Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Invoice #</th>
+                    <th class="px-6 py-3.5">Customer Name & Phone</th>
+                    <th class="px-6 py-3.5">Sale Date</th>
+                    <th class="px-6 py-3.5">Payment Method</th>
+                    <th class="px-6 py-3.5">Total Amount</th>
+                    <th class="px-6 py-3.5">Processed By</th>
+                    <th class="px-6 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="sales-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ============================================================ -->
+        <!-- TAB 5: EMPLOYEES MANAGEMENT -->
+        <!-- ============================================================ -->
+        <section id="sec-employees" class="hidden space-y-6">
+          
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap justify-between items-center gap-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+                <i class="fa-solid fa-users-gear text-pink-500"></i>
+                <span>Employee & User Directory (কর্মী ব্যবস্থাপনা)</span>
+              </h2>
+              <p class="text-xs text-slate-500">Manage payroll salary, role access, and staff profiles</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="emp-search-input" oninput="renderEmployeesTable()" placeholder="Name, ID, phone..." class="pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:ring-1 focus:ring-pink-500">
+              </div>
+
+              <select id="emp-filter-dept" onchange="renderEmployeesTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none">
+                <option value="ALL">All Departments</option>
+              </select>
+
+              <button onclick="openAddEmployeeModal()" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Add Employee</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Employees Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Employee Name & Photo</th>
+                    <th class="px-6 py-3.5">Employee ID</th>
+                    <th class="px-6 py-3.5">Department</th>
+                    <th class="px-6 py-3.5">Designation</th>
+                    <th class="px-6 py-3.5">Contact (Email / Phone)</th>
+                    <th class="px-6 py-3.5">Monthly Salary</th>
+                    <th class="px-6 py-3.5">Joining Date</th>
+                    <th class="px-6 py-3.5">Status</th>
+                    <th class="px-6 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="employees-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ============================================================ -->
+        <!-- TAB 6: ACCOUNTS (EXPENSE & INCOME) -->
+        <!-- ============================================================ -->
+        <section id="sec-accounts" class="hidden space-y-6">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Total Income</span>
+                <h3 id="acc-total-income" class="text-2xl font-black text-emerald-600 mt-1">৳ 0</h3>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Total Expenses</span>
+                <h3 id="acc-total-expense" class="text-2xl font-black text-rose-600 mt-1">৳ 0</h3>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Net Balance</span>
+                <h3 id="acc-net-balance" class="text-2xl font-black text-indigo-600 mt-1">৳ 0</h3>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap justify-between items-center gap-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-800">Accounts & Ledger (আয় ও ব্যয় বিবরণী)</h2>
+              <p class="text-xs text-slate-500">Record operational costs, utility bills, and other income</p>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <select id="acc-filter-type" onchange="renderAccountsTable()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
+                <option value="ALL">All Types</option>
+                <option value="Income">Income (+)</option>
+                <option value="Expense">Expense (-)</option>
+              </select>
+
+              <button onclick="openAddTransactionModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Entry</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Accounts Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Date</th>
+                    <th class="px-6 py-3.5">Type</th>
+                    <th class="px-6 py-3.5">Category</th>
+                    <th class="px-6 py-3.5">Note / Details</th>
+                    <th class="px-6 py-3.5">Payment Method</th>
+                    <th class="px-6 py-3.5 font-bold">Amount (৳)</th>
+                    <th class="px-6 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="accounts-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ============================================================ -->
+        <!-- TAB 7: REPORTS & ANALYTICS -->
+        <!-- ============================================================ -->
+        <section id="sec-reports" class="hidden space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
+            <div>
+              <h2 class="text-lg font-black text-slate-900 font-heading">Financial & Sales Reports</h2>
+              <p class="text-xs text-slate-500 font-medium">Export custom business statements for tax and accounting audits</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                  <i class="fa-solid fa-file-excel"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 text-sm">Full Sales Invoices Report</h4>
+                <p class="text-xs text-slate-500">Download itemized sales data, tax, cashier and invoice log in Excel.</p>
+                <button onclick="exportSalesToExcel()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-sm transition">
+                  Export Sales .xlsx
+                </button>
+              </div>
+
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <i class="fa-solid fa-boxes-packing"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 text-sm">Stock & Inventory Valuation</h4>
+                <p class="text-xs text-slate-500">Export current product quantities, purchase cost, and sale values.</p>
+                <button onclick="exportProductsToExcel()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition">
+                  Export Products .xlsx
+                </button>
+              </div>
+
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 text-sm">Employee & Payroll Summary</h4>
+                <p class="text-xs text-slate-500">Export employee directory, department distribution and salary sheet.</p>
+                <button onclick="exportEmployeesToExcel()" class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-xs shadow-sm transition">
+                  Export Staff .xlsx
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- MODALS -->
+  <!-- ============================================================ -->
+
+  <!-- 1. ADD / EDIT PRODUCT MODAL -->
+  <div id="modal-product" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 id="modal-product-title" class="text-base font-black text-slate-900 flex items-center space-x-2 font-heading">
+          <i class="fa-solid fa-box text-indigo-600"></i>
+          <span>Add New Product</span>
+        </h3>
+        <button onclick="closeModal('modal-product')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-product" onsubmit="handleProductSubmit(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="prd-form-id">
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Product Name (পণ্যের নাম) *</label>
+          <input type="text" id="prd-form-name" required placeholder="e.g. Cotton Polo Shirt" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Product Code / SKU *</label>
+            <input type="text" id="prd-form-code" required placeholder="e.g. PRD-101" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-700 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Category (ক্যাটেগরি) *</label>
+            <input type="text" id="prd-form-category" required placeholder="e.g. Clothing, Food, Electronics" list="cat-suggestions" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
+            <datalist id="cat-suggestions">
+              <option value="Clothing">
+              <option value="Electronics">
+              <option value="Grocery">
+              <option value="Footwear">
+              <option value="Accessories">
+            </datalist>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Purchase Price (৳) *</label>
+            <input type="number" id="prd-form-purchase" required min="0" step="any" placeholder="300" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Sale Price (৳) *</label>
+            <input type="number" id="prd-form-sale" required min="0" step="any" placeholder="450" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-emerald-600 outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Initial Stock *</label>
+            <input type="number" id="prd-form-stock" required min="0" placeholder="50" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Photo Upload -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Product Image (ছবি আপলোড)</label>
+          <div class="flex items-center space-x-3">
+            <img id="prd-image-preview" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150" class="w-12 h-12 rounded-xl object-cover border border-slate-200">
+            <input type="file" id="prd-form-file" accept="image/*" onchange="previewImage(event, 'prd-image-preview')" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modal-product')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-sm">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 2. ADD / EDIT EMPLOYEE MODAL -->
+  <div id="modal-employee" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 id="modal-employee-title" class="text-base font-black text-slate-900 flex items-center space-x-2 font-heading">
+          <i class="fa-solid fa-user-plus text-pink-600"></i>
+          <span>Add New Employee (নতুন কর্মী এন্ট্রি)</span>
+        </h3>
+        <button onclick="closeModal('modal-employee')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-employee" onsubmit="handleEmployeeSubmit(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="emp-form-id">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Full Name (নাম) *</label>
+            <input type="text" id="emp-form-name" required placeholder="e.g. Tanvir Ahmed" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-pink-500">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Employee ID *</label>
+            <input type="text" id="emp-form-code" required placeholder="e.g. EMP-01" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-pink-700 outline-none focus:bg-white focus:ring-2 focus:ring-pink-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Email Address *</label>
+            <input type="email" id="emp-form-email" required placeholder="tanvir@company.com" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Phone Number *</label>
+            <input type="text" id="emp-form-phone" required placeholder="018xxxxxxxx" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Department (বিভাগ) *</label>
+            <input type="text" id="emp-form-dept" required placeholder="Sales / Accounts / HR / IT" list="dept-suggestions" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+            <datalist id="dept-suggestions">
+              <option value="Sales">
+              <option value="Accounts">
+              <option value="HR & Admin">
+              <option value="Operations">
+              <option value="IT & Tech">
+            </datalist>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Designation (পদবী) *</label>
+            <input type="text" id="emp-form-desig" required placeholder="Branch Manager, Cashier..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Monthly Salary (৳) *</label>
+            <input type="number" id="emp-form-salary" required min="0" placeholder="25000" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Joining Date *</label>
+            <input type="date" id="emp-form-date" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Status *</label>
+            <select id="emp-form-status" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Photo (ছবি আপলোড)</label>
+          <div class="flex items-center space-x-3">
+            <img id="emp-image-preview" src="https://ui-avatars.com/api/?name=Staff&background=ec4899&color=fff" class="w-12 h-12 rounded-full object-cover border border-slate-200 shadow-xs">
+            <input type="file" id="emp-form-file" accept="image/*" onchange="previewImage(event, 'emp-image-preview')" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modal-employee')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-bold transition shadow-sm">Save Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 3. ADD TRANSACTION (INCOME / EXPENSE) MODAL -->
+  <div id="modal-transaction" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-base font-black text-slate-900 flex items-center space-x-2 font-heading">
+          <i class="fa-solid fa-money-bill-transfer text-teal-600"></i>
+          <span>Add Account Entry (আয় / ব্যয়)</span>
+        </h3>
+        <button onclick="closeModal('modal-transaction')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleTransactionSubmit(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Entry Type *</label>
+            <select id="acc-form-type" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+              <option value="Expense">Expense (ব্যয় -)</option>
+              <option value="Income">Income (আয় +)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Amount (৳) *</label>
+            <input type="number" id="acc-form-amount" required min="1" placeholder="1000" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-900 outline-none focus:bg-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Category (খাত) *</label>
+          <input type="text" id="acc-form-cat" required placeholder="e.g. Shop Rent, Electricity, Staff Lunch, Logistics" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Date *</label>
+            <input type="date" id="acc-form-date" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Payment Method</label>
+            <select id="acc-form-method" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none">
+              <option value="Cash">Cash</option>
+              <option value="bKash">bKash</option>
+              <option value="Card">Card / Bank</option>
+              <option value="Nagad">Nagad</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Notes / Details</label>
+          <textarea id="acc-form-note" rows="2" placeholder="বিস্তারিত বিবরণ..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modal-transaction')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold transition shadow-sm">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 4. PRINTABLE POS RECEIPT MODAL -->
+  <div id="modal-receipt" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Print Preview</span>
+        <button onclick="closeModal('modal-receipt')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Printable Area -->
+      <div id="printable-receipt-area" class="receipt-paper p-4 text-slate-900 text-xs space-y-3">
+        <div class="text-center space-y-1">
+          <h2 class="font-black text-base uppercase tracking-wider">APEX ENTERPRISE</h2>
+          <p class="text-[10px] text-slate-600">Dhaka, Bangladesh • Hotline: 01800-000000</p>
+          <div class="border-b border-dashed border-slate-400 pt-1"></div>
+        </div>
+
+        <div class="text-[11px] space-y-0.5">
+          <div class="flex justify-between"><span>Invoice:</span><b id="rec-inv-no">INV-001</b></div>
+          <div class="flex justify-between"><span>Date:</span><span id="rec-date">2026-08-25</span></div>
+          <div class="flex justify-between"><span>Customer:</span><span id="rec-customer">Walk-in</span></div>
+          <div class="flex justify-between"><span>Cashier:</span><span id="rec-cashier">Admin</span></div>
+          <div class="border-b border-dashed border-slate-400 pt-1"></div>
+        </div>
+
+        <!-- Receipt Table -->
+        <table class="w-full text-left text-[11px]">
+          <thead>
+            <tr class="border-b border-slate-300">
+              <th class="py-1">Item</th>
+              <th class="py-1 text-center">Qty</th>
+              <th class="py-1 text-right">Price</th>
+              <th class="py-1 text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody id="rec-items-body">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+
+        <div class="border-t border-dashed border-slate-400 pt-2 text-[11px] space-y-1">
+          <div class="flex justify-between"><span>Subtotal:</span><span id="rec-subtotal">৳ 0</span></div>
+          <div class="flex justify-between"><span>Discount:</span><span id="rec-discount">-৳ 0</span></div>
+          <div class="flex justify-between"><span>Tax (5%):</span><span id="rec-tax">৳ 0</span></div>
+          <div class="flex justify-between text-sm font-black pt-1 border-t border-slate-800">
+            <span>Total Payable:</span><span id="rec-total">৳ 0</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-600">
+            <span>Paid by:</span><span id="rec-payment-method">Cash</span>
+          </div>
+        </div>
+
+        <div class="text-center pt-3 space-y-2">
+          <div class="flex justify-center" id="rec-qr-code"></div>
+          <p class="text-[10px] font-bold text-slate-500">Thank you for shopping with us!</p>
+        </div>
+      </div>
+
+      <div class="pt-2 flex space-x-2">
+        <button onclick="window.print()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-md">
+          <i class="fa-solid fa-print"></i><span>Print Thermal Receipt</span>
+        </button>
+        <button onclick="closeModal('modal-receipt')" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 5. SUPABASE / POSTGRESQL SETTINGS MODAL -->
+  <div id="modal-supabase" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-base font-black text-slate-900 flex items-center space-x-2 font-heading">
+          <i class="fa-solid fa-database text-emerald-600"></i>
+          <span>PostgreSQL / Supabase Cloud Settings</span>
+        </h3>
+        <button onclick="closeModal('modal-supabase')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 text-xs text-emerald-900 space-y-1">
+        <div class="font-bold flex items-center space-x-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-600"></i>
+          <span>PostgreSQL Database Connectivity</span>
+        </div>
+        <p class="text-[11px] text-emerald-700">Enter your Supabase <b>Project URL</b> and <b>Publishable Key (Anon Key)</b> below to sync all records with your live cloud database.</p>
+      </div>
+
+      <form onsubmit="handleSaveSupabaseConfig(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Project URL *</label>
+          <input type="text" id="supabase-url" placeholder="https://xyzcompany.supabase.co" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Publishable / Anon Key *</label>
+          <textarea id="supabase-key" rows="2" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></textarea>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-slate-700">📋 SQL Table Creation Query:</span>
+            <button type="button" onclick="copySqlSchemaQuery()" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[10px] font-bold">Copy SQL</button>
+          </div>
+          <pre id="sql-schema-box" class="bg-slate-900 text-emerald-400 p-2.5 rounded-xl text-[10px] overflow-x-auto max-h-28 font-mono">-- Run this once in Supabase SQL Editor:
+CREATE TABLE IF NOT EXISTS employees (
+  id BIGSERIAL PRIMARY KEY,
+  employee_id TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  department TEXT,
+  designation TEXT,
+  salary NUMERIC DEFAULT 0,
+  joining_date DATE,
+  status TEXT DEFAULT 'Active',
+  photo_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS products (
+  id BIGSERIAL PRIMARY KEY,
+  product_code TEXT UNIQUE NOT NULL,
+  product_name TEXT NOT NULL,
+  category TEXT,
+  purchase_price NUMERIC DEFAULT 0,
+  sale_price NUMERIC NOT NULL,
+  stock INT DEFAULT 0,
+  image_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS sales (
+  id BIGSERIAL PRIMARY KEY,
+  invoice_no TEXT UNIQUE NOT NULL,
+  customer_name TEXT,
+  customer_phone TEXT,
+  total_amount NUMERIC NOT NULL,
+  payment_method TEXT,
+  sale_date TIMESTAMPTZ DEFAULT NOW(),
+  items JSONB,
+  cashier_name TEXT
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+  id BIGSERIAL PRIMARY KEY,
+  type TEXT NOT NULL,
+  category TEXT,
+  amount NUMERIC NOT NULL,
+  date DATE NOT NULL,
+  payment_method TEXT,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);</pre>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modal-supabase')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition shadow-sm flex items-center space-x-1.5">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save & Connect</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- JAVASCRIPT APP LOGIC & SUPABASE INTEGRATION -->
+  <!-- ============================================================ -->
+  <script>
+    // --- Application State ---
+    let supabaseClient = null;
+    let currentUser = null;
+    let posCart = [];
+
+    // Memory Store (Local Fallback + Live Synced Cache)
+    let employeesData = [
+      { id: 1, employee_id: 'EMP-01', name: 'Tanvir Ahmed Rifat', email: 'tanvir@system.com', phone: '01811-000001', department: 'Operations', designation: 'Branch Manager', salary: 35000, joining_date: '2024-01-15', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=6366f1&color=fff' },
+      { id: 2, employee_id: 'EMP-02', name: 'Sadia Akter', email: 'sadia@system.com', phone: '01722-000002', department: 'Sales', designation: 'Senior Cashier', salary: 22000, joining_date: '2024-03-01', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sadia+Akter&background=ec4899&color=fff' },
+      { id: 3, employee_id: 'EMP-03', name: 'Sanim Ahmed', email: 'sanim@system.com', phone: '01933-000003', department: 'Accounts', designation: 'Accountant', salary: 28000, joining_date: '2024-02-10', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sanim+Ahmed&background=10b981&color=fff' },
+      { id: 4, employee_id: 'EMP-04', name: 'Mariom Begum', email: 'mariom@system.com', phone: '01644-000004', department: 'Sales', designation: 'Sales Associate', salary: 18000, joining_date: '2024-06-20', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Mariom+Begum&background=f59e0b&color=fff' }
+    ];
+
+    let productsData = [
+      { id: 1, product_code: 'PRD-101', product_name: 'Premium Cotton Polo Shirt', category: 'Clothing', purchase_price: 350, sale_price: 650, stock: 45, image_url: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=200' },
+      { id: 2, product_code: 'PRD-102', product_name: 'Slim Fit Denim Jeans', category: 'Clothing', purchase_price: 600, sale_price: 1250, stock: 28, image_url: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=200' },
+      { id: 3, product_code: 'PRD-103', product_name: 'Wireless Bluetooth Earbuds', category: 'Electronics', purchase_price: 850, sale_price: 1550, stock: 18, image_url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=200' },
+      { id: 4, product_code: 'PRD-104', product_name: 'Leather Executive Wallet', category: 'Accessories', purchase_price: 250, sale_price: 550, stock: 3, image_url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=200' },
+      { id: 5, product_code: 'PRD-105', product_name: 'Casual Canvas Sneakers', category: 'Footwear', purchase_price: 700, sale_price: 1400, stock: 20, image_url: 'https://images.unsplash.com/photo-1525966226566-35c3443e7a6f?w=200' },
+      { id: 6, product_code: 'PRD-106', product_name: 'Stainless Steel Water Flask', category: 'Accessories', purchase_price: 220, sale_price: 480, stock: 2, image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=200' }
+    ];
+
+    let salesData = [
+      {
+        id: 1,
+        invoice_no: 'INV-20260825-001',
+        customer_name: 'Shakil Hasan',
+        customer_phone: '01711223344',
+        total_amount: 1900,
+        payment_method: 'Cash',
+        sale_date: '2026-08-25T14:30:00Z',
+        items: [
+          { product_id: 1, product_name: 'Premium Cotton Polo Shirt', price: 650, qty: 1, total: 650 },
+          { product_id: 2, product_name: 'Slim Fit Denim Jeans', price: 1250, qty: 1, total: 1250 }
+        ],
+        cashier_name: 'Tanvir Ahmed'
+      },
+      {
+        id: 2,
+        invoice_no: 'INV-20260825-002',
+        customer_name: 'Nusrat Jahan',
+        customer_phone: '01899887766',
+        total_amount: 1550,
+        payment_method: 'bKash',
+        sale_date: '2026-08-25T15:15:00Z',
+        items: [
+          { product_id: 3, product_name: 'Wireless Bluetooth Earbuds', price: 1550, qty: 1, total: 1550 }
+        ],
+        cashier_name: 'Sadia Akter'
+      }
+    ];
+
+    let accountsData = [
+      { id: 1, type: 'Income', category: 'Opening Balance', amount: 50000, date: '2026-08-01', payment_method: 'Cash', note: 'Initial register deposit' },
+      { id: 2, type: 'Expense', category: 'Shop Rent', amount: 15000, date: '2026-08-05', payment_method: 'Bank Transfer', note: 'Monthly Outlet Rent' },
+      { id: 3, type: 'Expense', category: 'Electricity Bill', amount: 3200, date: '2026-08-10', payment_method: 'bKash', note: 'DESCO electricity bill' },
+      { id: 4, type: 'Expense', category: 'Staff Refreshment', amount: 850, date: '2026-08-20', payment_method: 'Cash', note: 'Snacks & Tea' }
+    ];
+
+    let currentPayMethod = 'Cash';
+    let chartSalesInstance = null;
+    let chartCategoriesInstance = null;
+
+    // --- Init App on Page Load ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStoredCredentialsAndSupabase();
+      renderDashboard();
+      populateCategoryFilters();
+    });
+
+    // --- Supabase Config & Initialization ---
+    function loadStoredCredentialsAndSupabase() {
+      const savedUrl = localStorage.getItem('apex_supabase_url') || '';
+      const savedKey = localStorage.getItem('apex_supabase_key') || '';
+
+      if (document.getElementById('supabase-url')) document.getElementById('supabase-url').value = savedUrl;
+      if (document.getElementById('supabase-key')) document.getElementById('supabase-key').value = savedKey;
+
+      if (savedUrl && savedKey && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(savedUrl, savedKey);
+          updateDbStatusBadge(true, 'Supabase Connected');
+          fetchCloudDataRealtime();
+        } catch (err) {
+          console.warn('Supabase init error:', err);
+          updateDbStatusBadge(false, 'Local Database (Ready)');
+        }
+      } else {
+        updateDbStatusBadge(false, 'Local Database (Ready)');
+      }
+    }
+
+    function updateDbStatusBadge(isConnected, text) {
+      const dot = document.getElementById('header-db-dot');
+      const label = document.getElementById('header-db-label');
+      const loginStatus = document.getElementById('login-db-status');
+
+      if (dot) dot.className = isConnected ? 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-500';
+      if (label) label.innerText = text;
+      if (loginStatus) loginStatus.innerText = text;
+    }
+
+    async function fetchCloudDataRealtime() {
+      if (!supabaseClient) return;
+
+      try {
+        // Fetch products
+        const { data: prods } = await supabaseClient.from('products').select('*');
+        if (prods && prods.length > 0) productsData = prods;
+
+        // Fetch employees
+        const { data: emps } = await supabaseClient.from('employees').select('*');
+        if (emps && emps.length > 0) employeesData = emps;
+
+        // Fetch sales
+        const { data: sls } = await supabaseClient.from('sales').select('*').order('id', { ascending: false });
+        if (sls && sls.length > 0) salesData = sls;
+
+        // Fetch transactions
+        const { data: txs } = await supabaseClient.from('transactions').select('*').order('id', { ascending: false });
+        if (txs && txs.length > 0) accountsData = txs;
+
+        renderDashboard();
+        renderPosProducts();
+        renderProductsTable();
+        renderEmployeesTable();
+        renderSalesTable();
+        renderAccountsTable();
+      } catch (err) {
+        console.warn('Cloud sync note:', err.message);
+      }
+    }
+
+    function handleSaveSupabaseConfig(e) {
+      e.preventDefault();
+      const url = document.getElementById('supabase-url').value.trim();
+      const key = document.getElementById('supabase-key').value.trim();
+
+      if (!url || !key) {
+        Swal.fire('Required', 'Please enter both Project URL and Publishable Key', 'warning');
+        return;
+      }
+
+      localStorage.setItem('apex_supabase_url', url);
+      localStorage.setItem('apex_supabase_key', key);
+
+      try {
+        supabaseClient = window.supabase.createClient(url, key);
+        updateDbStatusBadge(true, 'Supabase Connected');
+        closeModal('modal-supabase');
+        Swal.fire('Connected!', 'Supabase PostgreSQL Client is successfully initialized!', 'success');
+        fetchCloudDataRealtime();
+      } catch (err) {
+        Swal.fire('Connection Failed', err.message, 'error');
+      }
+    }
+
+    function copySqlSchemaQuery() {
+      const sql = document.getElementById('sql-schema-box').innerText;
+      navigator.clipboard.writeText(sql).then(() => {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'SQL Schema copied to clipboard!', showConfirmButton: false, timer: 2000 });
+      });
+    }
+
+    // --- Authentication ---
+    function fillDemoCredentials(email, pass, role) {
+      document.getElementById('login-email').value = email;
+      document.getElementById('login-password').value = pass;
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value;
+
+      if (!email || !pass) {
+        Swal.fire('Error', 'Please enter email and password', 'warning');
+        return;
+      }
+
+      let role = 'Admin';
+      let name = 'Admin User';
+
+      if (email.toLowerCase().includes('cashier')) {
+        role = 'Cashier';
+        name = 'Sadia Akter (Cashier)';
+      } else if (email.toLowerCase().includes('acc')) {
+        role = 'Accountant';
+        name = 'Sanim Ahmed (Accounts)';
+      }
+
+      currentUser = { email, role, name };
+
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+
+      document.getElementById('header-name').innerText = name;
+      document.getElementById('header-role').innerText = role;
+      document.getElementById('header-avatar').innerText = name.charAt(0);
+      document.getElementById('current-user-role-label').innerText = `${role} Role`;
+      document.getElementById('current-user-email-badge').innerText = email;
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `Welcome back, ${name}!`,
+        showConfirmButton: false,
+        timer: 2000
+      });
+
+      renderDashboard();
+      switchNav('dashboard');
+    }
+
+    function handleLogout() {
+      Swal.fire({
+        title: 'Logout confirmation?',
+        text: 'Are you sure you want to sign out from POS session?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Sign Out'
+      }).then(res => {
+        if (res.isConfirmed) {
+          currentUser = null;
+          document.getElementById('main-app').classList.add('hidden');
+          document.getElementById('login-screen').classList.remove('hidden');
+        }
+      });
+    }
+
+    function togglePasswordView(inputId) {
+      const input = document.getElementById(inputId);
+      if (input) input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    // --- Navigation Switching ---
+    function switchNav(tabId) {
+      const sections = ['dashboard', 'pos', 'products', 'sales', 'employees', 'accounts', 'reports'];
+      sections.forEach(s => {
+        const el = document.getElementById(`sec-${s}`);
+        const navBtn = document.getElementById(`nav-${s}`);
+        if (el) el.classList.add('hidden');
+        if (navBtn) {
+          navBtn.classList.remove('sidebar-active');
+          navBtn.classList.add('text-slate-400');
+        }
+      });
+
+      const activeEl = document.getElementById(`sec-${tabId}`);
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeEl) activeEl.classList.remove('hidden');
+      if (activeNav) {
+        activeNav.classList.add('sidebar-active');
+        activeNav.classList.remove('text-slate-400');
+      }
+
+      const titles = {
+        dashboard: { t: 'Dashboard', sub: 'Real-time enterprise overview & POS transactions' },
+        pos: { t: 'POS Terminal (বিক্রয় টার্মিনাল)', sub: 'Fast barcode search, multi-item cart & instant checkout' },
+        products: { t: 'Product & Stock Inventory', sub: 'Product catalog, pricing, SKU codes & stock alert' },
+        sales: { t: 'Sales Invoices Log', sub: 'Complete sales history, thermal receipts and cashier audit' },
+        employees: { t: 'Employee & Staff Directory', sub: 'Department roles, contact directory and monthly salary' },
+        accounts: { t: 'Accounts (আয় ও ব্যয়)', sub: 'Income & expense ledger, cashbook and net balance' },
+        reports: { t: 'Reports & Export', sub: 'Download itemized statements in Excel (.xlsx)' }
+      };
+
+      if (titles[tabId]) {
+        document.getElementById('page-title').innerText = titles[tabId].t;
+        document.getElementById('page-subtitle').innerText = titles[tabId].sub;
+      }
+
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'pos') renderPosProducts();
+      if (tabId === 'products') renderProductsTable();
+      if (tabId === 'sales') renderSalesTable();
+      if (tabId === 'employees') renderEmployeesTable();
+      if (tabId === 'accounts') renderAccountsTable();
+    }
+
+    // --- Dashboard Rendering ---
+    function renderDashboard() {
+      let todaySales = 0;
+      let todayOrders = 0;
+      let totalRevenue = 0;
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      salesData.forEach(s => {
+        const amt = Number(s.total_amount) || 0;
+        totalRevenue += amt;
+        if (s.sale_date && s.sale_date.startsWith(todayStr)) {
+          todaySales += amt;
+          todayOrders++;
+        }
+      });
+
+      const lowStockCount = productsData.filter(p => p.stock <= 5).length;
+
+      document.getElementById('dash-today-sales').innerText = `৳ ${todaySales.toLocaleString()}`;
+      document.getElementById('dash-today-orders').innerText = `${todayOrders} Invoices completed today`;
+      document.getElementById('dash-total-revenue').innerText = `৳ ${totalRevenue.toLocaleString()}`;
+      document.getElementById('dash-total-products').innerText = `${productsData.length} items`;
+      document.getElementById('dash-low-stock-count').innerText = `${lowStockCount} Low stock items`;
+      document.getElementById('dash-total-employees').innerText = `${employeesData.filter(e => e.status === 'Active').length} Active`;
+
+      // Render Recent Invoices
+      const tbody = document.getElementById('dash-recent-sales-body');
+      if (tbody) {
+        const recent = salesData.slice(0, 5);
+        tbody.innerHTML = recent.map(s => `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+            <td class="px-6 py-3.5 font-bold text-indigo-600">${s.invoice_no}</td>
+            <td class="px-6 py-3.5 font-semibold text-slate-800">${s.customer_name || 'Walk-in'}</td>
+            <td class="px-6 py-3.5 text-slate-500">${new Date(s.sale_date).toLocaleDateString()}</td>
+            <td class="px-6 py-3.5">${(s.items || []).length} items</td>
+            <td class="px-6 py-3.5"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">${s.payment_method || 'Cash'}</span></td>
+            <td class="px-6 py-3.5 font-black text-emerald-600">৳ ${(Number(s.total_amount) || 0).toLocaleString()}</td>
+            <td class="px-6 py-3.5 text-right">
+              <button onclick="previewInvoiceReceipt('${s.invoice_no}')" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold transition">
+                <i class="fa-solid fa-receipt mr-1"></i>Receipt
+              </button>
+            </td>
+          </tr>
+        `).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No sales recorded yet</td></tr>';
+      }
+
+      renderCharts();
+    }
+
+    function renderCharts() {
+      // Sales Trend Chart
+      const ctx1 = document.getElementById('chart-sales-trend');
+      if (ctx1) {
+        if (chartSalesInstance) chartSalesInstance.destroy();
+        const labels = salesData.slice(-7).map(s => s.invoice_no.slice(-6));
+        const data = salesData.slice(-7).map(s => Number(s.total_amount) || 0);
+
+        chartSalesInstance = new Chart(ctx1, {
+          type: 'line',
+          data: {
+            labels: labels.length ? labels : ['INV-1', 'INV-2', 'INV-3'],
+            datasets: [{
+              label: 'Sales Revenue (৳)',
+              data: data.length ? data : [650, 1250, 1900],
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
+      // Categories Breakdown Chart
+      const ctx2 = document.getElementById('chart-categories');
+      if (ctx2) {
+        if (chartCategoriesInstance) chartCategoriesInstance.destroy();
+        const catMap = {};
+        productsData.forEach(p => {
+          catMap[p.category || 'General'] = (catMap[p.category || 'General'] || 0) + (Number(p.stock) || 0);
+        });
+
+        chartCategoriesInstance = new Chart(ctx2, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(catMap),
+            datasets: [{
+              data: Object.values(catMap),
+              backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+    }
+
+    // --- POS Sales Terminal Logic ---
+    function renderPosProducts() {
+      const container = document.getElementById('pos-product-grid');
+      if (!container) return;
+
+      const search = (document.getElementById('pos-search-input')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('pos-category-filter')?.value || 'ALL';
+
+      const filtered = productsData.filter(p => {
+        const matchSearch = p.product_name.toLowerCase().includes(search) || p.product_code.toLowerCase().includes(search);
+        const matchCat = cat === 'ALL' || p.category === cat;
+        return matchSearch && matchCat;
+      });
+
+      container.innerHTML = filtered.map(p => {
+        const isOutOfStock = p.stock <= 0;
+        const isLow = p.stock > 0 && p.stock <= 5;
+
+        return `
+          <div onclick="${isOutOfStock ? '' : `addToPosCart(${p.id})`}" class="${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-400 hover:shadow-md'} bg-white p-3 rounded-2xl border border-slate-200/80 transition space-y-2 flex flex-col justify-between">
+            <div>
+              <div class="relative">
+                <img src="${p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150'}" class="w-full h-24 object-cover rounded-xl border border-slate-100" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.product_name)}&background=6366f1&color=fff'">
+                <span class="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isOutOfStock ? 'bg-rose-600 text-white' : isLow ? 'bg-amber-500 text-white' : 'bg-slate-900/80 text-white'}">
+                  ${isOutOfStock ? 'Out of Stock' : `Stock: ${p.stock}`}
+                </span>
+              </div>
+              <h4 class="font-bold text-slate-800 text-xs mt-2 line-clamp-1">${p.product_name}</h4>
+              <div class="text-[10px] font-semibold text-slate-400">${p.product_code} • ${p.category}</div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+              <span class="text-sm font-black text-indigo-600">৳ ${p.sale_price}</span>
+              <button type="button" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg flex items-center justify-center transition">
+                <i class="fa-solid fa-plus text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('') || '<div class="col-span-full py-12 text-center text-slate-400">কোনো পণ্য পাওয়া যায়নি</div>';
+    }
+
+    function addToPosCart(productId) {
+      const product = productsData.find(p => p.id === productId);
+      if (!product) return;
+
+      const existing = posCart.find(item => item.product_id === productId);
+      if (existing) {
+        if (existing.qty >= product.stock) {
+          Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `Max stock reached (${product.stock})`, showConfirmButton: false, timer: 1500 });
+          return;
+        }
+        existing.qty++;
+        existing.total = existing.qty * existing.price;
+      } else {
+        posCart.push({
+          product_id: product.id,
+          product_code: product.product_code,
+          product_name: product.product_name,
+          price: product.sale_price,
+          qty: 1,
+          total: product.sale_price
+        });
+      }
+
+      renderPosCart();
+    }
+
+    function updateCartQty(productId, change) {
+      const item = posCart.find(i => i.product_id === productId);
+      const product = productsData.find(p => p.id === productId);
+      if (!item) return;
+
+      item.qty += change;
+      if (product && item.qty > product.stock) {
+        item.qty = product.stock;
+      }
+
+      if (item.qty <= 0) {
+        posCart = posCart.filter(i => i.product_id !== productId);
+      } else {
+        item.total = item.qty * item.price;
+      }
+
+      renderPosCart();
+    }
+
+    function removeCartItem(productId) {
+      posCart = posCart.filter(i => i.product_id !== productId);
+      renderPosCart();
+    }
+
+    function clearPosCart() {
+      posCart = [];
+      renderPosCart();
+    }
+
+    function renderPosCart() {
+      const container = document.getElementById('pos-cart-items-container');
+      const countLabel = document.getElementById('pos-cart-count');
+      if (!container) return;
+
+      countLabel.innerText = `${posCart.reduce((sum, i) => sum + i.qty, 0)} items in cart`;
+
+      if (posCart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-400 space-y-2">
+            <i class="fa-solid fa-cart-arrow-down text-3xl text-slate-300"></i>
+            <p class="text-xs font-semibold">Your cart is empty</p>
+            <p class="text-[10px]">Click any product from left catalog to add</p>
+          </div>
+        `;
+        calculatePosTotals();
+        return;
+      }
+
+      container.innerHTML = posCart.map(item => `
+        <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs">
+          <div class="flex-1 min-w-0 pr-2">
+            <div class="font-bold text-slate-800 truncate">${item.product_name}</div>
+            <div class="text-[10px] text-slate-400">৳ ${item.price} &times; ${item.qty}</div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-1 bg-white border border-slate-200 rounded-lg p-0.5">
+              <button onclick="updateCartQty(${item.product_id}, -1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center">-</button>
+              <span class="w-6 text-center font-bold">${item.qty}</span>
+              <button onclick="updateCartQty(${item.product_id}, 1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center">+</button>
+            </div>
+            <div class="font-black text-indigo-600 text-xs w-16 text-right">৳ ${item.total}</div>
+            <button onclick="removeCartItem(${item.product_id})" class="text-slate-400 hover:text-rose-600 p-1">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      calculatePosTotals();
+    }
+
+    function calculatePosTotals() {
+      const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
+      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const tax = Math.round(subtotal * 0.05);
+      const grandTotal = Math.max(0, subtotal - discount + tax);
+
+      if (document.getElementById('pos-subtotal')) document.getElementById('pos-subtotal').innerText = `৳ ${subtotal.toLocaleString()}`;
+      if (document.getElementById('pos-tax')) document.getElementById('pos-tax').innerText = `৳ ${tax.toLocaleString()}`;
+      if (document.getElementById('pos-grand-total')) document.getElementById('pos-grand-total').innerText = `৳ ${grandTotal.toLocaleString()}`;
+    }
+
+    function setPosPaymentMethod(method) {
+      currentPayMethod = method;
+      document.querySelectorAll('.pay-method-btn').forEach(b => {
+        b.className = 'pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center transition';
+      });
+      const activeBtn = document.getElementById(`btn-pay-${method}`);
+      if (activeBtn) {
+        activeBtn.className = 'pay-method-btn active py-2 rounded-xl text-xs font-bold border border-emerald-400 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center transition ring-1 ring-emerald-500';
+      }
+    }
+
+    async function processPosCheckout() {
+      if (posCart.length === 0) {
+        Swal.fire('Empty Cart', 'Please add products to cart before checkout', 'warning');
+        return;
+      }
+
+      const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
+      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const tax = Math.round(subtotal * 0.05);
+      const grandTotal = Math.max(0, subtotal - discount + tax);
+      const custName = document.getElementById('pos-customer-name')?.value.trim() || 'Walk-in Customer';
+      const custPhone = document.getElementById('pos-customer-phone')?.value.trim() || 'N/A';
+      const invoiceNo = `INV-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${String(salesData.length + 1).padStart(3, '0')}`;
+
+      const saleRecord = {
+        id: Date.now(),
+        invoice_no: invoiceNo,
+        customer_name: custName,
+        customer_phone: custPhone,
+        total_amount: grandTotal,
+        discount: discount,
+        tax: tax,
+        payment_method: currentPayMethod,
+        sale_date: new Date().toISOString(),
+        items: [...posCart],
+        cashier_name: currentUser ? currentUser.name : 'Admin'
+      };
+
+      // Deduct stock locally & in Supabase
+      posCart.forEach(cartItem => {
+        const prod = productsData.find(p => p.id === cartItem.product_id);
+        if (prod) {
+          prod.stock = Math.max(0, prod.stock - cartItem.qty);
+          if (supabaseClient) {
+            supabaseClient.from('products').update({ stock: prod.stock }).eq('id', prod.id).then();
+          }
+        }
+      });
+
+      salesData.unshift(saleRecord);
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('sales').insert([{
+            invoice_no: saleRecord.invoice_no,
+            customer_name: saleRecord.customer_name,
+            customer_phone: saleRecord.customer_phone,
+            total_amount: saleRecord.total_amount,
+            payment_method: saleRecord.payment_method,
+            sale_date: saleRecord.sale_date,
+            items: saleRecord.items,
+            cashier_name: saleRecord.cashier_name
+          }]);
+        } catch (err) {
+          console.warn('Supabase sale insert note:', err);
+        }
+      }
+
+      previewInvoiceReceipt(saleRecord.invoice_no);
+
+      // Reset Cart
+      posCart = [];
+      if (document.getElementById('pos-discount')) document.getElementById('pos-discount').value = '0';
+      if (document.getElementById('pos-customer-name')) document.getElementById('pos-customer-name').value = '';
+      if (document.getElementById('pos-customer-phone')) document.getElementById('pos-customer-phone').value = '';
+      renderPosCart();
+      renderPosProducts();
+      renderDashboard();
+      renderProductsTable();
+    }
+
+    function previewInvoiceReceipt(invoiceNo) {
+      const sale = salesData.find(s => s.invoice_no === invoiceNo);
+      if (!sale) return;
+
+      document.getElementById('rec-inv-no').innerText = sale.invoice_no;
+      document.getElementById('rec-date').innerText = new Date(sale.sale_date).toLocaleString();
+      document.getElementById('rec-customer').innerText = `${sale.customer_name} (${sale.customer_phone || ''})`;
+      document.getElementById('rec-cashier').innerText = sale.cashier_name || 'Admin';
+      document.getElementById('rec-payment-method').innerText = sale.payment_method || 'Cash';
+
+      const tbody = document.getElementById('rec-items-body');
+      if (tbody) {
+        tbody.innerHTML = (sale.items || []).map(i => `
+          <tr class="border-b border-slate-100">
+            <td class="py-1">${i.product_name}</td>
+            <td class="py-1 text-center">${i.qty}</td>
+            <td class="py-1 text-right">৳ ${i.price}</td>
+            <td class="py-1 text-right font-bold">৳ ${i.total}</td>
+          </tr>
+        `).join('');
+      }
+
+      const sub = (sale.items || []).reduce((sum, i) => sum + i.total, 0);
+      document.getElementById('rec-subtotal').innerText = `৳ ${sub}`;
+      document.getElementById('rec-discount').innerText = `-৳ ${sale.discount || 0}`;
+      document.getElementById('rec-tax').innerText = `৳ ${sale.tax || Math.round(sub * 0.05)}`;
+      document.getElementById('rec-total').innerText = `৳ ${sale.total_amount}`;
+
+      // Generate QR Code
+      const qrBox = document.getElementById('rec-qr-code');
+      if (qrBox) {
+        qrBox.innerHTML = '';
+        new QRCode(qrBox, {
+          text: `ApexPOS Invoice:${sale.invoice_no} Total:BDT ${sale.total_amount}`,
+          width: 80,
+          height: 80
+        });
+      }
+
+      openModal('modal-receipt');
+    }
+
+    // --- Products CRUD ---
+    function renderProductsTable() {
+      const tbody = document.getElementById('products-table-body');
+      if (!tbody) return;
+
+      const search = (document.getElementById('prd-search-input')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('prd-filter-cat')?.value || 'ALL';
+
+      const filtered = productsData.filter(p => {
+        const matchSearch = p.product_name.toLowerCase().includes(search) || p.product_code.toLowerCase().includes(search);
+        const matchCat = cat === 'ALL' || p.category === cat;
+        return matchSearch && matchCat;
+      });
+
+      tbody.innerHTML = filtered.map(p => {
+        const isOutOfStock = p.stock <= 0;
+        const isLow = p.stock > 0 && p.stock <= 5;
+        const statusBadge = isOutOfStock
+          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Out of Stock</span>'
+          : isLow
+          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Low Stock Alert</span>'
+          : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">In Stock</span>';
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+            <td class="px-6 py-3.5 flex items-center space-x-3">
+              <img src="${p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150'}" class="w-9 h-9 rounded-xl object-cover border border-slate-200" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.product_name)}&background=6366f1&color=fff'">
+              <div class="font-bold text-slate-800">${p.product_name}</div>
+            </td>
+            <td class="px-6 py-3.5 font-bold text-indigo-600">${p.product_code}</td>
+            <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded-md bg-slate-100 font-semibold">${p.category}</span></td>
+            <td class="px-6 py-3.5 font-semibold text-slate-600">৳ ${p.purchase_price}</td>
+            <td class="px-6 py-3.5 font-black text-emerald-600">৳ ${p.sale_price}</td>
+            <td class="px-6 py-3.5 font-bold text-slate-800">${p.stock} units</td>
+            <td class="px-6 py-3.5">${statusBadge}</td>
+            <td class="px-6 py-3.5 text-right space-x-1">
+              <button onclick="openEditProductModal(${p.id})" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteProduct(${p.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="8" class="text-center py-6 text-slate-400">কোনো পণ্য পাওয়া যায়নি</td></tr>';
+    }
+
+    function openAddProductModal() {
+      document.getElementById('form-product').reset();
+      document.getElementById('prd-form-id').value = '';
+      document.getElementById('modal-product-title').innerText = 'Add New Product (পণ্য যোগ করুন)';
+      document.getElementById('prd-image-preview').src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150';
+      openModal('modal-product');
+    }
+
+    function openEditProductModal(id) {
+      const prod = productsData.find(p => p.id === id);
+      if (!prod) return;
+
+      document.getElementById('prd-form-id').value = prod.id;
+      document.getElementById('prd-form-name').value = prod.product_name;
+      document.getElementById('prd-form-code').value = prod.product_code;
+      document.getElementById('prd-form-category').value = prod.category;
+      document.getElementById('prd-form-purchase').value = prod.purchase_price;
+      document.getElementById('prd-form-sale').value = prod.sale_price;
+      document.getElementById('prd-form-stock').value = prod.stock;
+      document.getElementById('prd-image-preview').src = prod.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150';
+
+      document.getElementById('modal-product-title').innerText = 'Edit Product (পণ্য এডিট করুন)';
+      openModal('modal-product');
+    }
+
+    async function handleProductSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('prd-form-id').value;
+      const name = document.getElementById('prd-form-name').value.trim();
+      const code = document.getElementById('prd-form-code').value.trim();
+      const cat = document.getElementById('prd-form-category').value.trim() || 'General';
+      const purchase = Number(document.getElementById('prd-form-purchase').value) || 0;
+      const sale = Number(document.getElementById('prd-form-sale').value) || 0;
+      const stock = Number(document.getElementById('prd-form-stock').value) || 0;
+      const imgPreview = document.getElementById('prd-image-preview').src;
+
+      const productPayload = {
+        product_code: code,
+        product_name: name,
+        category: cat,
+        purchase_price: purchase,
+        sale_price: sale,
+        stock: stock,
+        image_url: imgPreview
+      };
+
+      if (id) {
+        // Update existing
+        const idx = productsData.findIndex(p => p.id == id);
+        if (idx !== -1) productsData[idx] = { id: Number(id), ...productPayload };
+        if (supabaseClient) {
+          await supabaseClient.from('products').update(productPayload).eq('id', id);
+        }
+      } else {
+        // Add new
+        const newProduct = { id: Date.now(), ...productPayload };
+        productsData.push(newProduct);
+        if (supabaseClient) {
+          await supabaseClient.from('products').insert([productPayload]);
+        }
+      }
+
+      closeModal('modal-product');
+      populateCategoryFilters();
+      renderProductsTable();
+      renderPosProducts();
+      renderDashboard();
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Product saved successfully!', showConfirmButton: false, timer: 1500 });
+    }
+
+    async function deleteProduct(id) {
+      const res = await Swal.fire({
+        title: 'Delete Product?',
+        text: 'This action cannot be reversed',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Delete'
+      });
+
+      if (res.isConfirmed) {
+        productsData = productsData.filter(p => p.id !== id);
+        if (supabaseClient) {
+          await supabaseClient.from('products').delete().eq('id', id);
+        }
+        renderProductsTable();
+        renderPosProducts();
+        renderDashboard();
+        Swal.fire('Deleted!', 'Product removed from database', 'success');
+      }
+    }
+
+    // --- Employees CRUD ---
+    function renderEmployeesTable() {
+      const tbody = document.getElementById('employees-table-body');
+      if (!tbody) return;
+
+      const search = (document.getElementById('emp-search-input')?.value || '').toLowerCase().trim();
+      const dept = document.getElementById('emp-filter-dept')?.value || 'ALL';
+
+      const filtered = employeesData.filter(e => {
+        const matchSearch = e.name.toLowerCase().includes(search) || e.employee_id.toLowerCase().includes(search) || (e.phone && e.phone.includes(search));
+        const matchDept = dept === 'ALL' || e.department === dept;
+        return matchSearch && matchDept;
+      });
+
+      tbody.innerHTML = filtered.map(e => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+          <td class="px-6 py-3.5 flex items-center space-x-3">
+            <img src="${e.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.name)}&background=ec4899&color=fff`}" class="w-9 h-9 rounded-full object-cover border border-slate-200 shadow-xs">
+            <div>
+              <div class="font-bold text-slate-800">${e.name}</div>
+              <div class="text-[10px] text-slate-400">${e.designation}</div>
+            </div>
+          </td>
+          <td class="px-6 py-3.5 font-bold text-pink-600">${e.employee_id}</td>
+          <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold text-[11px]">${e.department}</span></td>
+          <td class="px-6 py-3.5 font-semibold text-slate-700">${e.designation}</td>
+          <td class="px-6 py-3.5">
+            <div class="font-medium text-slate-800">${e.phone || '-'}</div>
+            <div class="text-[10px] text-slate-400">${e.email || '-'}</div>
+          </td>
+          <td class="px-6 py-3.5 font-black text-slate-900">৳ ${(Number(e.salary) || 0).toLocaleString()}</td>
+          <td class="px-6 py-3.5 text-slate-500">${e.joining_date || '-'}</td>
+          <td class="px-6 py-3.5">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${e.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'}">
+              ${e.status || 'Active'}
+            </span>
+          </td>
+          <td class="px-6 py-3.5 text-right space-x-1">
+            <button onclick="openEditEmployeeModal(${e.id})" class="p-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteEmployee(${e.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="9" class="text-center py-6 text-slate-400">কোনো কর্মী পাওয়া যায়নি</td></tr>';
+    }
+
+    function openAddEmployeeModal() {
+      document.getElementById('form-employee').reset();
+      document.getElementById('emp-form-id').value = '';
+      document.getElementById('modal-employee-title').innerText = 'Add New Employee (কর্মী যোগ করুন)';
+      document.getElementById('emp-image-preview').src = 'https://ui-avatars.com/api/?name=Staff&background=ec4899&color=fff';
+      openModal('modal-employee');
+    }
+
+    function openEditEmployeeModal(id) {
+      const emp = employeesData.find(e => e.id === id);
+      if (!emp) return;
+
+      document.getElementById('emp-form-id').value = emp.id;
+      document.getElementById('emp-form-name').value = emp.name;
+      document.getElementById('emp-form-code').value = emp.employee_id;
+      document.getElementById('emp-form-email').value = emp.email || '';
+      document.getElementById('emp-form-phone').value = emp.phone || '';
+      document.getElementById('emp-form-dept').value = emp.department || '';
+      document.getElementById('emp-form-desig').value = emp.designation || '';
+      document.getElementById('emp-form-salary').value = emp.salary || 0;
+      document.getElementById('emp-form-date').value = emp.joining_date || '';
+      document.getElementById('emp-form-status').value = emp.status || 'Active';
+      document.getElementById('emp-image-preview').src = emp.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=ec4899&color=fff`;
+
+      document.getElementById('modal-employee-title').innerText = 'Edit Employee Profile';
+      openModal('modal-employee');
+    }
+
+    async function handleEmployeeSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('emp-form-id').value;
+      const name = document.getElementById('emp-form-name').value.trim();
+      const code = document.getElementById('emp-form-code').value.trim();
+      const email = document.getElementById('emp-form-email').value.trim();
+      const phone = document.getElementById('emp-form-phone').value.trim();
+      const dept = document.getElementById('emp-form-dept').value.trim();
+      const desig = document.getElementById('emp-form-desig').value.trim();
+      const salary = Number(document.getElementById('emp-form-salary').value) || 0;
+      const date = document.getElementById('emp-form-date').value;
+      const status = document.getElementById('emp-form-status').value;
+      const photo = document.getElementById('emp-image-preview').src;
+
+      const employeePayload = {
+        employee_id: code,
+        name: name,
+        email: email,
+        phone: phone,
+        department: dept,
+        designation: desig,
+        salary: salary,
+        joining_date: date,
+        status: status,
+        photo_url: photo
+      };
+
+      if (id) {
+        const idx = employeesData.findIndex(e => e.id == id);
+        if (idx !== -1) employeesData[idx] = { id: Number(id), ...employeePayload };
+        if (supabaseClient) {
+          await supabaseClient.from('employees').update(employeePayload).eq('id', id);
+        }
+      } else {
+        const newEmp = { id: Date.now(), ...employeePayload };
+        employeesData.push(newEmp);
+        if (supabaseClient) {
+          await supabaseClient.from('employees').insert([employeePayload]);
+        }
+      }
+
+      closeModal('modal-employee');
+      populateCategoryFilters();
+      renderEmployeesTable();
+      renderDashboard();
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Employee saved successfully!', showConfirmButton: false, timer: 1500 });
+    }
+
+    async function deleteEmployee(id) {
+      const res = await Swal.fire({
+        title: 'Delete Employee?',
+        text: 'This employee will be removed from directory',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Delete'
+      });
+
+      if (res.isConfirmed) {
+        employeesData = employeesData.filter(e => e.id !== id);
+        if (supabaseClient) {
+          await supabaseClient.from('employees').delete().eq('id', id);
+        }
+        renderEmployeesTable();
+        renderDashboard();
+        Swal.fire('Deleted!', 'Employee profile removed', 'success');
+      }
+    }
+
+    // --- Sales History ---
+    function renderSalesTable() {
+      const tbody = document.getElementById('sales-table-body');
+      if (!tbody) return;
+
+      const search = (document.getElementById('sales-search-input')?.value || '').toLowerCase().trim();
+      const pay = document.getElementById('sales-filter-payment')?.value || 'ALL';
+
+      const filtered = salesData.filter(s => {
+        const matchSearch = s.invoice_no.toLowerCase().includes(search) || (s.customer_name && s.customer_name.toLowerCase().includes(search));
+        const matchPay = pay === 'ALL' || s.payment_method === pay;
+        return matchSearch && matchPay;
+      });
+
+      tbody.innerHTML = filtered.map(s => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+          <td class="px-6 py-3.5 font-bold text-sky-600">${s.invoice_no}</td>
+          <td class="px-6 py-3.5">
+            <div class="font-bold text-slate-800">${s.customer_name || 'Walk-in'}</div>
+            <div class="text-[10px] text-slate-400">${s.customer_phone || ''}</div>
+          </td>
+          <td class="px-6 py-3.5 text-slate-500">${new Date(s.sale_date).toLocaleString()}</td>
+          <td class="px-6 py-3.5"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">${s.payment_method || 'Cash'}</span></td>
+          <td class="px-6 py-3.5 font-black text-emerald-600 text-sm">৳ ${(Number(s.total_amount) || 0).toLocaleString()}</td>
+          <td class="px-6 py-3.5 text-slate-600 font-semibold">${s.cashier_name || 'Admin'}</td>
+          <td class="px-6 py-3.5 text-right space-x-1">
+            <button onclick="previewInvoiceReceipt('${s.invoice_no}')" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs font-bold transition">
+              <i class="fa-solid fa-receipt mr-1"></i>View Receipt
+            </button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No invoices recorded</td></tr>';
+    }
+
+    // --- Accounts & Transactions ---
+    function renderAccountsTable() {
+      const tbody = document.getElementById('accounts-table-body');
+      if (!tbody) return;
+
+      const typeFilter = document.getElementById('acc-filter-type')?.value || 'ALL';
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      accountsData.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        if (t.type === 'Income') totalIncome += amt;
+        else totalExpense += amt;
+      });
+
+      document.getElementById('acc-total-income').innerText = `৳ ${totalIncome.toLocaleString()}`;
+      document.getElementById('acc-total-expense').innerText = `৳ ${totalExpense.toLocaleString()}`;
+      document.getElementById('acc-net-balance').innerText = `৳ ${(totalIncome - totalExpense).toLocaleString()}`;
+
+      const filtered = accountsData.filter(t => typeFilter === 'ALL' || t.type === typeFilter);
+
+      tbody.innerHTML = filtered.map(t => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+          <td class="px-6 py-3.5 font-medium text-slate-600">${t.date}</td>
+          <td class="px-6 py-3.5">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${t.type === 'Income' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+              ${t.type === 'Income' ? '🟢 Income' : '🔴 Expense'}
+            </span>
+          </td>
+          <td class="px-6 py-3.5 font-bold text-slate-800">${t.category}</td>
+          <td class="px-6 py-3.5 text-slate-500">${t.note || '-'}</td>
+          <td class="px-6 py-3.5"><span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-semibold">${t.payment_method || 'Cash'}</span></td>
+          <td class="px-6 py-3.5 font-black ${t.type === 'Income' ? 'text-emerald-600' : 'text-rose-600'}">
+            ${t.type === 'Income' ? '+' : '-'}৳ ${(Number(t.amount) || 0).toLocaleString()}
+          </td>
+          <td class="px-6 py-3.5 text-right">
+            <button onclick="deleteTransaction(${t.id})" class="p-1.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No account entries found</td></tr>';
+    }
+
+    function openAddTransactionModal() {
+      document.getElementById('acc-form-amount').value = '';
+      document.getElementById('acc-form-cat').value = '';
+      document.getElementById('acc-form-note').value = '';
+      document.getElementById('acc-form-date').value = new Date().toISOString().split('T')[0];
+      openModal('modal-transaction');
+    }
+
+    async function handleTransactionSubmit(e) {
+      e.preventDefault();
+      const type = document.getElementById('acc-form-type').value;
+      const amount = Number(document.getElementById('acc-form-amount').value) || 0;
+      const cat = document.getElementById('acc-form-cat').value.trim();
+      const date = document.getElementById('acc-form-date').value;
+      const method = document.getElementById('acc-form-method').value;
+      const note = document.getElementById('acc-form-note').value.trim();
+
+      const txPayload = {
+        type,
+        amount,
+        category: cat,
+        date,
+        payment_method: method,
+        note
+      };
+
+      const newTx = { id: Date.now(), ...txPayload };
+      accountsData.unshift(newTx);
+
+      if (supabaseClient) {
+        await supabaseClient.from('transactions').insert([txPayload]);
+      }
+
+      closeModal('modal-transaction');
+      renderAccountsTable();
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Transaction saved!', showConfirmButton: false, timer: 1500 });
+    }
+
+    async function deleteTransaction(id) {
+      accountsData = accountsData.filter(t => t.id !== id);
+      if (supabaseClient) {
+        await supabaseClient.from('transactions').delete().eq('id', id);
+      }
+      renderAccountsTable();
+    }
+
+    // --- Excel Exports ---
+    function exportSalesToExcel() {
+      const rows = salesData.map(s => ({
+        'Invoice No': s.invoice_no,
+        'Customer': s.customer_name,
+        'Phone': s.customer_phone,
+        'Total (BDT)': s.total_amount,
+        'Payment': s.payment_method,
+        'Date': s.sale_date,
+        'Cashier': s.cashier_name
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sales');
+      XLSX.writeFile(wb, `ApexPOS_Sales_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    function exportProductsToExcel() {
+      const rows = productsData.map(p => ({
+        'SKU Code': p.product_code,
+        'Product Name': p.product_name,
+        'Category': p.category,
+        'Purchase Price': p.purchase_price,
+        'Sale Price': p.sale_price,
+        'Stock': p.stock
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+      XLSX.writeFile(wb, `ApexPOS_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    function exportEmployeesToExcel() {
+      const rows = employeesData.map(e => ({
+        'Employee ID': e.employee_id,
+        'Full Name': e.name,
+        'Department': e.department,
+        'Designation': e.designation,
+        'Phone': e.phone,
+        'Email': e.email,
+        'Monthly Salary': e.salary,
+        'Status': e.status
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+      XLSX.writeFile(wb, `ApexPOS_Employees_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    // --- Helpers ---
+    function populateCategoryFilters() {
+      const cats = [...new Set(productsData.map(p => p.category).filter(Boolean))];
+      const posCatSelect = document.getElementById('pos-category-filter');
+      const prdCatSelect = document.getElementById('prd-filter-cat');
+
+      let opts = '<option value="ALL">All Categories</option>';
+      cats.forEach(c => { opts += `<option value="${c}">${c}</option>`; });
+
+      if (posCatSelect) posCatSelect.innerHTML = opts;
+      if (prdCatSelect) prdCatSelect.innerHTML = opts;
+
+      const depts = [...new Set(employeesData.map(e => e.department).filter(Boolean))];
+      const empDeptSelect = document.getElementById('emp-filter-dept');
+      let deptOpts = '<option value="ALL">All Departments</option>';
+      depts.forEach(d => { deptOpts += `<option value="${d}">${d}</option>`; });
+      if (empDeptSelect) empDeptSelect.innerHTML = deptOpts;
+    }
+
+    function previewImage(event, targetImgId) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById(targetImgId);
+          if (img) img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function openSupabaseSettingsModal() {
+      openModal('modal-supabase');
+    }
+  </script>
+
+</body>
+</html>
