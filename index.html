@@ -1196,7 +1196,6 @@
                     <th class="px-6 py-3.5 text-center font-bold text-slate-900">Variance / Difference ⚖️</th>
                     <th class="px-6 py-3.5 text-right font-bold text-slate-900">Shortage Value (ঘাটতি ৳)</th>
                     <th class="px-6 py-3.5 text-center">Status</th>
-                    <th class="px-6 py-3.5 text-right">Quick Action</th>
                   </tr>
                 </thead>
                 <tbody id="inventory-audit-table-body">
@@ -3311,29 +3310,6 @@ CREATE TABLE IF NOT EXISTS transactions (
       }
     }
 
-    function updateAuditItemCount(prodId, delta) {
-      const current = inventoryAuditState.scannedCounts[prodId] || 0;
-      const next = Math.max(0, current + delta);
-      inventoryAuditState.scannedCounts[prodId] = next;
-      inventoryAuditState.lastScannedId = prodId;
-      renderInventoryAuditTable();
-    }
-
-    function setAuditItemCountExact(prodId, val) {
-      const count = Math.max(0, Number(val) || 0);
-      inventoryAuditState.scannedCounts[prodId] = count;
-      inventoryAuditState.lastScannedId = prodId;
-      renderInventoryAuditTable();
-    }
-
-    function matchSystemStock(prodId) {
-      const prod = productsData.find(p => p.id === prodId);
-      if (prod) {
-        inventoryAuditState.scannedCounts[prodId] = prod.stock;
-        renderInventoryAuditTable();
-      }
-    }
-
     function resetInventoryAudit() {
       Swal.fire({
         title: 'Reset Audit Counts?',
@@ -3465,10 +3441,10 @@ CREATE TABLE IF NOT EXISTS transactions (
               ${r.sysStock} pcs
             </td>
             <td class="px-6 py-3.5 text-center bg-emerald-50/30">
-              <div class="flex items-center justify-center space-x-1">
-                <button onclick="updateAuditItemCount(${p.id}, -1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 font-bold border border-slate-200 flex items-center justify-center transition cursor-pointer">-</button>
-                <input type="number" min="0" value="${r.scanned}" onchange="setAuditItemCountExact(${p.id}, this.value)" class="w-14 p-1 text-center font-black text-emerald-800 bg-white border border-emerald-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
-                <button onclick="updateAuditItemCount(${p.id}, 1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 font-bold border border-slate-200 flex items-center justify-center transition cursor-pointer">+</button>
+              <div class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-emerald-300 shadow-2xs">
+                <i class="fa-solid fa-barcode text-[11px] text-emerald-600"></i>
+                <span class="font-black text-sm text-emerald-700">${r.scanned}</span>
+                <span class="text-[10px] text-emerald-600 font-bold">pcs</span>
               </div>
             </td>
             <td class="px-6 py-3.5 text-center">${varianceBadge}</td>
@@ -3476,14 +3452,9 @@ CREATE TABLE IF NOT EXISTS transactions (
               ${r.shortageLoss > 0 ? `-৳ ${r.shortageLoss.toLocaleString()}` : '৳ 0'}
             </td>
             <td class="px-6 py-3.5 text-center">${statusBadge}</td>
-            <td class="px-6 py-3.5 text-right space-x-1">
-              <button onclick="matchSystemStock(${p.id})" title="Set count equal to system stock" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition">
-                Match
-              </button>
-            </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="9" class="text-center py-8 text-slate-400">No products match current filter</td></tr>';
+      }).join('') || '<tr><td colspan="8" class="text-center py-8 text-slate-400">No products match current filter</td></tr>';
     }
 
     async function applyStockAdjustment() {
