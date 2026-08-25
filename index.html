@@ -549,6 +549,20 @@
                 </button>
               </div>
 
+              <!-- Sales Employee Selection -->
+              <div class="bg-indigo-50/70 p-2.5 rounded-2xl border border-indigo-100 text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label class="block text-[10px] font-bold text-indigo-900 uppercase tracking-wider flex items-center space-x-1">
+                    <i class="fa-solid fa-user-tie text-indigo-600"></i>
+                    <span>Sales Employee (বিক্রয়কর্মী) *</span>
+                  </label>
+                  <span class="text-[9px] font-bold text-indigo-700 bg-indigo-200/60 px-1.5 py-0.5 rounded">Active Staff</span>
+                </div>
+                <select id="pos-sales-employee-select" class="w-full bg-white p-2 border border-indigo-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs">
+                  <!-- Injected via JS from employeesData -->
+                </select>
+              </div>
+
               <!-- Customer Info Inputs -->
               <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 text-xs">
                 <div>
@@ -570,39 +584,129 @@
               <div class="space-y-2 pt-3 border-t border-slate-100 text-xs">
                 <div class="flex justify-between font-semibold text-slate-600">
                   <span>Subtotal</span>
-                  <span id="pos-subtotal">৳ 0</span>
+                  <span id="pos-subtotal" class="font-bold text-slate-800">৳ 0</span>
                 </div>
+
+                <!-- Admin Protected Discount -->
                 <div class="flex justify-between items-center font-semibold text-slate-600">
-                  <span>Discount (ছাড় ৳)</span>
-                  <input type="number" id="pos-discount" min="0" value="0" oninput="calculatePosTotals()" class="w-24 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none">
+                  <div class="flex items-center space-x-1.5">
+                    <span>Discount (ছাড় ৳)</span>
+                    <button type="button" id="btn-admin-auth-discount" onclick="requestAdminDiscountApproval()" title="Admin permission required for discount" class="text-[9px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 flex items-center space-x-1 transition cursor-pointer">
+                      <i class="fa-solid fa-lock text-[8px]" id="pos-discount-lock-icon"></i>
+                      <span id="pos-discount-auth-label">Admin Auth</span>
+                    </button>
+                  </div>
+                  <div class="flex items-center space-x-1">
+                    <input type="number" id="pos-discount" min="0" value="0" oninput="onDiscountInputChange()" placeholder="0" class="w-24 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                  </div>
                 </div>
+
+                <!-- Custom Editable VAT -->
                 <div class="flex justify-between items-center font-semibold text-slate-600">
-                  <span>Tax / VAT (5%)</span>
-                  <span id="pos-tax">৳ 0</span>
+                  <div class="flex items-center space-x-1.5">
+                    <span>Tax / VAT</span>
+                    <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+                      <input type="number" id="pos-tax-rate" min="0" max="100" value="5" step="0.5" oninput="calculatePosTotals()" class="w-10 text-center font-bold text-slate-800 bg-transparent outline-none text-[11px]">
+                      <span class="text-[10px] font-bold text-slate-500 pr-1">%</span>
+                    </div>
+                  </div>
+                  <span id="pos-tax" class="font-bold text-slate-700">৳ 0</span>
                 </div>
+
                 <div class="flex justify-between font-black text-lg text-slate-900 pt-2 border-t border-slate-200">
                   <span>Net Payable (মোট)</span>
-                  <span id="pos-grand-total" class="text-indigo-600">৳ 0</span>
+                  <span id="pos-grand-total" class="text-indigo-600 font-heading">৳ 0</span>
                 </div>
               </div>
 
               <!-- Payment Method Selector -->
-              <div class="space-y-1.5">
+              <div class="space-y-2">
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Payment Method (মূল্য পরিশোধ)</label>
-                <div class="grid grid-cols-4 gap-1.5">
-                  <button type="button" onclick="setPosPaymentMethod('Cash')" id="btn-pay-Cash" class="pay-method-btn active py-2 rounded-xl text-xs font-bold border border-emerald-300 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center">
+                <div class="grid grid-cols-5 gap-1">
+                  <button type="button" onclick="setPosPaymentMethod('Cash')" id="btn-pay-Cash" class="pay-method-btn active py-2 rounded-xl text-[11px] font-bold border border-emerald-300 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center">
                     <i class="fa-solid fa-money-bill-1-wave mb-0.5"></i>Cash
                   </button>
-                  <button type="button" onclick="setPosPaymentMethod('bKash')" id="btn-pay-bKash" class="pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
+                  <button type="button" onclick="setPosPaymentMethod('bKash')" id="btn-pay-bKash" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
                     <i class="fa-solid fa-mobile-screen mb-0.5"></i>bKash
                   </button>
-                  <button type="button" onclick="setPosPaymentMethod('Card')" id="btn-pay-Card" class="pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
+                  <button type="button" onclick="setPosPaymentMethod('Card')" id="btn-pay-Card" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
                     <i class="fa-solid fa-credit-card mb-0.5"></i>Card
                   </button>
-                  <button type="button" onclick="setPosPaymentMethod('Nagad')" id="btn-pay-Nagad" class="pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
+                  <button type="button" onclick="setPosPaymentMethod('Nagad')" id="btn-pay-Nagad" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
                     <i class="fa-solid fa-wallet mb-0.5"></i>Nagad
                   </button>
+                  <button type="button" onclick="setPosPaymentMethod('Split')" id="btn-pay-Split" class="pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-layer-group mb-0.5"></i>Split
+                  </button>
                 </div>
+
+                <!-- Card Bank Selection Box (Shown when Card is Selected) -->
+                <div id="pos-card-bank-box" class="hidden p-2.5 bg-sky-50 rounded-2xl border border-sky-200 text-xs space-y-2">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-sky-900">
+                    <span><i class="fa-solid fa-building-columns text-sky-600 mr-1"></i>Card / POS Bank Terminal</span>
+                    <span class="text-[9px] text-sky-600">Swipe / Tap</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Select Bank *</label>
+                      <select id="pos-card-bank-select" class="w-full bg-white p-1.5 border border-sky-300 rounded-lg text-xs font-bold text-slate-800 outline-none">
+                        <option value="City Bank (AMEX / VISA POS)">City Bank (AMEX/VISA/Master)</option>
+                        <option value="BRAC Bank POS">BRAC Bank POS</option>
+                        <option value="Dutch-Bangla Bank (DBBL Nexus/Visa)">Dutch-Bangla Bank (DBBL)</option>
+                        <option value="Eastern Bank (EBL POS)">Eastern Bank (EBL)</option>
+                        <option value="Islami Bank (IBBL POS)">Islami Bank (IBBL)</option>
+                        <option value="Mutual Trust Bank (MTB POS)">Mutual Trust Bank (MTB)</option>
+                        <option value="Standard Chartered POS">Standard Chartered</option>
+                        <option value="Other Bank POS Terminal">Other Bank POS</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Card Last 4 Digits / Txn Slip #</label>
+                      <input type="text" id="pos-card-txn-no" placeholder="e.g. 4829 / SLIP-12" class="w-full bg-white p-1.5 border border-sky-300 rounded-lg text-xs font-bold text-slate-800 outline-none">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Split Payment Breakdown Box (Shown when Split is Selected) -->
+                <div id="pos-split-pay-box" class="hidden p-3 bg-amber-50/80 rounded-2xl border border-amber-200 text-xs space-y-2.5">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-amber-900">
+                    <span><i class="fa-solid fa-coins text-amber-600 mr-1"></i>Split Payment Breakdown (Cash + Card/Digital)</span>
+                    <span class="text-[9px] font-bold text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded">Dual Pay</span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Cash Paid (৳)</label>
+                      <input type="number" id="pos-split-cash" min="0" oninput="calculateSplitBalance()" placeholder="0" class="w-full bg-white p-1.5 border border-amber-300 rounded-lg text-xs font-bold text-emerald-700 outline-none">
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Card / Digital Paid (৳)</label>
+                      <input type="number" id="pos-split-card" min="0" oninput="calculateSplitBalance()" placeholder="0" class="w-full bg-white p-1.5 border border-amber-300 rounded-lg text-xs font-bold text-indigo-700 outline-none">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Card POS Bank</label>
+                      <select id="pos-split-bank-select" class="w-full bg-white p-1.5 border border-amber-300 rounded-lg text-[11px] font-semibold text-slate-800 outline-none">
+                        <option value="City Bank POS">City Bank</option>
+                        <option value="BRAC Bank POS">BRAC Bank</option>
+                        <option value="DBBL Nexus POS">DBBL Nexus</option>
+                        <option value="EBL POS">Eastern Bank</option>
+                        <option value="bKash Merchant">bKash QR</option>
+                        <option value="Other Bank POS">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Total Paid / Balance</label>
+                      <div class="p-1 bg-white border border-amber-200 rounded-lg text-[11px] font-bold flex justify-between">
+                        <span>Paid: <b id="pos-split-paid-label" class="text-slate-800">৳0</b></span>
+                        <span id="pos-split-status-label" class="text-amber-600">Due: ৳0</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
               <!-- Checkout Submit Button -->
@@ -705,6 +809,7 @@
                 <option value="bKash">bKash</option>
                 <option value="Card">Card</option>
                 <option value="Nagad">Nagad</option>
+                <option value="Split">Split / Dual Pay</option>
               </select>
 
               <button onclick="exportSalesToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
@@ -1177,7 +1282,8 @@
           <div class="flex justify-between"><span>Invoice:</span><b id="rec-inv-no">INV-001</b></div>
           <div class="flex justify-between"><span>Date:</span><span id="rec-date">2026-08-25</span></div>
           <div class="flex justify-between"><span>Customer:</span><span id="rec-customer">Walk-in</span></div>
-          <div class="flex justify-between"><span>Cashier:</span><span id="rec-cashier">Admin</span></div>
+          <div class="flex justify-between"><span>Sales Person:</span><b id="rec-salesperson" class="text-indigo-900 font-black">Rahim (EMP-101)</b></div>
+          <div class="flex justify-between"><span>Cashier / Auth:</span><span id="rec-cashier">Admin</span></div>
           <div class="border-b border-dashed border-slate-400 pt-1"></div>
         </div>
 
@@ -1199,12 +1305,13 @@
         <div class="border-t border-dashed border-slate-400 pt-2 text-[11px] space-y-1">
           <div class="flex justify-between"><span>Subtotal:</span><span id="rec-subtotal">৳ 0</span></div>
           <div class="flex justify-between"><span>Discount:</span><span id="rec-discount">-৳ 0</span></div>
-          <div class="flex justify-between"><span>Tax (5%):</span><span id="rec-tax">৳ 0</span></div>
+          <div class="flex justify-between"><span id="rec-tax-label">Tax / VAT (5%):</span><span id="rec-tax">৳ 0</span></div>
           <div class="flex justify-between text-sm font-black pt-1 border-t border-slate-800">
             <span>Total Payable:</span><span id="rec-total">৳ 0</span>
           </div>
-          <div class="flex justify-between text-[10px] text-slate-600">
-            <span>Paid by:</span><span id="rec-payment-method">Cash</span>
+          <div class="pt-1.5 text-[10px] text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-200 space-y-0.5">
+            <span class="font-bold block text-slate-900">Payment Breakdown:</span>
+            <span id="rec-payment-method" class="font-bold text-indigo-700 block">Cash</span>
           </div>
         </div>
 
@@ -1574,6 +1681,8 @@ CREATE TABLE IF NOT EXISTS transactions (
         renderEmployeesTable();
         renderSalesTable();
         renderAccountsTable();
+        populateCategoryFilters();
+        populatePosSalesEmployees();
       } catch (err) {
         console.warn('Cloud sync note:', err.message);
       }
@@ -1638,6 +1747,7 @@ CREATE TABLE IF NOT EXISTS transactions (
       }
 
       currentUser = { email, role, name };
+      isDiscountApproved = (role === 'Admin');
 
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('main-app').classList.remove('hidden');
@@ -1660,6 +1770,7 @@ CREATE TABLE IF NOT EXISTS transactions (
       });
 
       renderDashboard();
+      populatePosSalesEmployees();
       switchNav('dashboard');
     }
 
@@ -1727,7 +1838,10 @@ CREATE TABLE IF NOT EXISTS transactions (
       }
 
       if (tabId === 'dashboard') renderDashboard();
-      if (tabId === 'pos') renderPosProducts();
+      if (tabId === 'pos') {
+        renderPosProducts();
+        populatePosSalesEmployees();
+      }
       if (tabId === 'products') renderProductsTable();
       if (tabId === 'sales') renderSalesTable();
       if (tabId === 'employees') renderEmployeesTable();
@@ -1979,38 +2093,196 @@ CREATE TABLE IF NOT EXISTS transactions (
       calculatePosTotals();
     }
 
+    let isDiscountApproved = false;
+
+    function populatePosSalesEmployees() {
+      const select = document.getElementById('pos-sales-employee-select');
+      if (!select) return;
+
+      select.innerHTML = employeesData.map(e => `
+        <option value="${e.id}" data-name="${e.name}" data-code="${e.employee_id}">
+          👤 ${e.name} (${e.designation}) [${e.employee_id}] - 🏢 ${e.department}
+        </option>
+      `).join('') || '<option value="0" data-name="Admin User" data-code="ADM-01">👤 Admin User (Manager)</option>';
+
+      if (currentUser) {
+        const match = employeesData.find(e => e.email === currentUser.email || e.name.toLowerCase().includes(currentUser.name.toLowerCase()));
+        if (match) select.value = match.id;
+      }
+    }
+
+    async function requestAdminDiscountApproval() {
+      if (currentUser && currentUser.role === 'Admin') {
+        isDiscountApproved = true;
+        const authBadge = document.getElementById('btn-admin-auth-discount');
+        if (authBadge) {
+          authBadge.className = 'text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 flex items-center space-x-1';
+          document.getElementById('pos-discount-lock-icon').className = 'fa-solid fa-lock-open text-[8px] text-emerald-600';
+          document.getElementById('pos-discount-auth-label').innerText = 'Admin Unlocked';
+        }
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Admin mode active: Discount unlocked', showConfirmButton: false, timer: 1500 });
+        document.getElementById('pos-discount')?.focus();
+        return;
+      }
+
+      const { value: pin } = await Swal.fire({
+        title: '🔒 Admin Permission Required',
+        text: 'ডিসকাউন্ট দিতে এডমিনের অনুমোদন বা পাসওয়ার্ড প্রয়োজন (Default PIN: admin123):',
+        input: 'password',
+        inputPlaceholder: 'Enter Admin Password / PIN',
+        inputAttributes: {
+          autocapitalize: 'off',
+          autocorrect: 'off'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#6366f1',
+        confirmButtonText: 'Authorize Discount',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (pin === 'admin123' || pin === '1234' || pin === 'admin') {
+        isDiscountApproved = true;
+        const authBadge = document.getElementById('btn-admin-auth-discount');
+        if (authBadge) {
+          authBadge.className = 'text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 flex items-center space-x-1';
+          document.getElementById('pos-discount-lock-icon').className = 'fa-solid fa-circle-check text-[8px] text-emerald-600';
+          document.getElementById('pos-discount-auth-label').innerText = 'Approved by Admin';
+        }
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Discount Authorized by Admin!', showConfirmButton: false, timer: 1500 });
+        document.getElementById('pos-discount')?.focus();
+      } else if (pin !== undefined) {
+        Swal.fire('Access Denied', 'ভুল পাসওয়ার্ড! এডমিনের অনুমতি ছাড়া ডিসকাউন্ট দেওয়া যাবে না।', 'error');
+        isDiscountApproved = false;
+        if (document.getElementById('pos-discount')) document.getElementById('pos-discount').value = '0';
+        calculatePosTotals();
+      }
+    }
+
+    function onDiscountInputChange() {
+      const discountVal = Number(document.getElementById('pos-discount')?.value) || 0;
+      if (discountVal > 0 && !isDiscountApproved && (!currentUser || currentUser.role !== 'Admin')) {
+        requestAdminDiscountApproval();
+      }
+      calculatePosTotals();
+    }
+
     function calculatePosTotals() {
       const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
       const discount = Number(document.getElementById('pos-discount')?.value) || 0;
-      const tax = Math.round(subtotal * 0.05);
+      const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
+      const tax = Math.round(subtotal * (taxRate / 100));
       const grandTotal = Math.max(0, subtotal - discount + tax);
 
       if (document.getElementById('pos-subtotal')) document.getElementById('pos-subtotal').innerText = `৳ ${subtotal.toLocaleString()}`;
       if (document.getElementById('pos-tax')) document.getElementById('pos-tax').innerText = `৳ ${tax.toLocaleString()}`;
       if (document.getElementById('pos-grand-total')) document.getElementById('pos-grand-total').innerText = `৳ ${grandTotal.toLocaleString()}`;
+
+      if (currentPayMethod === 'Split') {
+        calculateSplitBalance();
+      }
     }
 
     function setPosPaymentMethod(method) {
       currentPayMethod = method;
       document.querySelectorAll('.pay-method-btn').forEach(b => {
-        b.className = 'pay-method-btn py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center transition';
+        b.className = 'pay-method-btn py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700 flex flex-col items-center justify-center transition';
       });
       const activeBtn = document.getElementById(`btn-pay-${method}`);
       if (activeBtn) {
-        activeBtn.className = 'pay-method-btn active py-2 rounded-xl text-xs font-bold border border-emerald-400 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center transition ring-1 ring-emerald-500';
+        activeBtn.className = 'pay-method-btn active py-2 rounded-xl text-[11px] font-bold border border-emerald-400 bg-emerald-50 text-emerald-800 flex flex-col items-center justify-center transition ring-1 ring-emerald-500';
+      }
+
+      const cardBox = document.getElementById('pos-card-bank-box');
+      const splitBox = document.getElementById('pos-split-pay-box');
+
+      if (cardBox) cardBox.classList.toggle('hidden', method !== 'Card');
+      if (splitBox) {
+        splitBox.classList.toggle('hidden', method !== 'Split');
+        if (method === 'Split') {
+          const grandTotal = Math.max(0, (posCart.reduce((sum, i) => sum + i.total, 0) - (Number(document.getElementById('pos-discount')?.value) || 0)) + Math.round(posCart.reduce((sum, i) => sum + i.total, 0) * ((Number(document.getElementById('pos-tax-rate')?.value) || 0) / 100)));
+          const half = Math.round(grandTotal / 2);
+          if (!document.getElementById('pos-split-cash').value) {
+            document.getElementById('pos-split-cash').value = half;
+            document.getElementById('pos-split-card').value = grandTotal - half;
+          }
+          calculateSplitBalance();
+        }
+      }
+    }
+
+    function calculateSplitBalance() {
+      const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
+      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
+      const tax = Math.round(subtotal * (taxRate / 100));
+      const grandTotal = Math.max(0, subtotal - discount + tax);
+
+      const cash = Number(document.getElementById('pos-split-cash')?.value) || 0;
+      const card = Number(document.getElementById('pos-split-card')?.value) || 0;
+      const paid = cash + card;
+      const diff = grandTotal - paid;
+
+      const paidLabel = document.getElementById('pos-split-paid-label');
+      const statusLabel = document.getElementById('pos-split-status-label');
+
+      if (paidLabel) paidLabel.innerText = `৳${paid.toLocaleString()}`;
+      if (statusLabel) {
+        if (diff === 0) {
+          statusLabel.className = 'text-emerald-600 font-black';
+          statusLabel.innerText = '✓ Fully Paid';
+        } else if (diff > 0) {
+          statusLabel.className = 'text-rose-600 font-bold';
+          statusLabel.innerText = `Due: ৳${diff.toLocaleString()}`;
+        } else {
+          statusLabel.className = 'text-indigo-600 font-bold';
+          statusLabel.innerText = `Change: ৳${Math.abs(diff).toLocaleString()}`;
+        }
       }
     }
 
     async function processPosCheckout() {
       if (posCart.length === 0) {
-        Swal.fire('Empty Cart', 'Please add products to cart before checkout', 'warning');
+        Swal.fire('Empty Cart', 'কার্ট খালি! পণ্য নির্বাচন করুন।', 'warning');
         return;
       }
 
       const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
       const discount = Number(document.getElementById('pos-discount')?.value) || 0;
-      const tax = Math.round(subtotal * 0.05);
+      const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
+      const tax = Math.round(subtotal * (taxRate / 100));
       const grandTotal = Math.max(0, subtotal - discount + tax);
+
+      // Check discount permission
+      if (discount > 0 && !isDiscountApproved && (!currentUser || currentUser.role !== 'Admin')) {
+        await requestAdminDiscountApproval();
+        if (!isDiscountApproved) return;
+      }
+
+      // Check Split Payment validity
+      let formattedPaymentMethod = currentPayMethod;
+      if (currentPayMethod === 'Card') {
+        const bankName = document.getElementById('pos-card-bank-select')?.value || 'City Bank';
+        const txnSlip = document.getElementById('pos-card-txn-no')?.value.trim();
+        formattedPaymentMethod = `Card (${bankName}${txnSlip ? ` - Slip: #${txnSlip}` : ''})`;
+      } else if (currentPayMethod === 'Split') {
+        const cashPaid = Number(document.getElementById('pos-split-cash')?.value) || 0;
+        const cardPaid = Number(document.getElementById('pos-split-card')?.value) || 0;
+        const splitBank = document.getElementById('pos-split-bank-select')?.value || 'City Bank';
+        const totalPaid = cashPaid + cardPaid;
+
+        if (totalPaid < grandTotal) {
+          Swal.fire('Incomplete Payment', `পরিশোধিত টাকা মোট বিলের চেয়ে কম! বকেয়া: ৳${(grandTotal - totalPaid).toLocaleString()}`, 'warning');
+          return;
+        }
+        formattedPaymentMethod = `Split (Cash: ৳${cashPaid.toLocaleString()} + Card: ৳${cardPaid.toLocaleString()} [${splitBank}])`;
+      }
+
+      // Salesperson
+      const empSelect = document.getElementById('pos-sales-employee-select');
+      const selectedOption = empSelect ? empSelect.options[empSelect.selectedIndex] : null;
+      const salespersonName = selectedOption ? selectedOption.getAttribute('data-name') : (currentUser ? currentUser.name : 'Admin');
+      const salespersonCode = selectedOption ? selectedOption.getAttribute('data-code') : 'EMP-01';
+
       const custName = document.getElementById('pos-customer-name')?.value.trim() || 'Walk-in Customer';
       const custPhone = document.getElementById('pos-customer-phone')?.value.trim() || 'N/A';
       const invoiceNo = `INV-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${String(salesData.length + 1).padStart(3, '0')}`;
@@ -2020,16 +2292,20 @@ CREATE TABLE IF NOT EXISTS transactions (
         invoice_no: invoiceNo,
         customer_name: custName,
         customer_phone: custPhone,
+        salesperson_name: salespersonName,
+        employee_code: salespersonCode,
         total_amount: grandTotal,
+        subtotal: subtotal,
         discount: discount,
+        tax_rate: taxRate,
         tax: tax,
-        payment_method: currentPayMethod,
+        payment_method: formattedPaymentMethod,
         sale_date: new Date().toISOString(),
         items: [...posCart],
         cashier_name: currentUser ? currentUser.name : 'Admin'
       };
 
-      // Deduct stock locally & in Supabase
+      // Realtime Inventory stock deduction
       posCart.forEach(cartItem => {
         const prod = productsData.find(p => p.id === cartItem.product_id);
         if (prod) {
@@ -2048,6 +2324,7 @@ CREATE TABLE IF NOT EXISTS transactions (
             invoice_no: saleRecord.invoice_no,
             customer_name: saleRecord.customer_name,
             customer_phone: saleRecord.customer_phone,
+            salesperson_name: saleRecord.salesperson_name,
             total_amount: saleRecord.total_amount,
             payment_method: saleRecord.payment_method,
             sale_date: saleRecord.sale_date,
@@ -2061,15 +2338,26 @@ CREATE TABLE IF NOT EXISTS transactions (
 
       previewInvoiceReceipt(saleRecord.invoice_no);
 
-      // Reset Cart
+      // Reset Cart State
       posCart = [];
+      isDiscountApproved = false;
+      const authBadge = document.getElementById('btn-admin-auth-discount');
+      if (authBadge) {
+        authBadge.className = 'text-[9px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 flex items-center space-x-1 transition cursor-pointer';
+        document.getElementById('pos-discount-lock-icon').className = 'fa-solid fa-lock text-[8px]';
+        document.getElementById('pos-discount-auth-label').innerText = 'Admin Auth';
+      }
       if (document.getElementById('pos-discount')) document.getElementById('pos-discount').value = '0';
       if (document.getElementById('pos-customer-name')) document.getElementById('pos-customer-name').value = '';
       if (document.getElementById('pos-customer-phone')) document.getElementById('pos-customer-phone').value = '';
+      if (document.getElementById('pos-split-cash')) document.getElementById('pos-split-cash').value = '';
+      if (document.getElementById('pos-split-card')) document.getElementById('pos-split-card').value = '';
+      
       renderPosCart();
       renderPosProducts();
       renderDashboard();
       renderProductsTable();
+      renderSalesTable();
     }
 
     function previewInvoiceReceipt(invoiceNo) {
@@ -2079,6 +2367,7 @@ CREATE TABLE IF NOT EXISTS transactions (
       document.getElementById('rec-inv-no').innerText = sale.invoice_no;
       document.getElementById('rec-date').innerText = new Date(sale.sale_date).toLocaleString();
       document.getElementById('rec-customer').innerText = `${sale.customer_name} (${sale.customer_phone || ''})`;
+      document.getElementById('rec-salesperson').innerText = sale.salesperson_name ? `${sale.salesperson_name} ${sale.employee_code ? `[${sale.employee_code}]` : ''}` : (sale.cashier_name || 'Admin');
       document.getElementById('rec-cashier').innerText = sale.cashier_name || 'Admin';
       document.getElementById('rec-payment-method').innerText = sale.payment_method || 'Cash';
 
@@ -2086,26 +2375,29 @@ CREATE TABLE IF NOT EXISTS transactions (
       if (tbody) {
         tbody.innerHTML = (sale.items || []).map(i => `
           <tr class="border-b border-slate-100">
-            <td class="py-1">${i.product_name}</td>
-            <td class="py-1 text-center">${i.qty}</td>
+            <td class="py-1 font-semibold">${i.product_name}</td>
+            <td class="py-1 text-center font-bold">${i.qty}</td>
             <td class="py-1 text-right">৳ ${i.price}</td>
-            <td class="py-1 text-right font-bold">৳ ${i.total}</td>
+            <td class="py-1 text-right font-black">৳ ${i.total}</td>
           </tr>
         `).join('');
       }
 
-      const sub = (sale.items || []).reduce((sum, i) => sum + i.total, 0);
-      document.getElementById('rec-subtotal').innerText = `৳ ${sub}`;
-      document.getElementById('rec-discount').innerText = `-৳ ${sale.discount || 0}`;
-      document.getElementById('rec-tax').innerText = `৳ ${sale.tax || Math.round(sub * 0.05)}`;
-      document.getElementById('rec-total').innerText = `৳ ${sale.total_amount}`;
+      const sub = sale.subtotal || (sale.items || []).reduce((sum, i) => sum + i.total, 0);
+      document.getElementById('rec-subtotal').innerText = `৳ ${sub.toLocaleString()}`;
+      document.getElementById('rec-discount').innerText = `-৳ ${(sale.discount || 0).toLocaleString()}`;
+      if (document.getElementById('rec-tax-label')) {
+        document.getElementById('rec-tax-label').innerText = `Tax / VAT (${sale.tax_rate !== undefined ? sale.tax_rate : 5}%):`;
+      }
+      document.getElementById('rec-tax').innerText = `৳ ${(sale.tax || Math.round(sub * 0.05)).toLocaleString()}`;
+      document.getElementById('rec-total').innerText = `৳ ${(Number(sale.total_amount) || 0).toLocaleString()}`;
 
       // Generate QR Code
       const qrBox = document.getElementById('rec-qr-code');
       if (qrBox) {
         qrBox.innerHTML = '';
         new QRCode(qrBox, {
-          text: `ApexPOS Invoice:${sale.invoice_no} Total:BDT ${sale.total_amount}`,
+          text: `ApexPOS\nInvoice: ${sale.invoice_no}\nSalesperson: ${sale.salesperson_name || 'Staff'}\nTotal: BDT ${sale.total_amount}\nPayment: ${sale.payment_method}`,
           width: 80,
           height: 80
         });
@@ -2492,6 +2784,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
       closeModal('modal-employee');
       populateCategoryFilters();
+      populatePosSalesEmployees();
       renderEmployeesTable();
       renderDashboard();
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Employee saved successfully!', showConfirmButton: false, timer: 1500 });
@@ -2512,6 +2805,7 @@ CREATE TABLE IF NOT EXISTS transactions (
         if (supabaseClient) {
           await supabaseClient.from('employees').delete().eq('id', id);
         }
+        populatePosSalesEmployees();
         renderEmployeesTable();
         renderDashboard();
         Swal.fire('Deleted!', 'Employee profile removed', 'success');
@@ -2527,8 +2821,13 @@ CREATE TABLE IF NOT EXISTS transactions (
       const pay = document.getElementById('sales-filter-payment')?.value || 'ALL';
 
       const filtered = salesData.filter(s => {
-        const matchSearch = s.invoice_no.toLowerCase().includes(search) || (s.customer_name && s.customer_name.toLowerCase().includes(search));
-        const matchPay = pay === 'ALL' || s.payment_method === pay;
+        const matchSearch = s.invoice_no.toLowerCase().includes(search) || 
+                            (s.customer_name && s.customer_name.toLowerCase().includes(search)) ||
+                            (s.salesperson_name && s.salesperson_name.toLowerCase().includes(search));
+        let matchPay = false;
+        if (pay === 'ALL') matchPay = true;
+        else if (pay === 'Split') matchPay = s.payment_method && s.payment_method.startsWith('Split');
+        else matchPay = s.payment_method && s.payment_method.includes(pay);
         return matchSearch && matchPay;
       });
 
@@ -2540,9 +2839,16 @@ CREATE TABLE IF NOT EXISTS transactions (
             <div class="text-[10px] text-slate-400">${s.customer_phone || ''}</div>
           </td>
           <td class="px-6 py-3.5 text-slate-500">${new Date(s.sale_date).toLocaleString()}</td>
-          <td class="px-6 py-3.5"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">${s.payment_method || 'Cash'}</span></td>
+          <td class="px-6 py-3.5">
+            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold ${s.payment_method && s.payment_method.startsWith('Split') ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-sky-50 text-sky-700 border border-sky-200'} block max-w-[200px] truncate" title="${s.payment_method || 'Cash'}">
+              ${s.payment_method || 'Cash'}
+            </span>
+          </td>
           <td class="px-6 py-3.5 font-black text-emerald-600 text-sm">৳ ${(Number(s.total_amount) || 0).toLocaleString()}</td>
-          <td class="px-6 py-3.5 text-slate-600 font-semibold">${s.cashier_name || 'Admin'}</td>
+          <td class="px-6 py-3.5 text-slate-700">
+            <div class="font-bold text-indigo-700">${s.salesperson_name || s.cashier_name || 'Admin'}</div>
+            <div class="text-[10px] text-slate-400 font-semibold">${s.employee_code ? `[${s.employee_code}]` : ''}</div>
+          </td>
           <td class="px-6 py-3.5 text-right space-x-1">
             <button onclick="previewInvoiceReceipt('${s.invoice_no}')" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs font-bold transition">
               <i class="fa-solid fa-receipt mr-1"></i>View Receipt
@@ -2733,6 +3039,10 @@ CREATE TABLE IF NOT EXISTS transactions (
     function openSupabaseSettingsModal() {
       openModal('modal-supabase');
     }
+
+    // Initial Setup
+    populateCategoryFilters();
+    populatePosSalesEmployees();
   </script>
 
 </body>
