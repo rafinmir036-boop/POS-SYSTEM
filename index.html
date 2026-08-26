@@ -226,14 +226,14 @@
           <button type="button" onclick="fillDemoCredentials('admin@system.com', 'admin123')" class="px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-lg transition border border-indigo-200 text-center">
             👑 Super Admin
           </button>
-          <button type="button" onclick="fillDemoCredentials('01722-000002', '123456')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] rounded-lg transition border border-emerald-200 text-center">
-            🏬 Dhanmondi
+          <button type="button" onclick="fillDemoCredentials('dhanmondi.mgr@system.com', '123456')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] rounded-lg transition border border-emerald-200 text-center">
+            🏬 Dhanmondi Mgr
           </button>
-          <button type="button" onclick="fillDemoCredentials('01933-000003', '123456')" class="px-2 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] rounded-lg transition border border-purple-200 text-center">
-            🏬 Uttara Outlet
+          <button type="button" onclick="fillDemoCredentials('warehouse.mgr@system.com', '123456')" class="px-2 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold text-[10px] rounded-lg transition border border-cyan-200 text-center">
+            🏭 Warehouse Mgr
           </button>
-          <button type="button" onclick="fillDemoCredentials('01811-000001', '123456')" class="px-2 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold text-[10px] rounded-lg transition border border-cyan-200 text-center">
-            🏭 Warehouse
+          <button type="button" onclick="fillDemoCredentials('sadia.cashier@system.com', '123456')" class="px-2 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 font-bold text-[10px] rounded-lg transition border border-pink-200 text-center">
+            💳 Cashier
           </button>
         </div>
       </div>
@@ -356,7 +356,13 @@
             </div>
             <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-violet-500/20 text-violet-400 border border-violet-500/30">PROFIT</span>
           </button>
-          <button id="nav-settings" onclick="openSupabaseSettingsModal()" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-settings" onclick="switchNav('settings')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-user-shield text-indigo-400 w-4"></i><span>Settings & Permissions</span>
+            </div>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">ROLES</span>
+          </button>
+          <button id="nav-database" onclick="openSupabaseSettingsModal()" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
             <div class="flex items-center space-x-3">
               <i class="fa-solid fa-database text-cyan-400 w-4"></i><span>PostgreSQL DB</span>
             </div>
@@ -1655,6 +1661,146 @@
 
         </section>
 
+
+        <!-- TAB 10: SETTINGS, USER MANAGEMENT & ROLE PERMISSIONS -->
+        <section id="sec-settings" class="hidden space-y-6">
+          
+          <!-- Header Banner -->
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div class="flex items-center space-x-2.5">
+                <span class="p-2.5 bg-indigo-100 text-indigo-700 rounded-2xl font-bold text-base">
+                  <i class="fa-solid fa-user-shield"></i>
+                </span>
+                <h2 class="text-base font-black text-slate-900 font-heading">User Roles, Permissions & Security Policy (রোল ও পারমিশন কন্ট্রোল)</h2>
+              </div>
+              <p class="text-xs text-slate-500 font-medium mt-1">
+                ম্যানেজার, ক্যাশিয়ার ও অন্যান্য ব্যবহারকারীদের জন্য আইডি তৈরি করুন, মডিউল পারমিশন দিন এবং ডিলিট নিরাপত্তা নিয়ন্ত্রণ করুন।
+              </p>
+            </div>
+
+            <button onclick="openAddSystemUserModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-indigo-500/20 transition flex items-center space-x-2 cursor-pointer shrink-0">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>+ Create New User / Manager (নতুন ইউজার তৈরি)</span>
+            </button>
+          </div>
+
+          <!-- Security Policy Banner -->
+          <div class="p-4 bg-gradient-to-r from-rose-50 via-amber-50 to-orange-50 border border-rose-200 rounded-2xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-start space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 text-base font-black">
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-rose-900 flex items-center space-x-1.5">
+                  <span>Strict Data Deletion Policy (ডাটা ডিলিট নিরাপত্তা নীতি)</span>
+                  <span class="px-2 py-0.2 rounded-full text-[9px] bg-rose-600 text-white uppercase tracking-wider font-bold">Admin Only</span>
+                </h4>
+                <p class="text-[11px] text-rose-700 font-medium mt-0.5 leading-relaxed">
+                  নিরাপত্তার স্বার্থে <b>শুধুমাত্র Super Admin</b> যেকোনো পণ্য, ইনভয়েস, কর্মী বা আর্থিক লেনদেনের রেকর্ড ডিলিট করতে পারবেন। কোনো ম্যানেজার বা স্টাফ কোনো রেকর্ড ডিলিট করতে পারবে না।
+                </p>
+              </div>
+            </div>
+            <div class="px-3 py-1.5 bg-white/80 border border-rose-200 rounded-xl text-center shrink-0">
+              <span class="text-[10px] text-slate-500 font-bold block">Current Role Status</span>
+              <span id="settings-current-role-badge" class="text-xs font-black text-indigo-700">👑 Super Admin</span>
+            </div>
+          </div>
+
+          <!-- Users Table & List -->
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-users text-indigo-600"></i>
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">System Users & Role Directory</h3>
+                <span id="settings-users-count" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">0 Users</span>
+              </div>
+              <div class="w-full sm:w-64">
+                <input type="text" id="system-user-search" oninput="renderSystemUsersTable()" placeholder="Search user name or login..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold">
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">User / Name</th>
+                    <th class="px-6 py-3.5 font-mono">Login ID / Username</th>
+                    <th class="px-6 py-3.5">Assigned Role</th>
+                    <th class="px-6 py-3.5">Branch</th>
+                    <th class="px-6 py-3.5">Permitted Modules</th>
+                    <th class="px-6 py-3.5 text-center">Delete Access</th>
+                    <th class="px-6 py-3.5 text-center">Status</th>
+                    <th class="px-6 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="system-users-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Store Profile & System Info -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+              <div class="flex items-center space-x-2 border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-store text-emerald-600"></i>
+                <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Business & Store Profile</h4>
+              </div>
+              <form onsubmit="handleSaveStoreProfile(event)" class="space-y-3 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Company / Store Name</label>
+                  <input type="text" id="store-name-input" value="ApexPOS & ERP Enterprise Suite" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1">Contact Phone</label>
+                    <input type="text" id="store-phone-input" value="+880 1800-000000" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1">Default Currency</label>
+                    <input type="text" id="store-currency-input" value="৳ (BDT)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Store Address</label>
+                  <input type="text" id="store-address-input" value="Tejgaon Commercial Area, Dhaka - 1208, Bangladesh" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
+                </div>
+                <div class="pt-2 flex justify-end">
+                  <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition flex items-center space-x-1.5 cursor-pointer shadow-xs">
+                    <i class="fa-solid fa-circle-check"></i><span>Save Business Profile</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center space-x-2 border-b border-slate-100 pb-2">
+                  <i class="fa-solid fa-shield-halved text-indigo-600"></i>
+                  <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Access & Security Guidelines</h4>
+                </div>
+                <ul class="text-[11px] text-slate-600 space-y-2 mt-3 list-disc list-inside">
+                  <li><b>Branch Managers:</b> শুধুমাত্র তাদের নির্ধারিত ব্রাঞ্চের সেলস, স্টক এবং ট্রান্সফার দেখতে ও রিসিভ করতে পারবে।</li>
+                  <li><b>Cashiers:</b> শুধুমাত্র POS বিক্রি টার্মিনাল এবং নিজস্ব সেলস ইনভয়েস দেখতে পারবে।</li>
+                  <li><b>Deletion Protection:</b> যেকোনো গুরুত্বপূর্ণ রেকর্ড মুছতে হলে Super Admin এর অ্যাকাউন্টে লগইন করতে হবে।</li>
+                </ul>
+              </div>
+              <div class="p-3 bg-indigo-50/60 rounded-2xl border border-indigo-100 text-xs text-indigo-900 flex items-center justify-between">
+                <div>
+                  <span class="font-bold block">Need Cloud Database Backup?</span>
+                  <span class="text-[11px] text-slate-500">Sync with PostgreSQL / Supabase</span>
+                </div>
+                <button onclick="openSupabaseSettingsModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition cursor-pointer">
+                  Cloud DB
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
       </div>
     </main>
 
@@ -2346,6 +2492,150 @@
   </div>
 
 
+  <!-- 9. USER ID & ROLE PERMISSIONS MODAL -->
+  <div id="modal-system-user" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <h3 id="modal-system-user-title" class="text-base font-black text-slate-900 font-heading">Create System User / Manager ID</h3>
+            <p class="text-[11px] text-slate-500 font-medium">ব্যবহারকারীর লগইন আইডি, পাসওয়ার্ড ও মডিউল পারমিশন নির্ধারণ করুন</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-system-user')" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleSystemUserSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="user-form-id">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Full Name (পূর্ণ নাম) *</label>
+            <input type="text" id="user-form-name" required placeholder="e.g. Tanvir Ahmed" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Login Username or Email *</label>
+            <input type="text" id="user-form-username" required placeholder="e.g. manager.dhanmondi" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Phone Number</label>
+            <input type="text" id="user-form-phone" placeholder="017XX-XXXXXX" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Login Password (পাসওয়ার্ড) *</label>
+            <div class="relative">
+              <input type="password" id="user-form-password" required placeholder="••••••••" value="123456" class="w-full p-2.5 pr-9 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
+              <button type="button" onclick="togglePasswordView('user-form-password')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-eye text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Role Preset (রোল নির্বাচন)</label>
+            <select id="user-form-role" onchange="onUserRolePresetChange()" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 outline-none">
+              <option value="Branch Manager">🏬 Branch Manager (ব্রাঞ্চ ম্যানেজার)</option>
+              <option value="Warehouse Manager">🏭 Warehouse Manager (গুদাম ইনচার্জ)</option>
+              <option value="Cashier">💳 Cashier / POS Operator (ক্যাশিয়ার)</option>
+              <option value="Accountant">📊 Accountant (হিসাবরক্ষক)</option>
+              <option value="Admin">👑 Super Admin (সর্বোচ্চ ক্ষমতা)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Assigned Branch (নির্ধারিত শাখা)</label>
+            <select id="user-form-branch" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 outline-none">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Granular Permissions Matrix -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="font-black text-slate-800 text-xs flex items-center space-x-1.5">
+              <i class="fa-solid fa-key text-indigo-600"></i>
+              <span>Module Permissions (মডিউল অ্যাক্সেস নিয়ন্ত্রণ)</span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-semibold">টিক চিহ্ন দিয়ে অনুমোদন দিন</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-pos" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>POS Terminal (বিক্রি)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-products" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Products & Stock (স্টক)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-sales" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Sales & Invoices (ইনভয়েস)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-transfers" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Stock Transfers (চালান)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-accounts" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Accounts (আয় / ব্যয়)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-inventory" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Inventory Audit (অডিট)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-reports" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Manager Reports (রিপোর্ট)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-employees" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Employees (কর্মী তালিকা)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="perm-settings" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Settings (সেটিংস)</span>
+            </label>
+          </div>
+
+          <!-- Deletion Protection Status -->
+          <div class="p-3 bg-rose-50 rounded-xl border border-rose-200 flex items-center justify-between text-[11px]">
+            <div class="flex items-center space-x-2 text-rose-900 font-bold">
+              <i class="fa-solid fa-ban text-rose-600"></i>
+              <span>Delete Records Permission (ডিলিট পারমিশন)</span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white uppercase">🔒 Admin Only</span>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modal-system-user')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold transition shadow-md shadow-indigo-600/20 flex items-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-user-check"></i>
+            <span>Save User & Permissions (ইউজার সংরক্ষণ)</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
   <!-- 5. SUPABASE / POSTGRESQL SETTINGS MODAL -->
   <div id="modal-supabase" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
@@ -2652,6 +2942,137 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
     let currentTransferFilter = 'ALL';
     let transferCart = [];
 
+    // System Users & Role Permissions Registry
+    const DEFAULT_SYSTEM_USERS = [
+      {
+        id: 1,
+        name: 'Super Administrator',
+        username: 'admin@system.com',
+        phone: '01700-000000',
+        password: 'admin123',
+        role: 'Admin',
+        branch_id: 'ALL',
+        status: 'Active',
+        photo_url: 'https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff',
+        permissions: {
+          can_pos: true,
+          can_products: true,
+          can_sales: true,
+          can_transfers: true,
+          can_accounts: true,
+          can_inventory: true,
+          can_reports: true,
+          can_employees: true,
+          can_settings: true,
+          can_delete: true
+        }
+      },
+      {
+        id: 2,
+        name: 'Tanvir Ahmed (Warehouse Mgr)',
+        username: 'warehouse.mgr@system.com',
+        phone: '01811-000001',
+        password: '123456',
+        role: 'Warehouse Manager',
+        branch_id: 1,
+        status: 'Active',
+        photo_url: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=06b6d4&color=fff',
+        permissions: {
+          can_pos: false,
+          can_products: true,
+          can_sales: false,
+          can_transfers: true,
+          can_accounts: false,
+          can_inventory: true,
+          can_reports: true,
+          can_employees: false,
+          can_settings: false,
+          can_delete: false
+        }
+      },
+      {
+        id: 3,
+        name: 'Kabir Hossain (Dhanmondi Mgr)',
+        username: 'dhanmondi.mgr@system.com',
+        phone: '01722-000002',
+        password: '123456',
+        role: 'Branch Manager',
+        branch_id: 2,
+        status: 'Active',
+        photo_url: 'https://ui-avatars.com/api/?name=Kabir+Hossain&background=10b981&color=fff',
+        permissions: {
+          can_pos: true,
+          can_products: true,
+          can_sales: true,
+          can_transfers: true,
+          can_accounts: true,
+          can_inventory: true,
+          can_reports: true,
+          can_employees: true,
+          can_settings: false,
+          can_delete: false
+        }
+      },
+      {
+        id: 4,
+        name: 'Sadia Akter (Senior Cashier)',
+        username: 'sadia.cashier@system.com',
+        phone: '01933-000003',
+        password: '123456',
+        role: 'Cashier',
+        branch_id: 2,
+        status: 'Active',
+        photo_url: 'https://ui-avatars.com/api/?name=Sadia+Akter&background=ec4899&color=fff',
+        permissions: {
+          can_pos: true,
+          can_products: false,
+          can_sales: true,
+          can_transfers: false,
+          can_accounts: false,
+          can_inventory: false,
+          can_reports: false,
+          can_employees: false,
+          can_settings: false,
+          can_delete: false
+        }
+      }
+    ];
+
+    let systemUsersData = JSON.parse(localStorage.getItem('apex_system_users')) || DEFAULT_SYSTEM_USERS;
+
+    function getDefaultPermissionsForRole(role) {
+      if (role === 'Admin') {
+        return { can_pos: true, can_products: true, can_sales: true, can_transfers: true, can_accounts: true, can_inventory: true, can_reports: true, can_employees: true, can_settings: true, can_delete: true };
+      } else if (role === 'Branch Manager') {
+        return { can_pos: true, can_products: true, can_sales: true, can_transfers: true, can_accounts: true, can_inventory: true, can_reports: true, can_employees: true, can_settings: false, can_delete: false };
+      } else if (role === 'Warehouse Manager') {
+        return { can_pos: false, can_products: true, can_sales: false, can_transfers: true, can_accounts: false, can_inventory: true, can_reports: true, can_employees: false, can_settings: false, can_delete: false };
+      } else if (role === 'Cashier') {
+        return { can_pos: true, can_products: false, can_sales: true, can_transfers: false, can_accounts: false, can_inventory: false, can_reports: false, can_employees: false, can_settings: false, can_delete: false };
+      } else if (role === 'Accountant') {
+        return { can_pos: false, can_products: false, can_sales: true, can_transfers: false, can_accounts: true, can_inventory: false, can_reports: true, can_employees: false, can_settings: false, can_delete: false };
+      }
+      return { can_pos: true, can_products: false, can_sales: true, can_transfers: false, can_accounts: false, can_inventory: false, can_reports: false, can_employees: false, can_settings: false, can_delete: false };
+    }
+
+    // Security Deletion Guard: Non-admin users cannot delete anything!
+    function checkAdminDeletePermission(actionName = 'রেকর্ড ডিলিট') {
+      if (!currentUser || currentUser.role !== 'Admin') {
+        Swal.fire({
+          icon: 'error',
+          title: '🚫 Access Denied (ডিলিট করার অনুমতি নেই)',
+          html: `<div class="text-left space-y-2">
+            <p class="text-xs text-rose-600 font-bold">নিরাপত্তার স্বার্থে শুধুমাত্র <b>Super Admin</b> কোনো ডাটা বা ${actionName} করতে পারবেন।</p>
+            <p class="text-[11px] text-slate-500">ম্যানেজার বা অন্যান্য কর্মীদের তথ্য ডিলিট করার কোনো অনুমতি দেওয়া হয়নি।</p>
+          </div>`,
+          confirmButtonColor: '#4f46e5',
+          confirmButtonText: 'বুঝেছি'
+        });
+        return false;
+      }
+      return true;
+    }
+
     // Memory Store (Local Fallback + Live Synced Cache)
     let employeesData = [
       { id: 1, employee_id: 'EMP-01', name: 'Tanvir Ahmed Rifat', email: 'tanvir@system.com', phone: '01811-000001', password: 'wh123', branch_id: 1, department: 'Operations', designation: 'Warehouse In-Charge', role: 'Branch Manager', salary: 35000, joining_date: '2024-01-15', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=6366f1&color=fff' },
@@ -2841,9 +3262,11 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         const toOpts = branchesData.map(b => `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`).join('');
         trfFromSelect.innerHTML = fromOpts;
         trfToSelect.innerHTML = toOpts;
-        if (branchesData.length > 1) {
-          trfToSelect.selectedIndex = 1;
-        }
+        if (branchesData.length > 1) trfToSelect.selectedIndex = 1;
+      }
+
+      if (document.getElementById('user-form-branch')) {
+        populateUserBranchSelect();
       }
     }
 
@@ -3067,57 +3490,74 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         return;
       }
 
-      let role = 'Admin';
-      let name = 'Super Administrator';
-      let email = identifier;
-      let branchId = 'ALL';
+      // Check in systemUsersData first
+      let matchedUser = systemUsersData.find(u => 
+        (u.username && u.username.toLowerCase() === identifier.toLowerCase()) ||
+        (u.phone && u.phone.replace(/[^0-9]/g, '') === identifier.replace(/[^0-9]/g, '')) ||
+        (u.name && u.name.toLowerCase() === identifier.toLowerCase())
+      );
 
-      // Find by Email or Phone in employeesData
+      // Fallback check in employeesData
       const matchedEmp = employeesData.find(emp => 
         (emp.email && emp.email.toLowerCase() === identifier.toLowerCase()) || 
         (emp.phone && emp.phone.replace(/[^0-9]/g, '') === identifier.replace(/[^0-9]/g, '')) ||
         (emp.employee_id && emp.employee_id.toLowerCase() === identifier.toLowerCase())
       );
 
-      if (identifier.toLowerCase() === 'admin@system.com' || identifier.toLowerCase() === 'admin') {
-        role = 'Admin';
-        name = 'Super Administrator';
-        branchId = 'ALL';
-      } else if (matchedEmp) {
-        name = matchedEmp.name;
-        role = matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier');
-        email = matchedEmp.email || matchedEmp.phone;
-        branchId = matchedEmp.branch_id || 2;
-      } else if (identifier.toLowerCase().includes('cashier')) {
-        role = 'Cashier';
-        name = 'Sadia Akter (Cashier)';
-        branchId = 2;
-      } else if (identifier.toLowerCase().includes('acc')) {
-        role = 'Accountant';
-        name = 'Sanim Ahmed (Accounts)';
-        branchId = 'ALL';
+      if (!matchedUser && matchedEmp) {
+        matchedUser = {
+          id: matchedEmp.id,
+          name: matchedEmp.name,
+          username: matchedEmp.email || matchedEmp.phone || matchedEmp.employee_id,
+          password: matchedEmp.password || '123456',
+          role: matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier'),
+          branch_id: matchedEmp.branch_id || 2,
+          permissions: getDefaultPermissionsForRole(matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier'))
+        };
       }
 
-      currentUser = { email, role, name, branch_id: branchId };
-      currentBranchId = branchId;
-      isDiscountApproved = (role === 'Admin');
+      if (identifier.toLowerCase() === 'admin@system.com' || identifier.toLowerCase() === 'admin') {
+        if (!matchedUser) matchedUser = systemUsersData[0];
+      }
+
+      if (!matchedUser) {
+        Swal.fire('User Not Found', 'এই ইউজারনেম বা ইমেইলের কোনো ব্যবহারকারী পাওয়া যায়নি।', 'error');
+        return;
+      }
+
+      if (matchedUser.password && matchedUser.password !== pass) {
+        Swal.fire('Invalid Password', 'ভুল পাসওয়ার্ড দিয়েছেন! সঠিক পাসওয়ার্ড দিয়ে পুনরায় চেষ্টা করুন।', 'error');
+        return;
+      }
+
+      currentUser = {
+        id: matchedUser.id,
+        email: matchedUser.username,
+        name: matchedUser.name,
+        role: matchedUser.role,
+        branch_id: matchedUser.branch_id,
+        permissions: matchedUser.permissions || getDefaultPermissionsForRole(matchedUser.role)
+      };
+
+      currentBranchId = matchedUser.branch_id;
+      isDiscountApproved = (currentUser.role === 'Admin');
 
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('main-app').classList.remove('hidden');
 
-      document.getElementById('header-name').innerText = name;
-      document.getElementById('header-role').innerText = `${role} • ${currentBranchId === 'ALL' ? 'All Locations' : getBranchName(currentBranchId)}`;
-      document.getElementById('header-avatar').innerText = name.charAt(0);
-      if (document.getElementById('sidebar-user-name')) document.getElementById('sidebar-user-name').innerText = name;
-      if (document.getElementById('sidebar-user-avatar')) document.getElementById('sidebar-user-avatar').innerText = name.charAt(0);
-      if (document.getElementById('current-user-email-badge')) document.getElementById('current-user-email-badge').innerText = email;
-      document.getElementById('current-user-role-label').innerText = `${role} Role`;
+      document.getElementById('header-name').innerText = currentUser.name;
+      document.getElementById('header-role').innerText = `${currentUser.role} • ${currentBranchId === 'ALL' ? 'All Locations' : getBranchName(currentBranchId)}`;
+      document.getElementById('header-avatar').innerText = currentUser.name.charAt(0);
+      if (document.getElementById('sidebar-user-name')) document.getElementById('sidebar-user-name').innerText = currentUser.name;
+      if (document.getElementById('sidebar-user-avatar')) document.getElementById('sidebar-user-avatar').innerText = currentUser.name.charAt(0);
+      if (document.getElementById('current-user-email-badge')) document.getElementById('current-user-email-badge').innerText = currentUser.email;
+      document.getElementById('current-user-role-label').innerText = `${currentUser.role} Role`;
 
-      // Branch Switcher Permissions
+      // Branch Switcher Permissions (Admin can switch all branches, others locked to assigned branch)
       const headerSelect = document.getElementById('header-branch-select');
       if (headerSelect) {
         headerSelect.value = String(currentBranchId);
-        if (role !== 'Admin') {
+        if (currentUser.role !== 'Admin') {
           headerSelect.disabled = true;
           headerSelect.classList.add('cursor-not-allowed', 'opacity-80');
         } else {
@@ -3126,13 +3566,15 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         }
       }
 
+      applyRolePermissionsToUI();
+
       Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'success',
-        title: `Welcome back, ${name}! (${currentBranchId === 'ALL' ? 'Enterprise All Locations' : getBranchName(currentBranchId)})`,
+        title: `Welcome back, ${currentUser.name}!`,
         showConfirmButton: false,
-        timer: 2500
+        timer: 2000
       });
 
       populateBranchDropdowns();
@@ -3140,7 +3582,44 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       populatePosSalesEmployees();
       renderTransfersTable();
       updateTransferBadges();
-      switchNav('dashboard');
+
+      // Automatically switch to first permitted section
+      if (currentUser.permissions && currentUser.permissions.can_pos && !currentUser.permissions.can_reports && currentUser.role === 'Cashier') {
+        switchNav('pos');
+      } else {
+        switchNav('dashboard');
+      }
+    }
+
+    function applyRolePermissionsToUI() {
+      if (!currentUser) return;
+      const p = currentUser.permissions || getDefaultPermissionsForRole(currentUser.role);
+      const isAdmin = currentUser.role === 'Admin';
+
+      const navMap = {
+        'nav-pos': isAdmin || p.can_pos,
+        'nav-products': isAdmin || p.can_products,
+        'nav-sales': isAdmin || p.can_sales,
+        'nav-employees': isAdmin || p.can_employees,
+        'nav-accounts': isAdmin || p.can_accounts,
+        'nav-inventory': isAdmin || p.can_inventory,
+        'nav-transfers': isAdmin || p.can_transfers,
+        'nav-new-transfer': isAdmin || p.can_transfers,
+        'nav-reports': isAdmin || p.can_reports,
+        'nav-settings': isAdmin || p.can_settings
+      };
+
+      Object.entries(navMap).forEach(([navId, isAllowed]) => {
+        const el = document.getElementById(navId);
+        if (el) {
+          el.style.display = isAllowed ? '' : 'none';
+        }
+      });
+
+      const roleBadge = document.getElementById('settings-current-role-badge');
+      if (roleBadge) {
+        roleBadge.innerText = `${isAdmin ? '👑 Super Admin' : '👤 ' + currentUser.role} (${currentUser.branch_id === 'ALL' ? 'All Branches' : getBranchName(currentUser.branch_id)})`;
+      }
     }
 
     function handleLogout() {
@@ -3172,7 +3651,7 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
 
     // --- Navigation Switching ---
     function switchNav(tabId) {
-      const sections = ['dashboard', 'pos', 'products', 'sales', 'employees', 'accounts', 'reports', 'inventory', 'transfers'];
+      const sections = ['dashboard', 'pos', 'products', 'sales', 'employees', 'accounts', 'reports', 'inventory', 'transfers', 'settings'];
       sections.forEach(s => {
         const el = document.getElementById(`sec-${s}`);
         const navBtn = document.getElementById(`nav-${s}`);
@@ -3200,13 +3679,273 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         accounts: { t: 'Accounts (আয় ও ব্যয়)', sub: 'Income & expense ledger, cashbook and net balance' },
         reports: { t: 'Manager Daily Sales, Profit & Transfer Reports (ম্যানেজার রিপোর্ট)', sub: 'তারিখ নির্বাচন করে মোট বিক্রয়, মোট কোয়ান্টিটি (Qty), নিট লাভ (Profit), মোট ছাড় (Discount) এবং চালান লগ দেখুন' },
         inventory: { t: 'Inventory Stock & Physical Audit (ইনভেন্টরি অডিট)', sub: 'বারকোড স্ক্যানার দিয়ে বাস্তব স্টক গণনা করুন এবং সিস্টেম ঘাটতি (Shortage) মিলিয়ে নিন' },
-        transfers: { t: 'Stock Transfers & Receiving (পণ্য স্থানান্তর ও গ্রহণ)', sub: 'ওয়্যারহাউজ ও শাখাগুলোর মধ্যে স্টক ট্রান্সফার, চালান প্রিন্ট এবং রিসিভ করুন' }
+        transfers: { t: 'Stock Transfers & Receiving (পণ্য স্থানান্তর ও গ্রহণ)', sub: 'ওয়্যারহাউজ ও শাখাগুলোর মধ্যে স্টক ট্রান্সফার, চালান প্রিন্ট এবং রিসিভ করুন' },
+        settings: { t: 'System Settings & Role Permissions (সেটিংস ও রোল পারমিশন)', sub: 'ম্যানেজার ও স্টাফদের জন্য ইউজার আইডি তৈরি করুন, পারমিশন দিন এবং ডিলিট সিকিউরিটি নিয়ন্ত্রণ করুন' }
       };
 
       if (titles[tabId]) {
         document.getElementById('page-title').innerText = titles[tabId].t;
         document.getElementById('page-subtitle').innerText = titles[tabId].sub;
       }
+
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'pos') {
+        renderPosProducts();
+        populatePosSalesEmployees();
+      }
+      if (tabId === 'products') renderProductsTable();
+      if (tabId === 'sales') renderSalesTable();
+      if (tabId === 'employees') renderEmployeesTable();
+      if (tabId === 'accounts') renderAccountsTable();
+      if (tabId === 'reports') initReportsSection();
+      if (tabId === 'settings') renderSystemUsersTable();
+    }
+
+    // --- System Users & Settings Management ---
+    function renderSystemUsersTable() {
+      const tbody = document.getElementById('system-users-table-body');
+      const countEl = document.getElementById('settings-users-count');
+      if (!tbody) return;
+
+      const search = (document.getElementById('system-user-search')?.value || '').toLowerCase().trim();
+
+      const filtered = systemUsersData.filter(u => 
+        u.name.toLowerCase().includes(search) || 
+        u.username.toLowerCase().includes(search) || 
+        (u.phone && u.phone.includes(search)) ||
+        (u.role && u.role.toLowerCase().includes(search))
+      );
+
+      if (countEl) countEl.innerText = `${filtered.length} Users`;
+
+      tbody.innerHTML = filtered.map(u => {
+        const p = u.permissions || getDefaultPermissionsForRole(u.role);
+        const permBadges = [];
+        if (p.can_pos) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px]">POS</span>');
+        if (p.can_products) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 font-bold text-[10px]">Stock</span>');
+        if (p.can_sales) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[10px]">Sales</span>');
+        if (p.can_transfers) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-700 font-bold text-[10px]">Transfer</span>');
+        if (p.can_accounts) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-bold text-[10px]">Accounts</span>');
+        if (p.can_inventory) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 font-bold text-[10px]">Audit</span>');
+        if (p.can_reports) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 font-bold text-[10px]">Reports</span>');
+        if (p.can_employees) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-pink-50 text-pink-700 font-bold text-[10px]">Staff</span>');
+        if (p.can_settings) permBadges.push('<span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold text-[10px]">Settings</span>');
+
+        const roleColor = u.role === 'Admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                          u.role.includes('Manager') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                          u.role === 'Cashier' ? 'bg-pink-50 text-pink-700 border-pink-200' :
+                          'bg-amber-50 text-amber-700 border-amber-200';
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+            <td class="px-6 py-3.5 flex items-center space-x-3">
+              <img src="${u.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=6366f1&color=fff`}" class="w-9 h-9 rounded-full object-cover border border-slate-200 shadow-2xs">
+              <div>
+                <div class="font-bold text-slate-800">${u.name}</div>
+                <div class="text-[10px] text-slate-400 font-medium">${u.phone || 'No phone'}</div>
+              </div>
+            </td>
+            <td class="px-6 py-3.5 font-bold font-mono text-indigo-600 text-xs">${u.username}</td>
+            <td class="px-6 py-3.5">
+              <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold ${roleColor}">
+                ${u.role === 'Admin' ? '👑 ' : ''}${u.role}
+              </span>
+            </td>
+            <td class="px-6 py-3.5">
+              <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[11px] flex items-center space-x-1 w-fit">
+                <i class="fa-solid fa-store text-[9px]"></i><span>${u.branch_id === 'ALL' ? 'All Branches' : getBranchName(u.branch_id)}</span>
+              </span>
+            </td>
+            <td class="px-6 py-3.5">
+              <div class="flex flex-wrap gap-1 max-w-xs">
+                ${permBadges.join('') || '<span class="text-slate-400 text-[10px]">None</span>'}
+              </div>
+            </td>
+            <td class="px-6 py-3.5 text-center">
+              ${u.role === 'Admin' 
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">ALLOWED</span>'
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">LOCKED (ADMIN ONLY)</span>'
+              }
+            </td>
+            <td class="px-6 py-3.5 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'}">
+                ${u.status || 'Active'}
+              </span>
+            </td>
+            <td class="px-6 py-3.5 text-right space-x-1">
+              <button onclick="openEditSystemUserModal(${u.id})" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs transition cursor-pointer" title="Edit Permissions & ID">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              ${u.role !== 'Admin' ? `
+                <button onclick="deleteSystemUser(${u.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition cursor-pointer" title="Delete User">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="8" class="text-center py-6 text-slate-400">কোনো ইউজার পাওয়া যায়নি</td></tr>';
+    }
+
+    function openAddSystemUserModal() {
+      document.getElementById('user-form-id').value = '';
+      document.getElementById('user-form-name').value = '';
+      document.getElementById('user-form-username').value = '';
+      document.getElementById('user-form-phone').value = '';
+      document.getElementById('user-form-password').value = '123456';
+      document.getElementById('user-form-role').value = 'Branch Manager';
+      
+      populateUserBranchSelect();
+      onUserRolePresetChange();
+      document.getElementById('modal-system-user-title').innerText = 'Create System User / Manager ID';
+      openModal('modal-system-user');
+    }
+
+    function openEditSystemUserModal(id) {
+      const u = systemUsersData.find(usr => usr.id === id);
+      if (!u) return;
+
+      document.getElementById('user-form-id').value = u.id;
+      document.getElementById('user-form-name').value = u.name;
+      document.getElementById('user-form-username').value = u.username;
+      document.getElementById('user-form-phone').value = u.phone || '';
+      document.getElementById('user-form-password').value = u.password || '123456';
+      document.getElementById('user-form-role').value = u.role || 'Branch Manager';
+      
+      populateUserBranchSelect(u.branch_id);
+
+      const p = u.permissions || getDefaultPermissionsForRole(u.role);
+      document.getElementById('perm-pos').checked = !!p.can_pos;
+      document.getElementById('perm-products').checked = !!p.can_products;
+      document.getElementById('perm-sales').checked = !!p.can_sales;
+      document.getElementById('perm-transfers').checked = !!p.can_transfers;
+      document.getElementById('perm-accounts').checked = !!p.can_accounts;
+      document.getElementById('perm-inventory').checked = !!p.can_inventory;
+      document.getElementById('perm-reports').checked = !!p.can_reports;
+      document.getElementById('perm-employees').checked = !!p.can_employees;
+      document.getElementById('perm-settings').checked = !!p.can_settings;
+
+      document.getElementById('modal-system-user-title').innerText = `Edit Permissions: ${u.name}`;
+      openModal('modal-system-user');
+    }
+
+    function populateUserBranchSelect(selectedVal = 'ALL') {
+      const select = document.getElementById('user-form-branch');
+      if (!select) return;
+
+      let opts = '<option value="ALL">🌐 All Branches (সকল শাখা)</option>';
+      branchesData.forEach(b => {
+        opts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
+      });
+      select.innerHTML = opts;
+      select.value = String(selectedVal);
+    }
+
+    function onUserRolePresetChange() {
+      const role = document.getElementById('user-form-role').value;
+      const defs = getDefaultPermissionsForRole(role);
+
+      document.getElementById('perm-pos').checked = defs.can_pos;
+      document.getElementById('perm-products').checked = defs.can_products;
+      document.getElementById('perm-sales').checked = defs.can_sales;
+      document.getElementById('perm-transfers').checked = defs.can_transfers;
+      document.getElementById('perm-accounts').checked = defs.can_accounts;
+      document.getElementById('perm-inventory').checked = defs.can_inventory;
+      document.getElementById('perm-reports').checked = defs.can_reports;
+      document.getElementById('perm-employees').checked = defs.can_employees;
+      document.getElementById('perm-settings').checked = defs.can_settings;
+    }
+
+    async function handleSystemUserSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('user-form-id').value;
+      const name = document.getElementById('user-form-name').value.trim();
+      const username = document.getElementById('user-form-username').value.trim();
+      const phone = document.getElementById('user-form-phone').value.trim();
+      const password = document.getElementById('user-form-password').value.trim();
+      const role = document.getElementById('user-form-role').value;
+      const branchId = document.getElementById('user-form-branch').value === 'ALL' ? 'ALL' : Number(document.getElementById('user-form-branch').value);
+
+      const permissions = {
+        can_pos: document.getElementById('perm-pos').checked,
+        can_products: document.getElementById('perm-products').checked,
+        can_sales: document.getElementById('perm-sales').checked,
+        can_transfers: document.getElementById('perm-transfers').checked,
+        can_accounts: document.getElementById('perm-accounts').checked,
+        can_inventory: document.getElementById('perm-inventory').checked,
+        can_reports: document.getElementById('perm-reports').checked,
+        can_employees: document.getElementById('perm-employees').checked,
+        can_settings: document.getElementById('perm-settings').checked,
+        can_delete: (role === 'Admin') // Strictly Admin only!
+      };
+
+      const userPayload = {
+        name,
+        username,
+        phone,
+        password,
+        role,
+        branch_id: branchId,
+        status: 'Active',
+        photo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`,
+        permissions
+      };
+
+      if (id) {
+        const idx = systemUsersData.findIndex(u => u.id == id);
+        if (idx !== -1) {
+          systemUsersData[idx] = { id: Number(id), ...userPayload };
+        }
+      } else {
+        const newUser = { id: Date.now(), ...userPayload };
+        systemUsersData.push(newUser);
+      }
+
+      localStorage.setItem('apex_system_users', JSON.stringify(systemUsersData));
+      closeModal('modal-system-user');
+      renderSystemUsersTable();
+      
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'User ID & Permissions saved successfully!',
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
+
+    async function deleteSystemUser(id) {
+      if (!checkAdminDeletePermission('ইউজার অ্যাকাউন্ট ডিলিট')) return;
+
+      const res = await Swal.fire({
+        title: 'Delete System User?',
+        text: 'This user will no longer be able to log in to POS system',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Delete User'
+      });
+
+      if (res.isConfirmed) {
+        systemUsersData = systemUsersData.filter(u => u.id !== id);
+        localStorage.setItem('apex_system_users', JSON.stringify(systemUsersData));
+        renderSystemUsersTable();
+        Swal.fire('Deleted!', 'User ID has been removed from system', 'success');
+      }
+    }
+
+    function handleSaveStoreProfile(e) {
+      e.preventDefault();
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Business & Store profile updated!',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
 
       if (tabId === 'dashboard') renderDashboard();
       if (tabId === 'pos') {
@@ -3970,6 +4709,7 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
     }
 
     async function deleteProduct(id) {
+      if (!checkAdminDeletePermission('পণ্য ডিলিট')) return;
       const res = await Swal.fire({
         title: 'Delete Product?',
         text: 'This action cannot be reversed',
@@ -4257,6 +4997,7 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
     }
 
     async function deleteEmployee(id) {
+      if (!checkAdminDeletePermission('কর্মী প্রোফাইল ডিলিট')) return;
       const res = await Swal.fire({
         title: 'Delete Employee?',
         text: 'This employee will be removed from directory',
@@ -4360,10 +5101,32 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
             ${t.type === 'Income' ? '+' : '-'}৳ ${(Number(t.amount) || 0).toLocaleString()}
           </td>
           <td class="px-6 py-3.5 text-right">
-            <button onclick="deleteTransaction(${t.id})" class="p-1.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+            <button onclick="deleteTransaction(${t.id})" class="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>
           </td>
         </tr>
       `).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No account entries found</td></tr>';
+    }
+
+    async function deleteTransaction(id) {
+      if (!checkAdminDeletePermission('অ্যাকাউন্টের লেনদেন ডিলিট')) return;
+      const res = await Swal.fire({
+        title: 'Delete Transaction Entry?',
+        text: 'This transaction record will be removed from accounts',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Delete'
+      });
+
+      if (res.isConfirmed) {
+        accountsData = accountsData.filter(t => t.id !== id);
+        if (supabaseClient) {
+          await supabaseClient.from('accounts').delete().eq('id', id);
+        }
+        renderAccountsTable();
+        renderDashboard();
+        Swal.fire('Deleted!', 'Transaction entry removed', 'success');
+      }
     }
 
     function openAddTransactionModal() {
