@@ -758,17 +758,16 @@
                   <span id="pos-subtotal" class="font-bold text-slate-800">৳ 0</span>
                 </div>
 
-                <!-- Admin Protected Discount -->
+                <!-- Discount (Directly Editable by All Staff) -->
                 <div class="flex justify-between items-center font-semibold text-slate-600">
                   <div class="flex items-center space-x-1.5">
                     <span>Discount (ছাড় ৳)</span>
-                    <button type="button" id="btn-admin-auth-discount" onclick="requestAdminDiscountApproval()" title="Admin permission required for discount" class="text-[9px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 flex items-center space-x-1 transition cursor-pointer">
-                      <i class="fa-solid fa-lock text-[8px]" id="pos-discount-lock-icon"></i>
-                      <span id="pos-discount-auth-label">Admin Auth</span>
-                    </button>
+                    <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      <i class="fa-solid fa-tag text-[8px] mr-0.5"></i>ছাড়
+                    </span>
                   </div>
                   <div class="flex items-center space-x-1">
-                    <input type="number" id="pos-discount" min="0" value="0" oninput="onDiscountInputChange()" placeholder="0" class="w-24 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                    <input type="number" id="pos-discount" min="0" value="0" oninput="onDiscountInputChange()" placeholder="0" class="w-24 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
                   </div>
                 </div>
 
@@ -5395,58 +5394,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }
     }
 
-    async function requestAdminDiscountApproval() {
-      if (currentUser && currentUser.role === 'Admin') {
-        isDiscountApproved = true;
-        const authBadge = document.getElementById('btn-admin-auth-discount');
-        if (authBadge) {
-          authBadge.className = 'text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 flex items-center space-x-1';
-          document.getElementById('pos-discount-lock-icon').className = 'fa-solid fa-lock-open text-[8px] text-emerald-600';
-          document.getElementById('pos-discount-auth-label').innerText = 'Admin Unlocked';
-        }
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Admin mode active: Discount unlocked', showConfirmButton: false, timer: 1500 });
-        document.getElementById('pos-discount')?.focus();
-        return;
-      }
-
-      const { value: pin } = await Swal.fire({
-        title: '🔒 Admin Permission Required',
-        text: 'ডিসকাউন্ট দিতে এডমিনের অনুমোদন বা পাসওয়ার্ড প্রয়োজন (Default PIN: admin123):',
-        input: 'password',
-        inputPlaceholder: 'Enter Admin Password / PIN',
-        inputAttributes: {
-          autocapitalize: 'off',
-          autocorrect: 'off'
-        },
-        showCancelButton: true,
-        confirmButtonColor: '#6366f1',
-        confirmButtonText: 'Authorize Discount',
-        cancelButtonText: 'Cancel'
-      });
-
-      if (pin === 'admin123' || pin === '1234' || pin === 'admin') {
-        isDiscountApproved = true;
-        const authBadge = document.getElementById('btn-admin-auth-discount');
-        if (authBadge) {
-          authBadge.className = 'text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 flex items-center space-x-1';
-          document.getElementById('pos-discount-lock-icon').className = 'fa-solid fa-circle-check text-[8px] text-emerald-600';
-          document.getElementById('pos-discount-auth-label').innerText = 'Approved by Admin';
-        }
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Discount Authorized by Admin!', showConfirmButton: false, timer: 1500 });
-        document.getElementById('pos-discount')?.focus();
-      } else if (pin !== undefined) {
-        Swal.fire('Access Denied', 'ভুল পাসওয়ার্ড! এডমিনের অনুমতি ছাড়া ডিসকাউন্ট দেওয়া যাবে না।', 'error');
-        isDiscountApproved = false;
-        if (document.getElementById('pos-discount')) document.getElementById('pos-discount').value = '0';
-        calculatePosTotals();
-      }
-    }
-
     function onDiscountInputChange() {
-      const discountVal = Number(document.getElementById('pos-discount')?.value) || 0;
-      if (discountVal > 0 && !isDiscountApproved && (!currentUser || currentUser.role !== 'Admin')) {
-        requestAdminDiscountApproval();
-      }
       calculatePosTotals();
     }
 
@@ -5728,12 +5676,6 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const tax = Math.round(subtotal * (taxRate / 100));
       const grandTotal = Math.max(0, subtotal - discount + tax);
 
-      // Check discount permission
-      if (discount > 0 && !isDiscountApproved && (!currentUser || currentUser.role !== 'Admin')) {
-        await requestAdminDiscountApproval();
-        if (!isDiscountApproved) return;
-      }
-
       const cash = Number(document.getElementById('pay-input-cash')?.value) || 0;
       const bkash = Number(document.getElementById('pay-input-bkash')?.value) || 0;
       const bkashTxn = document.getElementById('pay-bkash-txnid')?.value.trim();
@@ -5842,13 +5784,6 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       // Reset Cart State
       posCart = [];
-      isDiscountApproved = false;
-      const authBadge = document.getElementById('btn-admin-auth-discount');
-      if (authBadge) {
-        authBadge.className = 'text-[9px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 flex items-center space-x-1 transition cursor-pointer';
-        document.getElementById('pos-discount-lock-icon').className = 'fa-solid fa-lock text-[8px]';
-        document.getElementById('pos-discount-auth-label').innerText = 'Admin Auth';
-      }
       if (document.getElementById('pos-discount')) document.getElementById('pos-discount').value = '0';
       if (document.getElementById('pos-customer-name')) document.getElementById('pos-customer-name').value = '';
       if (document.getElementById('pos-customer-phone')) document.getElementById('pos-customer-phone').value = '';
