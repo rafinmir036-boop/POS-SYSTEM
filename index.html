@@ -5310,18 +5310,33 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       document.getElementById('rec-tax').innerText = `৳ ${(sale.tax || 0).toLocaleString()}`;
       document.getElementById('rec-total').innerText = `৳ ${(Number(sale.total_amount) || 0).toLocaleString()}`;
 
-      // Generate QR Code
+      // Generate QR Code safely
       const qrBox = document.getElementById('rec-qr-code');
       if (qrBox) {
         qrBox.innerHTML = '';
-        new QRCode(qrBox, {
-          text: `ApexPOS\n${isExchange ? 'EXCHANGE INVOICE' : 'INVOICE'}: ${sale.invoice_no}\n${sale.ref_invoice_no ? `Ref: ${sale.ref_invoice_no}\n` : ''}Salesperson: ${sale.salesperson_name || 'Staff'}\nTotal Paid: BDT ${sale.total_amount}\nPayment: ${sale.payment_method}`,
-          width: 80,
-          height: 80
-        });
+        try {
+          if (typeof QRCode !== 'undefined') {
+            new QRCode(qrBox, {
+              text: `ApexPOS\n${isExchange ? 'EXCHANGE INVOICE' : 'INVOICE'}: ${sale.invoice_no}\n${sale.ref_invoice_no ? `Ref: ${sale.ref_invoice_no}\n` : ''}Salesperson: ${sale.salesperson_name || 'Staff'}\nTotal Paid: BDT ${sale.total_amount}\nPayment: ${sale.payment_method}`,
+              width: 80,
+              height: 80
+            });
+          }
+        } catch (qrErr) {
+          console.warn('QR Code generation notice:', qrErr);
+        }
       }
 
       openModal('modal-receipt');
+      
+      // Auto-trigger browser print dialog for thermal receipt printer
+      setTimeout(() => {
+        try {
+          window.print();
+        } catch (pErr) {
+          console.warn('Auto-print dialog notice:', pErr);
+        }
+      }, 350);
     }
 
     // --- Products CRUD ---
