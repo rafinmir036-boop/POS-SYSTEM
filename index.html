@@ -3502,14 +3502,14 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     }
 
     // Memory Store (Local Fallback + Live Synced Cache)
-    let employeesData = [
+    const DEFAULT_EMPLOYEES = [
       { id: 1, employee_id: 'EMP-01', name: 'Tanvir Ahmed Rifat', email: 'tanvir@system.com', phone: '01811-000001', password: 'wh123', branch_id: 1, department: 'Operations', designation: 'Warehouse In-Charge', role: 'Branch Manager', salary: 35000, joining_date: '2024-01-15', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=6366f1&color=fff' },
       { id: 2, employee_id: 'EMP-02', name: 'Sadia Akter', email: 'sadia@system.com', phone: '01722-000002', password: '123456', branch_id: 2, department: 'Sales', designation: 'Dhanmondi Senior Cashier', role: 'Cashier', salary: 22000, joining_date: '2024-03-01', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sadia+Akter&background=ec4899&color=fff' },
       { id: 3, employee_id: 'EMP-03', name: 'Sanim Ahmed', email: 'sanim@system.com', phone: '01933-000003', password: '123456', branch_id: 3, department: 'Sales', designation: 'Uttara Branch Cashier', role: 'Cashier', salary: 22000, joining_date: '2024-02-10', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Sanim+Ahmed&background=10b981&color=fff' },
       { id: 4, employee_id: 'EMP-04', name: 'Mariom Begum', email: 'mariom@system.com', phone: '01644-000004', password: '123456', branch_id: 4, department: 'Sales', designation: 'Mirpur Sales Associate', role: 'Cashier', salary: 18000, joining_date: '2024-06-20', status: 'Active', photo_url: 'https://ui-avatars.com/api/?name=Mariom+Begum&background=f59e0b&color=fff' }
     ];
 
-    let productsData = [
+    const DEFAULT_PRODUCTS = [
       { id: 1, product_code: 'PRD-101', product_name: 'Premium Cotton Polo Shirt', category: 'Clothing', purchase_price: 350, sale_price: 650, stock: 45, branch_stocks: { 1: 20, 2: 15, 3: 6, 4: 4 }, image_url: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=200' },
       { id: 2, product_code: 'PRD-102', product_name: 'Slim Fit Denim Jeans', category: 'Clothing', purchase_price: 600, sale_price: 1250, stock: 28, branch_stocks: { 1: 10, 2: 8, 3: 6, 4: 4 }, image_url: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=200' },
       { id: 3, product_code: 'PRD-103', product_name: 'Wireless Bluetooth Earbuds', category: 'Electronics', purchase_price: 850, sale_price: 1550, stock: 18, branch_stocks: { 1: 8, 2: 5, 3: 3, 4: 2 }, image_url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=200' },
@@ -3518,7 +3518,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       { id: 6, product_code: 'PRD-106', product_name: 'Stainless Steel Water Flask', category: 'Accessories', purchase_price: 220, sale_price: 480, stock: 15, branch_stocks: { 1: 5, 2: 4, 3: 3, 4: 3 }, image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=200' }
     ];
 
-    let transfersData = [
+    const DEFAULT_TRANSFERS = [
       {
         id: 1,
         transfer_no: 'TRF-20260825-001',
@@ -3552,7 +3552,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }
     ];
 
-    let salesData = [
+    const DEFAULT_SALES = [
       {
         id: 1,
         invoice_no: 'INV-20260825-001',
@@ -3617,12 +3617,18 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }
     ];
 
-    let accountsData = [
+    const DEFAULT_ACCOUNTS = [
       { id: 1, type: 'Income', category: 'Opening Balance', amount: 50000, date: '2026-08-01', payment_method: 'Cash', note: 'Initial register deposit' },
       { id: 2, type: 'Expense', category: 'Shop Rent', amount: 15000, date: '2026-08-05', payment_method: 'Bank Transfer', note: 'Monthly Outlet Rent' },
       { id: 3, type: 'Expense', category: 'Electricity Bill', amount: 3200, date: '2026-08-10', payment_method: 'bKash', note: 'DESCO electricity bill' },
       { id: 4, type: 'Expense', category: 'Staff Refreshment', amount: 850, date: '2026-08-20', payment_method: 'Cash', note: 'Snacks & Tea' }
     ];
+
+    let employeesData = localStorage.getItem('apex_employees') !== null ? JSON.parse(localStorage.getItem('apex_employees')) : DEFAULT_EMPLOYEES;
+    let productsData = localStorage.getItem('apex_products') !== null ? JSON.parse(localStorage.getItem('apex_products')) : DEFAULT_PRODUCTS;
+    let transfersData = localStorage.getItem('apex_transfers') !== null ? JSON.parse(localStorage.getItem('apex_transfers')) : DEFAULT_TRANSFERS;
+    let salesData = localStorage.getItem('apex_sales') !== null ? JSON.parse(localStorage.getItem('apex_sales')) : DEFAULT_SALES;
+    let accountsData = localStorage.getItem('apex_accounts') !== null ? JSON.parse(localStorage.getItem('apex_accounts')) : DEFAULT_ACCOUNTS;
 
     let currentPayMethod = 'Cash';
     let chartSalesInstance = null;
@@ -3791,57 +3797,72 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       try {
         const { data: prods, error: pErr } = await supabaseClient.from('products').select('*');
-        if (prods && prods.length > 0) {
-          productsData = prods;
-        } else if (!pErr && productsData.length > 0) {
-          // Cloud database is clean/new, seed initial catalog
-          await supabaseClient.from('products').upsert(productsData.map(p => ({
-            id: p.id,
-            product_code: p.product_code,
-            product_name: p.product_name,
-            category: p.category,
-            purchase_price: p.purchase_price,
-            sale_price: p.sale_price,
-            stock: p.stock,
-            branch_stocks: p.branch_stocks || {},
-            image_url: p.image_url
-          })));
+        if (!pErr && prods) {
+          if (prods.length > 0) {
+            productsData = prods;
+            localStorage.setItem('apex_products', JSON.stringify(productsData));
+          } else if (localStorage.getItem('apex_products_seeded') !== 'true') {
+            localStorage.setItem('apex_products_seeded', 'true');
+            await supabaseClient.from('products').upsert(productsData.map(p => ({
+              id: p.id,
+              product_code: p.product_code,
+              product_name: p.product_name,
+              category: p.category,
+              purchase_price: p.purchase_price,
+              sale_price: p.sale_price,
+              stock: p.stock,
+              branch_stocks: p.branch_stocks || {},
+              image_url: p.image_url
+            })));
+          }
         }
 
         const { data: emps, error: eErr } = await supabaseClient.from('employees').select('*');
-        if (emps && emps.length > 0) {
-          employeesData = emps;
-        } else if (!eErr && employeesData.length > 0) {
-          // Seed initial employee roster
-          await supabaseClient.from('employees').upsert(employeesData.map(e => ({
-            id: e.id,
-            employee_id: e.employee_id,
-            name: e.name,
-            email: e.email,
-            phone: e.phone,
-            password: e.password,
-            branch_id: e.branch_id,
-            department: e.department,
-            designation: e.designation,
-            role: e.role,
-            salary: e.salary,
-            joining_date: e.joining_date,
-            status: e.status,
-            photo_url: e.photo_url
-          })));
+        if (!eErr && emps) {
+          if (emps.length > 0) {
+            employeesData = emps;
+            localStorage.setItem('apex_employees', JSON.stringify(employeesData));
+          } else if (localStorage.getItem('apex_employees_seeded') !== 'true') {
+            localStorage.setItem('apex_employees_seeded', 'true');
+            await supabaseClient.from('employees').upsert(employeesData.map(e => ({
+              id: e.id,
+              employee_id: e.employee_id,
+              name: e.name,
+              email: e.email,
+              phone: e.phone,
+              password: e.password,
+              branch_id: e.branch_id,
+              department: e.department,
+              designation: e.designation,
+              role: e.role,
+              salary: e.salary,
+              joining_date: e.joining_date,
+              status: e.status,
+              photo_url: e.photo_url
+            })));
+          }
         }
 
-        const { data: sls } = await supabaseClient.from('sales').select('*').order('id', { ascending: false });
-        if (sls && sls.length > 0) salesData = sls;
+        const { data: sls, error: sErr } = await supabaseClient.from('sales').select('*').order('id', { ascending: false });
+        if (!sErr && sls) {
+          salesData = sls;
+          localStorage.setItem('apex_sales', JSON.stringify(salesData));
+        }
 
-        const { data: trfs } = await supabaseClient.from('transfers').select('*').order('id', { ascending: false });
-        if (trfs && trfs.length > 0) transfersData = trfs;
+        const { data: trfs, error: trfErr } = await supabaseClient.from('transfers').select('*').order('id', { ascending: false });
+        if (!trfErr && trfs) {
+          transfersData = trfs;
+          localStorage.setItem('apex_transfers', JSON.stringify(transfersData));
+        }
 
-        const { data: txs } = await supabaseClient.from('accounts').select('*').order('id', { ascending: false });
-        if (txs && txs.length > 0) accountsData = txs;
+        const { data: txs, error: txErr } = await supabaseClient.from('accounts').select('*').order('id', { ascending: false });
+        if (!txErr && txs) {
+          accountsData = txs;
+          localStorage.setItem('apex_accounts', JSON.stringify(accountsData));
+        }
 
-        const { data: brs } = await supabaseClient.from('branches').select('*');
-        if (brs && brs.length > 0) {
+        const { data: brs, error: brErr } = await supabaseClient.from('branches').select('*');
+        if (!brErr && brs && brs.length > 0) {
           branchesData = brs;
           localStorage.setItem('apex_branches', JSON.stringify(branchesData));
         }
@@ -5534,6 +5555,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         }
       }
 
+      localStorage.setItem('apex_products', JSON.stringify(productsData));
       closeModal('modal-product');
       populateCategoryFilters();
       renderProductsTable();
@@ -5555,8 +5577,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       if (res.isConfirmed) {
         productsData = productsData.filter(p => p.id !== id);
+        localStorage.setItem('apex_products', JSON.stringify(productsData));
         if (supabaseClient) {
-          await supabaseClient.from('products').delete().eq('id', id);
+          try {
+            await supabaseClient.from('products').delete().eq('id', id);
+          } catch (err) {
+            console.warn('Supabase delete product note:', err);
+          }
         }
         renderProductsTable();
         renderPosProducts();
@@ -5948,6 +5975,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         }
       }
 
+      localStorage.setItem('apex_employees', JSON.stringify(employeesData));
       closeModal('modal-employee');
       populateCategoryFilters();
       populatePosSalesEmployees();
@@ -5969,8 +5997,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       if (res.isConfirmed) {
         employeesData = employeesData.filter(e => e.id !== id);
+        localStorage.setItem('apex_employees', JSON.stringify(employeesData));
         if (supabaseClient) {
-          await supabaseClient.from('employees').delete().eq('id', id);
+          try {
+            await supabaseClient.from('employees').delete().eq('id', id);
+          } catch (err) {
+            console.warn('Supabase delete employee note:', err);
+          }
         }
         populatePosSalesEmployees();
         renderEmployeesTable();
@@ -6092,8 +6125,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       if (res.isConfirmed) {
         accountsData = accountsData.filter(t => t.id !== id);
+        localStorage.setItem('apex_accounts', JSON.stringify(accountsData));
         if (supabaseClient) {
-          await supabaseClient.from('accounts').delete().eq('id', id);
+          try {
+            await supabaseClient.from('accounts').delete().eq('id', id);
+          } catch (err) {
+            console.warn('Supabase delete account note:', err);
+          }
         }
         renderAccountsTable();
         renderDashboard();
@@ -6118,24 +6156,33 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const method = document.getElementById('acc-form-method').value;
       const note = document.getElementById('acc-form-note').value.trim();
 
+      const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
+
       const txPayload = {
         type,
         amount,
         category: cat,
         date,
         payment_method: method,
+        branch_id: effectiveBranchId,
         note
       };
 
       const newTx = { id: Date.now(), ...txPayload };
       accountsData.unshift(newTx);
+      localStorage.setItem('apex_accounts', JSON.stringify(accountsData));
 
       if (supabaseClient) {
-        await supabaseClient.from('transactions').insert([txPayload]);
+        try {
+          await supabaseClient.from('accounts').insert([txPayload]);
+        } catch (err) {
+          console.warn('Supabase account insert note:', err);
+        }
       }
 
       closeModal('modal-transaction');
       renderAccountsTable();
+      renderDashboard();
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Transaction saved!', showConfirmButton: false, timer: 1500 });
     }
 
