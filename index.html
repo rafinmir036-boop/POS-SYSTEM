@@ -188,12 +188,29 @@
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 6px;
+        padding: 4px;
         box-shadow: none;
       }
       .barcode-sticker-item {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+      }
+      .barcode-sticker-item.size-190x130 {
+        width: 1.90in !important;
+        height: 1.30in !important;
+        min-width: 1.90in !important;
+        min-height: 1.30in !important;
+        max-width: 1.90in !important;
+        max-height: 1.30in !important;
+        padding: 3px 5px !important;
+        margin: 2px !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        background: #fff !important;
+        border: 1px dashed #cbd5e1 !important;
       }
     }
   </style>
@@ -709,16 +726,24 @@
                 </select>
               </div>
 
-              <!-- Customer Info Inputs -->
-              <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 text-xs">
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500 uppercase">Customer Name</label>
-                  <input type="text" id="pos-customer-name" placeholder="Walk-in Customer" class="w-full bg-white p-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none">
+              <!-- Customer Info Inputs with Cross-Branch Loyalty Intelligence -->
+              <div class="space-y-2 bg-gradient-to-br from-slate-50 via-emerald-50/20 to-teal-50/15 p-2.5 rounded-2xl border border-emerald-200/80 text-xs shadow-2xs">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">Customer Name</label>
+                    <input type="text" id="pos-customer-name" placeholder="Walk-in Customer" class="w-full bg-white p-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:ring-1 focus:ring-emerald-500">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center justify-between">
+                      <span>Phone (ফোন নম্বর)</span>
+                      <i class="fa-solid fa-crown text-[10px] text-amber-500"></i>
+                    </label>
+                    <input type="text" id="pos-customer-phone" oninput="handlePosCustomerPhoneInput()" placeholder="017xxxxxxxx" class="w-full bg-white p-1.5 border border-slate-200 rounded-lg text-xs font-black text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500">
+                  </div>
                 </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500 uppercase">Customer Phone</label>
-                  <input type="text" id="pos-customer-phone" placeholder="017xxxxxxxx" class="w-full bg-white p-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none">
-                </div>
+
+                <!-- Live Cross-Branch Loyalty Card & Rating (Injected via JS) -->
+                <div id="pos-customer-loyalty-badge" class="hidden p-2.5 bg-white/95 rounded-xl border border-emerald-200 shadow-2xs space-y-1.5 transition-all"></div>
               </div>
 
               <!-- Cart Items List Scrollable -->
@@ -1350,14 +1375,17 @@
           </div>
 
           <!-- Report Sub-Tab Navigation Bar -->
-          <div class="flex items-center space-x-2 border-b border-slate-200 pb-2">
-            <button onclick="switchReportTab('sales')" id="rep-subtab-sales" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs transition flex items-center space-x-1.5">
+          <div class="flex items-center space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
+            <button onclick="switchReportTab('sales')" id="rep-subtab-sales" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs transition flex items-center space-x-1.5 shrink-0 cursor-pointer">
               <i class="fa-solid fa-receipt"></i><span>Sales & Profit History (বিক্রয় ও লাভ হিস্টোরি)</span>
             </button>
-            <button onclick="switchReportTab('transfers')" id="rep-subtab-transfers" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5">
+            <button onclick="switchReportTab('top-products')" id="rep-subtab-top-products" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5 shrink-0 cursor-pointer">
+              <i class="fa-solid fa-trophy text-amber-500"></i><span>🏆 Top Selling Products (বেশি বিক্রিত পণ্য)</span>
+            </button>
+            <button onclick="switchReportTab('transfers')" id="rep-subtab-transfers" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5 shrink-0 cursor-pointer">
               <i class="fa-solid fa-truck-ramp-box text-cyan-600"></i><span>Product Transfer Log (পণ্য স্থানান্তর তালিকা)</span>
             </button>
-            <button onclick="switchReportTab('export')" id="rep-subtab-export" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5">
+            <button onclick="switchReportTab('export')" id="rep-subtab-export" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5 shrink-0 cursor-pointer">
               <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Excel Data Downloads</span>
             </button>
           </div>
@@ -1460,6 +1488,55 @@
               </div>
 
             </div>
+          </div>
+
+          <!-- SUBTAB: TOP SELLING PRODUCTS LEADERBOARD WITH PICTURES -->
+          <div id="rep-panel-top-products" class="hidden space-y-5">
+            
+            <!-- Top 3 Podium Winners Cards -->
+            <div id="rep-top-products-podium" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Dynamically populated via JS -->
+            </div>
+
+            <!-- Full Leaderboard Table -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+              <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3 bg-gradient-to-r from-amber-50/40 via-white to-indigo-50/30">
+                <div>
+                  <h3 class="font-black text-slate-900 text-xs tracking-wide uppercase font-heading flex items-center space-x-2">
+                    <i class="fa-solid fa-ranking-star text-amber-500 text-sm"></i>
+                    <span>Top Selling Products Ranking & Performance (সর্বাধিক বিক্রিত পণ্যের তালিকা)</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5">ছবি, বিক্রিত পণ্যের সংখ্যা (Quantity), মোট রেভিনিউ এবং অর্জিত প্রফিটের সম্পূর্ণ বিশ্লেষণ</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button onclick="exportTopProductsToExcel()" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl font-bold text-xs transition flex items-center space-x-1.5 shadow-xs cursor-pointer">
+                    <i class="fa-solid fa-file-excel"></i><span>Export Top Products .xlsx</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-600">
+                  <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-[11px]">
+                    <tr>
+                      <th class="px-5 py-3.5 text-center w-16">Rank (র‍্যাংক)</th>
+                      <th class="px-5 py-3.5 w-16 text-center">Photo (ছবি)</th>
+                      <th class="px-5 py-3.5">Product Name & SKU</th>
+                      <th class="px-5 py-3.5">Category</th>
+                      <th class="px-5 py-3.5 text-right">Unit Price</th>
+                      <th class="px-5 py-3.5 text-center font-black text-indigo-700 bg-indigo-50/40">Total Qty Sold (মোট বিক্রয়)</th>
+                      <th class="px-5 py-3.5 text-right font-black text-slate-900">Total Sales (মোট রেভিনিউ)</th>
+                      <th class="px-5 py-3.5 text-right font-black text-emerald-700 bg-emerald-50/40">Total Profit (মোট লাভ ৳)</th>
+                      <th class="px-5 py-3.5 text-center">Branch Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rep-top-products-table-body">
+                    <!-- Populated via renderTopSellingProductsReport() -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
 
           <!-- SUBTAB 2: PRODUCT TRANSFER & MOVEMENT LOG -->
@@ -2390,10 +2467,11 @@
 
           <!-- Paper Layout / Printer Type -->
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Printer / Paper Size Preset</label>
-            <select id="bc-paper-layout" onchange="updateBarcodePreview()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
-              <option value="thermal-single">🏷️ Thermal Single Roll (38x25mm / 40x30mm)</option>
-              <option value="thermal-double">🏷️ Thermal 2-Up Roll (Dual Column 50x30mm)</option>
+            <label class="block font-bold text-slate-700 mb-1">Printer / Paper Size Preset (স্টিকারের সাইজ)</label>
+            <select id="bc-paper-layout" onchange="updateBarcodePreview()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+              <option value="thermal-190x130" selected>🏷️ Custom Thermal Label (1.90in × 1.30in / 48×33mm)</option>
+              <option value="thermal-single">🏷️ Standard Single Roll (38×25mm / 40×30mm)</option>
+              <option value="thermal-double">🏷️ Thermal 2-Up Roll (Dual Column 50×30mm)</option>
               <option value="a4-sheet">📄 A4 Sticker Sheet (24 Labels Grid)</option>
             </select>
           </div>
@@ -2404,7 +2482,7 @@
             <div class="space-y-1.5 text-[11px] font-semibold text-slate-700">
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="bc-inc-store" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
-                <span>Store Name (APEX STORE)</span>
+                <span>Store Name (RTR POS & ERP)</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="bc-inc-name" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
@@ -3470,6 +3548,64 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
         <span class="text-[11px] text-slate-400 font-medium">💡 অন্য ব্রাঞ্চে স্টক থাকলে সরাসরি ট্রান্সফার রিকোয়েস্ট তৈরি করা যায়</span>
         <button type="button" onclick="closeModal('modal-global-stock')" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer">
+          Close (বন্ধ করুন)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 11. CUSTOMER PURCHASE HISTORY & CROSS-BRANCH LOYALTY MODAL -->
+  <div id="modal-customer-history" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-white flex items-center justify-center text-lg shadow-md shadow-amber-500/20">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 font-heading" id="cust-hist-title">Customer Loyalty & Purchase History</h3>
+            <p class="text-[11px] text-slate-500 font-medium" id="cust-hist-subtitle">সকল ব্রাঞ্চের মোট কেনাকাটা, ভিজিট সংখ্যা ও লয়ালটি রেটিং</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-customer-history')" class="text-slate-400 hover:text-slate-700 cursor-pointer text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Customer Lifetime KPI Metrics Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="cust-hist-kpis">
+        <!-- Injected dynamically via JS -->
+      </div>
+
+      <!-- Customer Invoices History Table -->
+      <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+        <div class="px-4 py-2.5 bg-gradient-to-r from-slate-50 to-indigo-50/30 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+          <span class="flex items-center space-x-1.5 font-heading">
+            <i class="fa-solid fa-receipt text-indigo-600"></i>
+            <span>Previous Invoices Across All Branches (সকল ব্রাঞ্চের পূর্বের চালানসমূহ)</span>
+          </span>
+          <span class="text-[10px] text-indigo-700 font-bold bg-indigo-100 px-2 py-0.5 rounded-md" id="cust-hist-count-badge">0 Purchases</span>
+        </div>
+        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[10px]">
+              <tr>
+                <th class="px-4 py-2.5">Invoice # & Date</th>
+                <th class="px-4 py-2.5">Branch (শাখা)</th>
+                <th class="px-4 py-2.5">Items Purchased</th>
+                <th class="px-4 py-2.5 text-right font-black text-slate-900">Total (৳)</th>
+                <th class="px-4 py-2.5 text-center">Receipt</th>
+              </tr>
+            </thead>
+            <tbody id="cust-hist-table-body">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button type="button" onclick="closeModal('modal-customer-history')" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer">
           Close (বন্ধ করুন)
         </button>
       </div>
@@ -5405,6 +5541,181 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       onMultiPaymentInputChange();
     }
 
+    // --- Cross-Branch Customer Loyalty Intelligence & Purchase History ---
+    function handlePosCustomerPhoneInput() {
+      const phoneInput = document.getElementById('pos-customer-phone');
+      const badgeContainer = document.getElementById('pos-customer-loyalty-badge');
+      const nameInput = document.getElementById('pos-customer-name');
+      if (!phoneInput || !badgeContainer) return;
+
+      const rawPhone = phoneInput.value.trim();
+      if (rawPhone.length < 5) {
+        badgeContainer.classList.add('hidden');
+        badgeContainer.innerHTML = '';
+        return;
+      }
+
+      // Search all previous sales across any branch in the entire enterprise
+      const matchedSales = salesData.filter(s => {
+        if (!s.customer_phone || s.customer_phone === 'N/A') return false;
+        const cleanCustomerPhone = s.customer_phone.replace(/\D/g, '');
+        const cleanQuery = rawPhone.replace(/\D/g, '');
+        return cleanCustomerPhone.includes(cleanQuery) || s.customer_phone.trim() === rawPhone;
+      });
+
+      if (matchedSales.length === 0) {
+        badgeContainer.classList.remove('hidden');
+        badgeContainer.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded-md font-bold text-[10px] bg-slate-100 text-slate-700 border border-slate-200">
+              🆕 New Customer (নতুন ক্রেতা)
+            </span>
+            <span class="text-[10px] text-emerald-600 font-bold">⭐ 1st Visit</span>
+          </div>
+          <p class="text-[10px] text-slate-500 font-medium leading-tight">আমাদের শপে প্রথমবার কেনাকাটা করছেন।</p>
+        `;
+        return;
+      }
+
+      // Auto-fill customer name if currently default or blank
+      if (nameInput && (nameInput.value === 'Walk-in Customer' || !nameInput.value.trim())) {
+        const latestSaleWithName = matchedSales.find(s => s.customer_name && s.customer_name !== 'Walk-in Customer');
+        if (latestSaleWithName) {
+          nameInput.value = latestSaleWithName.customer_name;
+        }
+      }
+
+      const totalPurchases = matchedSales.length;
+      const totalSpent = matchedSales.reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0);
+      const branchesVisited = [...new Set(matchedSales.map(s => s.branch_name || getBranchName(s.branch_id)))];
+      const latestSale = matchedSales[0];
+      const latestDate = new Date(latestSale.sale_date).toLocaleDateString();
+
+      // Determine Loyalty Tier & Star Rating
+      let tierName = 'Regular Customer';
+      let tierBadgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-300';
+      let starsHtml = '⭐⭐⭐';
+      let tierIcon = 'fa-medal text-emerald-600';
+
+      if (totalPurchases >= 5 || totalSpent >= 10000) {
+        tierName = 'VIP Platinum Member';
+        tierBadgeClass = 'bg-purple-100 text-purple-800 border-purple-300';
+        starsHtml = '⭐⭐⭐⭐⭐';
+        tierIcon = 'fa-crown text-purple-600';
+      } else if (totalPurchases >= 3 || totalSpent >= 4000) {
+        tierName = 'Gold Loyal Member';
+        tierBadgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+        starsHtml = '⭐⭐⭐⭐';
+        tierIcon = 'fa-trophy text-amber-600';
+      }
+
+      badgeContainer.classList.remove('hidden');
+      badgeContainer.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-1.5">
+            <span class="px-2 py-0.5 rounded-md font-black text-[10px] border ${tierBadgeClass} flex items-center space-x-1 shadow-2xs">
+              <i class="fa-solid ${tierIcon} text-[10px]"></i>
+              <span>${tierName}</span>
+            </span>
+            <span class="text-amber-500 text-[10px] font-bold tracking-tighter">${starsHtml}</span>
+          </div>
+          <button type="button" onclick="openCustomerPurchaseHistoryModal('${rawPhone}')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200 transition cursor-pointer">
+            হিস্টোরি (${totalPurchases} বার) ➔
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-1 pt-1 text-[10px] text-slate-700 font-semibold border-t border-slate-100">
+          <div>🛍️ মোট কেনাকাটা: <b class="text-emerald-700 font-black">৳ ${totalSpent.toLocaleString()}</b></div>
+          <div class="text-right text-slate-500">🏬 ${branchesVisited.length} ব্রাঞ্চ থেকে ক্রয়</div>
+        </div>
+      `;
+    }
+
+    function openCustomerPurchaseHistoryModal(phone) {
+      const matchedSales = salesData.filter(s => {
+        if (!s.customer_phone) return false;
+        const cleanCustomerPhone = s.customer_phone.replace(/\D/g, '');
+        const cleanQuery = phone.replace(/\D/g, '');
+        return cleanCustomerPhone.includes(cleanQuery) || s.customer_phone.trim() === phone;
+      });
+
+      const custName = matchedSales.find(s => s.customer_name && s.customer_name !== 'Walk-in Customer')?.customer_name || 'Valued Customer';
+      const totalPurchases = matchedSales.length;
+      const totalSpent = matchedSales.reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0);
+      const totalDiscountReceived = matchedSales.reduce((sum, s) => sum + (Number(s.discount) || 0), 0);
+      const branchesVisited = [...new Set(matchedSales.map(s => s.branch_name || getBranchName(s.branch_id)))];
+
+      let tierName = 'Regular (3★)';
+      if (totalPurchases >= 5 || totalSpent >= 10000) tierName = 'Platinum VIP (5★)';
+      else if (totalPurchases >= 3 || totalSpent >= 4000) tierName = 'Gold Loyal (4★)';
+
+      const titleEl = document.getElementById('cust-hist-title');
+      const subtitleEl = document.getElementById('cust-hist-subtitle');
+      const kpisEl = document.getElementById('cust-hist-kpis');
+      const countBadge = document.getElementById('cust-hist-count-badge');
+      const tbody = document.getElementById('cust-hist-table-body');
+
+      if (titleEl) titleEl.innerText = `${custName} - Profile & Purchase History`;
+      if (subtitleEl) subtitleEl.innerText = `Phone: ${phone} • Cross-Branch Enterprise History`;
+      if (countBadge) countBadge.innerText = `${totalPurchases} Total Invoices`;
+
+      if (kpisEl) {
+        kpisEl.innerHTML = `
+          <div class="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 shadow-2xs">
+            <span class="text-[9px] font-bold text-amber-800 uppercase block">Loyalty Tier</span>
+            <div class="text-sm font-black text-amber-950 mt-0.5">${tierName}</div>
+            <span class="text-[10px] text-amber-700 font-bold">${totalPurchases} Purchases made</span>
+          </div>
+          <div class="p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200 shadow-2xs">
+            <span class="text-[9px] font-bold text-emerald-800 uppercase block">Lifetime Spending</span>
+            <div class="text-sm font-black text-emerald-700 mt-0.5">৳ ${totalSpent.toLocaleString()}</div>
+            <span class="text-[10px] text-emerald-700 font-semibold">Total Revenue</span>
+          </div>
+          <div class="p-3 bg-indigo-50/80 rounded-2xl border border-indigo-200 shadow-2xs">
+            <span class="text-[9px] font-bold text-indigo-800 uppercase block">Branches Visited</span>
+            <div class="text-sm font-black text-indigo-900 mt-0.5">${branchesVisited.length} Outlets</div>
+            <span class="text-[10px] text-indigo-700 font-semibold truncate block">${branchesVisited.join(', ') || 'Direct'}</span>
+          </div>
+          <div class="p-3 bg-rose-50/80 rounded-2xl border border-rose-200 shadow-2xs">
+            <span class="text-[9px] font-bold text-rose-800 uppercase block">Total Discounts</span>
+            <div class="text-sm font-black text-rose-700 mt-0.5">৳ ${totalDiscountReceived.toLocaleString()}</div>
+            <span class="text-[10px] text-rose-600 font-semibold">Savings given</span>
+          </div>
+        `;
+      }
+
+      if (tbody) {
+        if (matchedSales.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">কোনো পূর্বের কেনাকাটার ইতিহাস পাওয়া যায়নি</td></tr>`;
+        } else {
+          tbody.innerHTML = matchedSales.map(s => {
+            const items = s.items || [];
+            const itemsStr = items.map(i => `<span class="inline-block bg-slate-100 px-1.5 py-0.5 rounded text-[10px] mr-1 font-semibold">${i.qty}x ${i.product_name}</span>`).join('');
+            const dateStr = new Date(s.sale_date).toLocaleString();
+            const branch = s.branch_name || getBranchName(s.branch_id);
+
+            return `
+              <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                <td class="px-4 py-2.5">
+                  <div class="font-mono font-bold text-indigo-700 text-xs">${s.invoice_no}</div>
+                  <div class="text-[10px] text-slate-400">${dateStr}</div>
+                </td>
+                <td class="px-4 py-2.5 font-bold text-slate-800 text-xs">${branch}</td>
+                <td class="px-4 py-2.5 max-w-[200px]">${itemsStr}</td>
+                <td class="px-4 py-2.5 text-right font-black text-slate-900 text-xs">৳ ${(Number(s.total_amount) || 0).toLocaleString()}</td>
+                <td class="px-4 py-2.5 text-center">
+                  <button type="button" onclick="previewInvoiceReceipt('${s.invoice_no}')" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition" title="Print Receipt">
+                    <i class="fa-solid fa-receipt"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      openModal('modal-customer-history');
+    }
+
     async function processPosCheckout() {
       if (posCart.length === 0) {
         Swal.fire('Empty Cart', 'কার্ট খালি! পণ্য নির্বাচন করুন।', 'warning');
@@ -5541,6 +5852,11 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       if (document.getElementById('pos-discount')) document.getElementById('pos-discount').value = '0';
       if (document.getElementById('pos-customer-name')) document.getElementById('pos-customer-name').value = '';
       if (document.getElementById('pos-customer-phone')) document.getElementById('pos-customer-phone').value = '';
+      const loyaltyBadge = document.getElementById('pos-customer-loyalty-badge');
+      if (loyaltyBadge) {
+        loyaltyBadge.classList.add('hidden');
+        loyaltyBadge.innerHTML = '';
+      }
       clearAllPaymentInputs();
       
       renderPosCart();
@@ -5953,7 +6269,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const prod = productsData.find(p => p.id === selId);
       const code = document.getElementById('bc-input-code')?.value.trim() || (prod ? prod.product_code : 'PRD-101');
       const qty = Math.max(1, Math.min(100, Number(document.getElementById('bc-input-qty')?.value) || 1));
-      const paperLayout = document.getElementById('bc-paper-layout')?.value || 'thermal-single';
+      const paperLayout = document.getElementById('bc-paper-layout')?.value || 'thermal-190x130';
       
       const incStore = document.getElementById('bc-inc-store')?.checked;
       const incName = document.getElementById('bc-inc-name')?.checked;
@@ -5967,29 +6283,42 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       if (countLabel) countLabel.innerText = `${qty} Sticker${qty > 1 ? 's' : ''}`;
 
       const prodName = prod ? prod.product_name : 'Product Item';
-      const prodPrice = prod ? `৳ ${prod.sale_price}` : '৳ 0';
+      const prodPrice = prod ? `৳ ${Number(prod.sale_price).toLocaleString()}` : '৳ 0';
 
-      let stickerWidth = '145px';
-      let stickerHeight = '100px';
+      let stickerWidth = '1.90in';
+      let stickerHeight = '1.30in';
+      let sizeClass = 'size-190x130';
+      let barcodeHeight = 26;
+      let barcodeWidth = 1.15;
+      let barcodeFontSize = 9;
 
       if (paperLayout === 'thermal-double') {
         stickerWidth = '160px';
         stickerHeight = '110px';
+        sizeClass = 'size-double';
       } else if (paperLayout === 'a4-sheet') {
         stickerWidth = '135px';
         stickerHeight = '95px';
+        sizeClass = 'size-a4';
+      } else if (paperLayout === 'thermal-single') {
+        stickerWidth = '145px';
+        stickerHeight = '100px';
+        sizeClass = 'size-single';
       }
 
       let stickersHtml = '';
       for (let i = 0; i < qty; i++) {
         stickersHtml += `
-          <div class="barcode-sticker-item bg-white border border-slate-300 rounded-lg p-2 text-center shadow-xs flex flex-col items-center justify-between" style="width: ${stickerWidth}; min-height: ${stickerHeight};">
-            ${incStore ? '<div class="text-[9px] font-black tracking-wider text-slate-800 uppercase leading-none truncate w-full">APEX STORE</div>' : ''}
-            ${incName ? `<div class="text-[10px] font-bold text-slate-700 truncate w-full px-0.5 leading-tight my-0.5">${prodName}</div>` : ''}
-            <div class="w-full flex justify-center my-0.5">
-              <svg class="barcode-svg-node-${i}" style="max-height: 38px; width: 100%;"></svg>
+          <div class="barcode-sticker-item ${sizeClass} bg-white border border-slate-300 rounded-lg p-1.5 text-center shadow-xs flex flex-col items-center justify-between overflow-hidden" style="width: ${stickerWidth}; height: ${stickerHeight}; min-height: ${stickerHeight}; max-width: ${stickerWidth}; box-sizing: border-box;">
+            ${incStore ? '<div class="text-[8.5px] font-black tracking-widest text-slate-800 uppercase leading-none truncate w-full pt-0.5">RTR POS & ERP</div>' : ''}
+            ${incName ? `<div class="text-[9.5px] font-bold text-slate-900 truncate w-full px-0.5 leading-tight my-0.5">${prodName}</div>` : ''}
+            <div class="w-full flex justify-center my-0.5 overflow-hidden">
+              <svg class="barcode-svg-node-${i}" style="max-height: ${barcodeHeight}px; width: 100%;"></svg>
             </div>
-            ${incPrice ? `<div class="text-xs font-black text-slate-900 leading-none">${prodPrice}</div>` : ''}
+            <div class="w-full flex justify-between items-center px-1 text-[10px] font-black leading-none pb-0.5">
+              <span class="text-slate-500 font-mono font-semibold text-[8.5px]">${incSku ? code : ''}</span>
+              ${incPrice ? `<span class="text-[11px] font-black text-slate-900">${prodPrice}</span>` : ''}
+            </div>
           </div>
         `;
       }
@@ -6002,11 +6331,11 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           if (window.JsBarcode) {
             JsBarcode(`.barcode-svg-node-${i}`, code, {
               format: "CODE128",
-              width: 1.2,
-              height: 28,
-              displayValue: incSku,
-              fontSize: 9,
-              textMargin: 1,
+              width: barcodeWidth,
+              height: barcodeHeight,
+              displayValue: false, // Clean display with manual SKU underneath
+              fontSize: barcodeFontSize,
+              textMargin: 0,
               margin: 0
             });
           }
@@ -6026,7 +6355,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       if (receiptArea) receiptArea.style.display = 'none';
       printArea.style.display = 'block';
       printArea.innerHTML = `
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; padding: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-start; padding: 2px;">
           ${container.innerHTML}
         </div>
       `;
@@ -7881,22 +8210,24 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
     function switchReportTab(subtab) {
       currentReportSubtab = subtab;
-      const tabs = ['sales', 'transfers', 'export'];
+      const tabs = ['sales', 'top-products', 'transfers', 'export'];
       tabs.forEach(t => {
         const panel = document.getElementById(`rep-panel-${t}`);
         const btn = document.getElementById(`rep-subtab-${t}`);
         if (panel) panel.classList.toggle('hidden', t !== subtab);
         if (btn) {
           if (t === subtab) {
-            btn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs transition flex items-center space-x-1.5';
+            btn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs transition flex items-center space-x-1.5 shrink-0 cursor-pointer';
           } else {
-            btn.className = 'px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5';
+            btn.className = 'px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5 shrink-0 cursor-pointer';
           }
         }
       });
 
       if (subtab === 'transfers') {
         renderReportTransfersTable();
+      } else if (subtab === 'top-products') {
+        applyReportFilters();
       }
     }
 
@@ -8151,7 +8482,210 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         }
       }
 
+      renderTopSellingProductsReport(filteredSales);
       renderReportTransfersTable();
+    }
+
+    // --- Top Selling Products Leaderboard with Pictures & Excel Export ---
+    function renderTopSellingProductsReport(filteredSalesList) {
+      const podiumContainer = document.getElementById('rep-top-products-podium');
+      const tableBody = document.getElementById('rep-top-products-table-body');
+      if (!tableBody) return;
+
+      const salesToAnalyze = filteredSalesList || (typeof salesData !== 'undefined' ? salesData : []);
+      const branchVal = document.getElementById('rep-branch-select')?.value || 'ALL';
+
+      // Aggregate sales metrics for each product
+      const productStats = productsData.map(prod => {
+        let qtySold = 0;
+        let totalRevenue = 0;
+        let totalCost = 0;
+
+        salesToAnalyze.forEach(s => {
+          (s.items || []).forEach(item => {
+            if (item.product_id === prod.id || item.product_code === prod.product_code) {
+              const q = Number(item.qty) || 1;
+              const p = Number(item.price) || (Number(prod.sale_price) || 0);
+              const cost = Number(item.purchase_price) || (Number(prod.purchase_price) || 0);
+              qtySold += q;
+              totalRevenue += (p * q);
+              totalCost += (cost * q);
+            }
+          });
+        });
+
+        const grossProfit = Math.max(0, totalRevenue - totalCost);
+        const branchStock = getProductBranchStock(prod, branchVal);
+
+        return {
+          ...prod,
+          qtySold,
+          totalRevenue,
+          totalCost,
+          grossProfit,
+          branchStock
+        };
+      });
+
+      // Sort in descending order by Quantity Sold, then by Total Revenue
+      productStats.sort((a, b) => b.qtySold - a.qtySold || b.totalRevenue - a.totalRevenue);
+
+      // 1. Render Podium Top 3 Best Seller Cards
+      if (podiumContainer) {
+        const top3 = productStats.slice(0, 3);
+        const medalThemes = [
+          { rank: '1', title: 'Champion Best Seller 🥇', bg: 'from-amber-500/15 via-amber-500/5 to-white', border: 'border-amber-400', badge: 'bg-amber-500 text-white', icon: 'fa-trophy text-amber-500' },
+          { rank: '2', title: 'Runner-Up 🥈', bg: 'from-slate-400/15 via-slate-400/5 to-white', border: 'border-slate-300', badge: 'bg-slate-500 text-white', icon: 'fa-medal text-slate-500' },
+          { rank: '3', title: 'Third Place 🥉', bg: 'from-amber-700/15 via-amber-700/5 to-white', border: 'border-amber-600/40', badge: 'bg-amber-700 text-white', icon: 'fa-award text-amber-700' }
+        ];
+
+        podiumContainer.innerHTML = top3.map((item, idx) => {
+          const theme = medalThemes[idx];
+          const imgSrc = item.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.product_name)}&background=f59e0b&color=fff`;
+
+          return `
+            <div class="bg-gradient-to-br ${theme.bg} p-5 rounded-3xl border-2 ${theme.border} shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md hover:scale-[1.01] transition duration-200">
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badge} shadow-xs">
+                  Rank #${theme.rank} • ${theme.title}
+                </span>
+                <i class="fa-solid ${theme.icon} text-xl"></i>
+              </div>
+
+              <div class="flex items-center space-x-3.5">
+                <img src="${imgSrc}" class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-md shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(item.product_name)}&background=6366f1&color=fff'">
+                <div class="min-w-0">
+                  <h4 class="font-black text-slate-900 text-sm leading-tight truncate">${item.product_name}</h4>
+                  <p class="text-[11px] font-mono font-bold text-indigo-600">${item.product_code}</p>
+                  <span class="inline-block mt-0.5 px-2 py-0.5 rounded bg-white text-slate-600 text-[10px] font-bold border border-slate-200">${item.category || 'General'}</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/80 text-xs">
+                <div class="bg-white/80 p-2.5 rounded-xl border border-slate-200/60 shadow-2xs">
+                  <span class="text-[10px] font-bold text-slate-500 uppercase block">Total Units Sold</span>
+                  <b class="text-indigo-700 font-black text-base">${item.qtySold} pcs</b>
+                </div>
+                <div class="bg-white/80 p-2.5 rounded-xl border border-slate-200/60 shadow-2xs">
+                  <span class="text-[10px] font-bold text-emerald-600 uppercase block">Gross Profit</span>
+                  <b class="text-emerald-700 font-black text-base">৳ ${item.grossProfit.toLocaleString()}</b>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 bg-white/60 px-3 py-1.5 rounded-xl border border-slate-200/50">
+                <span>মোট রেভিনিউ: <b class="text-slate-900 font-black">৳ ${item.totalRevenue.toLocaleString()}</b></span>
+                <span class="text-[11px] font-bold ${item.branchStock > 0 ? 'text-emerald-600' : 'text-rose-600'}">স্টক: ${item.branchStock} pcs</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Render Full Leaderboard Table
+      const maxQty = productStats[0]?.qtySold || 1;
+
+      tableBody.innerHTML = productStats.map((item, idx) => {
+        const rank = idx + 1;
+        const imgSrc = item.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.product_name)}&background=6366f1&color=fff`;
+        const percentage = maxQty > 0 ? Math.round((item.qtySold / maxQty) * 100) : 0;
+
+        let rankBadge = `<span class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-black text-xs inline-flex items-center justify-center">${rank}</span>`;
+        if (rank === 1) rankBadge = `<span class="w-8 h-8 rounded-full bg-amber-500 text-white font-black text-xs inline-flex items-center justify-center shadow-xs">🥇 1</span>`;
+        else if (rank === 2) rankBadge = `<span class="w-8 h-8 rounded-full bg-slate-400 text-white font-black text-xs inline-flex items-center justify-center shadow-xs">🥈 2</span>`;
+        else if (rank === 3) rankBadge = `<span class="w-8 h-8 rounded-full bg-amber-700 text-white font-black text-xs inline-flex items-center justify-center shadow-xs">🥉 3</span>`;
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition">
+            <td class="px-5 py-3.5 text-center font-bold">${rankBadge}</td>
+            <td class="px-5 py-3.5 text-center">
+              <img src="${imgSrc}" class="w-11 h-11 rounded-xl object-cover border border-slate-200 shadow-2xs mx-auto" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(item.product_name)}&background=6366f1&color=fff'">
+            </td>
+            <td class="px-5 py-3.5">
+              <div class="font-black text-slate-900 text-xs">${item.product_name}</div>
+              <div class="font-mono text-[11px] font-bold text-indigo-600">${item.product_code}</div>
+            </td>
+            <td class="px-5 py-3.5">
+              <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[11px]">${item.category || 'General'}</span>
+            </td>
+            <td class="px-5 py-3.5 text-right font-black text-slate-800">৳ ${(Number(item.sale_price) || 0).toLocaleString()}</td>
+            <td class="px-5 py-3.5 text-center bg-indigo-50/20">
+              <div class="font-black text-indigo-800 text-sm">${item.qtySold} pcs</div>
+              <div class="w-24 bg-slate-200 h-1.5 rounded-full mx-auto mt-1 overflow-hidden">
+                <div class="bg-indigo-600 h-full rounded-full" style="width: ${percentage}%"></div>
+              </div>
+            </td>
+            <td class="px-5 py-3.5 text-right font-black text-slate-900 text-xs">৳ ${item.totalRevenue.toLocaleString()}</td>
+            <td class="px-5 py-3.5 text-right font-black text-emerald-700 bg-emerald-50/20 text-xs">৳ ${item.grossProfit.toLocaleString()}</td>
+            <td class="px-5 py-3.5 text-center">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${item.branchStock > 5 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : item.branchStock > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                ${item.branchStock} pcs
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportTopProductsToExcel() {
+      if (typeof XLSX === 'undefined') {
+        Swal.fire('Error', 'SheetJS library not loaded.', 'error');
+        return;
+      }
+
+      const fromVal = document.getElementById('rep-from-date')?.value || '';
+      const toVal = document.getElementById('rep-to-date')?.value || '';
+      const branchVal = document.getElementById('rep-branch-select')?.value || 'ALL';
+
+      const filteredSales = salesData.filter(s => {
+        const d = (s.sale_date || '').split('T')[0];
+        if (fromVal && d < fromVal) return false;
+        if (toVal && d > toVal) return false;
+        if (branchVal !== 'ALL' && s.branch_id != branchVal) return false;
+        return true;
+      });
+
+      const productStats = productsData.map(prod => {
+        let qtySold = 0;
+        let totalRevenue = 0;
+        let totalCost = 0;
+
+        filteredSales.forEach(s => {
+          (s.items || []).forEach(item => {
+            if (item.product_id === prod.id || item.product_code === prod.product_code) {
+              const q = Number(item.qty) || 1;
+              const p = Number(item.price) || (Number(prod.sale_price) || 0);
+              const cost = Number(item.purchase_price) || (Number(prod.purchase_price) || 0);
+              qtySold += q;
+              totalRevenue += (p * q);
+              totalCost += (cost * q);
+            }
+          });
+        });
+
+        const grossProfit = Math.max(0, totalRevenue - totalCost);
+        const branchStock = getProductBranchStock(prod, branchVal);
+
+        return {
+          'Product Code': prod.product_code,
+          'Product Name': prod.product_name,
+          'Category': prod.category || 'General',
+          'Unit Purchase Price (৳)': Number(prod.purchase_price) || 0,
+          'Unit Sale Price (৳)': Number(prod.sale_price) || 0,
+          'Total Qty Sold (pcs)': qtySold,
+          'Total Revenue (৳)': totalRevenue,
+          'Total Cost (৳)': totalCost,
+          'Gross Profit (৳)': grossProfit,
+          'Current Stock in Branch': branchStock
+        };
+      });
+
+      productStats.sort((a, b) => b['Total Qty Sold (pcs)'] - a['Total Qty Sold (pcs)']);
+
+      const ws = XLSX.utils.json_to_sheet(productStats);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Top Selling Products");
+      XLSX.writeFile(wb, `Top_Selling_Products_${fromVal || 'All'}_to_${toVal || 'Now'}.xlsx`);
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Top Selling Products Excel Exported!', showConfirmButton: false, timer: 2000 });
     }
 
     function renderReportTransfersTable() {
