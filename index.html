@@ -1695,6 +1695,52 @@
             </div>
           </div>
 
+          <!-- Enterprise Branches & Outlets Management -->
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50/50">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-sm font-bold shadow-2xs">
+                  <i class="fa-solid fa-code-branch"></i>
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Enterprise Branches & Outlets (শাখা ও আউটলেট ব্যবস্থাপনা)</h3>
+                    <span id="settings-branches-count" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">0 Branches</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 font-medium">নতুন শাখা বা আউটলেট যোগ করুন এবং ম্যানেজারদের জন্য শাখা নির্ধারণ করুন</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <input type="text" id="branch-search-input" oninput="renderBranchesTable()" placeholder="Search branch name, code..." class="w-full sm:w-48 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 font-semibold shadow-2xs">
+                <button onclick="openAddBranchModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5 cursor-pointer shrink-0">
+                  <i class="fa-solid fa-plus"></i>
+                  <span>+ Add Branch (নতুন শাখা)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-6 py-3.5">Branch Code & Name</th>
+                    <th class="px-6 py-3.5">Type (ক্যাটাগরি)</th>
+                    <th class="px-6 py-3.5">Branch In-Charge / Manager</th>
+                    <th class="px-6 py-3.5">Phone & Address</th>
+                    <th class="px-6 py-3.5 text-center font-bold text-slate-900">Staff Count 👥</th>
+                    <th class="px-6 py-3.5 text-center font-bold text-indigo-900">Branch Stock (pcs) 📦</th>
+                    <th class="px-6 py-3.5 text-center">Status</th>
+                    <th class="px-6 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="branches-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- Users Table & List -->
           <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
             <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
@@ -2805,6 +2851,86 @@
   </div>
 
 
+  <!-- 10. BRANCH / OUTLET CREATE & EDIT MODAL -->
+  <div id="modal-branch" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">
+            <i class="fa-solid fa-store"></i>
+          </div>
+          <div>
+            <h3 id="modal-branch-title" class="text-base font-black text-slate-900 font-heading">Add New Branch / Outlet</h3>
+            <p class="text-[11px] text-slate-500 font-medium">নতুন বিক্রয় শাখা, আউটলেট বা গুদামের তথ্য যুক্ত করুন</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-branch')" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleBranchSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="branch-form-id">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Branch Code (শাখা কোড) *</label>
+            <input type="text" id="branch-form-code" required placeholder="e.g. BR-05 or WH-02" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold font-mono text-indigo-700 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Branch Type (শাখার ধরন) *</label>
+            <select id="branch-form-type" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
+              <option value="Branch">🏬 Retail Branch / Outlet (বিক্রয় কেন্দ্র)</option>
+              <option value="Warehouse">🏭 Central Warehouse / Hub (প্রধান গুদাম)</option>
+              <option value="Franchise">🏢 Franchise Outlet (ফ্র্যাঞ্চাইজি)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Branch Name (শাখার নাম) *</label>
+          <input type="text" id="branch-form-name" required placeholder="e.g. Chittagong GEC Branch (চট্টগ্রাম শাখা)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Branch Manager / In-Charge</label>
+            <input type="text" id="branch-form-manager" placeholder="e.g. Kamal Hossain" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Contact Phone (ফোন নম্বর)</label>
+            <input type="text" id="branch-form-phone" placeholder="017XX-XXXXXX" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Full Location Address (শাখার সম্পূর্ণ ঠিকানা)</label>
+          <textarea id="branch-form-address" rows="2" placeholder="e.g. GEC Circle, Nasirabad, Chittagong, Bangladesh" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Operational Status</label>
+            <select id="branch-form-status" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 outline-none">
+              <option value="Active">🟢 Active (চালু)</option>
+              <option value="Inactive">⚪ Inactive / Under Renovation</option>
+            </select>
+          </div>
+          <div class="flex items-center text-[11px] text-slate-500 pt-3 sm:pt-0">
+            <span>নতুন ব্রাঞ্চ যুক্ত হলে স্বয়ংক্রিয়ভাবে POS, ট্রান্সফার এবং ইউজার পারমিশনে নতুন ব্রাঞ্চটি সিলেক্ট করা যাবে।</span>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modal-branch')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold transition shadow-md shadow-indigo-600/20 flex items-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Save Branch (শাখা সংরক্ষণ করুন)</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
   <!-- 5. SUPABASE / POSTGRESQL SETTINGS MODAL -->
   <div id="modal-supabase" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
@@ -2927,18 +3053,32 @@ CREATE TABLE IF NOT EXISTS accounts (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS branches (
+  id BIGSERIAL PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT DEFAULT 'Branch',
+  manager TEXT,
+  phone TEXT,
+  address TEXT,
+  status TEXT DEFAULT 'Active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable public RLS for easy connection:
 ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transfers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE branches ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all access to employees" ON employees FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to products" ON products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to sales" ON sales FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to transfers" ON transfers FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WITH CHECK (true);</pre>
+CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WITH CHECK (true);</pre>
         </div>
 
         <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
@@ -3100,12 +3240,14 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
     let posCart = [];
 
     // Multi-Branch Registry
-    let branchesData = [
-      { id: 1, code: 'WH-01', name: 'Central Warehouse (প্রধান গুদাম)', type: 'Warehouse', phone: '01811-000001', address: 'Tejgaon Industrial Area, Dhaka' },
-      { id: 2, code: 'BR-01', name: 'Dhanmondi Branch (ধানমন্ডি)', type: 'Branch', phone: '01722-000002', address: 'Road 27, Dhanmondi, Dhaka' },
-      { id: 3, code: 'BR-02', name: 'Uttara Branch (উত্তরা)', type: 'Branch', phone: '01933-000003', address: 'Sector 3, Uttara, Dhaka' },
-      { id: 4, code: 'BR-03', name: 'Mirpur Outlet (মিরপুর)', type: 'Branch', phone: '01644-000004', address: 'Mirpur 10 Circle, Dhaka' }
+    const DEFAULT_BRANCHES = [
+      { id: 1, code: 'WH-01', name: 'Central Warehouse (প্রধান গুদাম)', type: 'Warehouse', manager: 'Tanvir Ahmed', phone: '01811-000001', address: 'Tejgaon Industrial Area, Dhaka', status: 'Active' },
+      { id: 2, code: 'BR-01', name: 'Dhanmondi Branch (ধানমন্ডি)', type: 'Branch', manager: 'Kabir Hossain', phone: '01722-000002', address: 'Road 27, Dhanmondi, Dhaka', status: 'Active' },
+      { id: 3, code: 'BR-02', name: 'Uttara Branch (উত্তরা)', type: 'Branch', manager: 'Sanim Ahmed', phone: '01933-000003', address: 'Sector 3, Uttara, Dhaka', status: 'Active' },
+      { id: 4, code: 'BR-03', name: 'Mirpur Outlet (মিরপুর)', type: 'Branch', manager: 'Mariom Begum', phone: '01644-000004', address: 'Mirpur 10 Circle, Dhaka', status: 'Active' }
     ];
+
+    let branchesData = JSON.parse(localStorage.getItem('apex_branches')) || DEFAULT_BRANCHES;
 
     let currentBranchId = 'ALL'; // 'ALL' for Super Admin or specific branch ID (1, 2, 3, 4)
     let currentTransferFilter = 'ALL';
@@ -3375,6 +3517,8 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       populateBranchDropdowns();
       updateTransferBadges();
       renderDashboard();
+      renderBranchesTable();
+      renderSystemUsersTable();
       populateCategoryFilters();
     });
 
@@ -3412,6 +3556,8 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       const empBranchSelect = document.getElementById('emp-form-branch');
       const trfFromSelect = document.getElementById('trf-form-from-branch');
       const trfToSelect = document.getElementById('trf-form-to-branch');
+      const repBranchSelect = document.getElementById('rep-branch-select');
+      const invBranchSelect = document.getElementById('inv-branch-select');
 
       if (headerSelect) {
         let headerOpts = '<option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>';
@@ -3432,6 +3578,22 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         trfFromSelect.innerHTML = fromOpts;
         trfToSelect.innerHTML = toOpts;
         if (branchesData.length > 1) trfToSelect.selectedIndex = 1;
+      }
+
+      if (repBranchSelect) {
+        let repOpts = '<option value="ALL">🌐 All Enterprise Branches</option>';
+        branchesData.forEach(b => {
+          repOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
+        });
+        repBranchSelect.innerHTML = repOpts;
+      }
+
+      if (invBranchSelect) {
+        let invOpts = '<option value="ALL">🌐 All Branches Consolidated</option>';
+        branchesData.forEach(b => {
+          invOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
+        });
+        invBranchSelect.innerHTML = invOpts;
       }
 
       if (document.getElementById('user-form-branch')) {
@@ -3551,6 +3713,12 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         const { data: txs } = await supabaseClient.from('accounts').select('*').order('id', { ascending: false });
         if (txs && txs.length > 0) accountsData = txs;
 
+        const { data: brs } = await supabaseClient.from('branches').select('*');
+        if (brs && brs.length > 0) {
+          branchesData = brs;
+          localStorage.setItem('apex_branches', JSON.stringify(branchesData));
+        }
+
         renderDashboard();
         renderPosProducts();
         renderProductsTable();
@@ -3558,6 +3726,9 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         renderSalesTable();
         renderAccountsTable();
         renderTransfersTable();
+        renderBranchesTable();
+        renderSystemUsersTable();
+        renderInventoryAuditTable();
         updateTransferBadges();
         populateCategoryFilters();
         populatePosSalesEmployees();
@@ -3882,7 +4053,246 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         renderTransfersTable();
         updateTransferBadges();
       }
-      if (tabId === 'settings') renderSystemUsersTable();
+      if (tabId === 'settings') {
+        renderBranchesTable();
+        renderSystemUsersTable();
+      }
+    }
+
+    // --- Enterprise Branches & Outlets Management ---
+    function renderBranchesTable() {
+      const tbody = document.getElementById('branches-table-body');
+      const countEl = document.getElementById('settings-branches-count');
+      if (!tbody) return;
+
+      const search = (document.getElementById('branch-search-input')?.value || '').toLowerCase().trim();
+
+      const filtered = branchesData.filter(b => 
+        (b.name && b.name.toLowerCase().includes(search)) || 
+        (b.code && b.code.toLowerCase().includes(search)) || 
+        (b.manager && b.manager.toLowerCase().includes(search)) || 
+        (b.phone && b.phone.includes(search)) || 
+        (b.address && b.address.toLowerCase().includes(search)) || 
+        (b.type && b.type.toLowerCase().includes(search))
+      );
+
+      if (countEl) countEl.innerText = `${filtered.length} Branches`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">কোনো শাখা বা আউটলেট পাওয়া যায়নি</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(b => {
+        // Count staff in this branch
+        const staffCount = (employeesData || []).filter(e => e.branch_id == b.id).length +
+                           (systemUsersData || []).filter(u => u.branch_id == b.id).length;
+
+        // Count total stock items in this branch
+        let totalBranchStock = 0;
+        (productsData || []).forEach(p => {
+          totalBranchStock += getProductBranchStock(p, b.id);
+        });
+
+        const typeBadge = b.type === 'Warehouse'
+          ? '<span class="px-2.5 py-1 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 text-[11px] font-bold">🏭 Central Warehouse</span>'
+          : b.type === 'Franchise'
+          ? '<span class="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold">🏢 Franchise</span>'
+          : '<span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">🏬 Retail Outlet</span>';
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+            <td class="px-6 py-3.5">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shadow-2xs">
+                  ${b.type === 'Warehouse' ? '🏭' : '🏬'}
+                </div>
+                <div>
+                  <div class="font-bold text-slate-800 text-xs">${b.name}</div>
+                  <div class="font-mono font-bold text-indigo-600 text-[10px]">${b.code}</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-3.5">${typeBadge}</td>
+            <td class="px-6 py-3.5">
+              <div class="font-bold text-slate-700 text-xs">${b.manager || 'Not Assigned'}</div>
+              <div class="text-[10px] text-slate-400 font-medium">In-Charge</div>
+            </td>
+            <td class="px-6 py-3.5 max-w-[200px]">
+              <div class="font-semibold text-slate-800 text-xs">${b.phone || '-'}</div>
+              <div class="text-[10px] text-slate-400 truncate" title="${b.address || ''}">${b.address || 'No address set'}</div>
+            </td>
+            <td class="px-6 py-3.5 text-center">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 border border-blue-200">
+                ${staffCount} Staff
+              </span>
+            </td>
+            <td class="px-6 py-3.5 text-center">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-black bg-indigo-50 text-indigo-800 border border-indigo-200">
+                ${totalBranchStock} pcs
+              </span>
+            </td>
+            <td class="px-6 py-3.5 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${b.status === 'Active' || !b.status ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'}">
+                ${b.status || 'Active'}
+              </span>
+            </td>
+            <td class="px-6 py-3.5 text-right space-x-1">
+              <button onclick="openEditBranchModal(${b.id})" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs transition cursor-pointer" title="Edit Branch">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              ${b.id !== 1 ? `
+                <button onclick="deleteBranch(${b.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition cursor-pointer" title="Delete Branch">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openAddBranchModal() {
+      document.getElementById('branch-form-id').value = '';
+      const nextCode = `BR-0${branchesData.length + 1}`;
+      document.getElementById('branch-form-code').value = nextCode;
+      document.getElementById('branch-form-name').value = '';
+      document.getElementById('branch-form-type').value = 'Branch';
+      document.getElementById('branch-form-manager').value = '';
+      document.getElementById('branch-form-phone').value = '';
+      document.getElementById('branch-form-address').value = '';
+      document.getElementById('branch-form-status').value = 'Active';
+
+      document.getElementById('modal-branch-title').innerText = 'Add New Branch / Outlet (নতুন শাখা যোগ)';
+      openModal('modal-branch');
+    }
+
+    function openEditBranchModal(id) {
+      const b = branchesData.find(br => br.id == id);
+      if (!b) return;
+
+      document.getElementById('branch-form-id').value = b.id;
+      document.getElementById('branch-form-code').value = b.code || '';
+      document.getElementById('branch-form-name').value = b.name || '';
+      document.getElementById('branch-form-type').value = b.type || 'Branch';
+      document.getElementById('branch-form-manager').value = b.manager || '';
+      document.getElementById('branch-form-phone').value = b.phone || '';
+      document.getElementById('branch-form-address').value = b.address || '';
+      document.getElementById('branch-form-status').value = b.status || 'Active';
+
+      document.getElementById('modal-branch-title').innerText = `Edit Branch: ${b.name}`;
+      openModal('modal-branch');
+    }
+
+    async function handleBranchSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('branch-form-id').value;
+      const code = document.getElementById('branch-form-code').value.trim();
+      const name = document.getElementById('branch-form-name').value.trim();
+      const type = document.getElementById('branch-form-type').value;
+      const manager = document.getElementById('branch-form-manager').value.trim();
+      const phone = document.getElementById('branch-form-phone').value.trim();
+      const address = document.getElementById('branch-form-address').value.trim();
+      const status = document.getElementById('branch-form-status').value;
+
+      const branchPayload = {
+        code,
+        name,
+        type,
+        manager,
+        phone,
+        address,
+        status
+      };
+
+      let targetBranchId;
+
+      if (id) {
+        targetBranchId = Number(id);
+        const idx = branchesData.findIndex(b => b.id == id);
+        if (idx !== -1) {
+          branchesData[idx] = { id: targetBranchId, ...branchPayload };
+        }
+      } else {
+        targetBranchId = Date.now();
+        const newBranch = { id: targetBranchId, ...branchPayload };
+        branchesData.push(newBranch);
+      }
+
+      // Initialize stock for products in new branch
+      (productsData || []).forEach(p => {
+        if (!p.branch_stocks) p.branch_stocks = {};
+        if (p.branch_stocks[targetBranchId] === undefined) {
+          p.branch_stocks[targetBranchId] = 0;
+        }
+      });
+
+      localStorage.setItem('apex_branches', JSON.stringify(branchesData));
+
+      // Supabase sync if connected
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('branches').upsert([{ id: targetBranchId, ...branchPayload }]);
+        } catch (err) {
+          console.warn('Supabase branch sync notice:', err.message);
+        }
+      }
+
+      closeModal('modal-branch');
+      populateBranchDropdowns();
+      renderBranchesTable();
+      renderSystemUsersTable();
+      renderDashboard();
+      renderTransfersTable();
+      updateTransferBadges();
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `Branch ${name} saved successfully!`,
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
+
+    async function deleteBranch(id) {
+      if (!checkAdminDeletePermission('শাখা ডিলিট')) return;
+
+      if (id === 1) {
+        Swal.fire('Cannot Delete', 'Central Warehouse (প্রধান গুদাম) ডিলিট করা যাবে না।', 'error');
+        return;
+      }
+
+      const branch = branchesData.find(b => b.id == id);
+      if (!branch) return;
+
+      const res = await Swal.fire({
+        title: `Delete Branch: ${branch.name}?`,
+        text: 'এই ব্রাঞ্চের সাথে যুক্ত স্টক ও তথ্য মুছে যাবে বা অন্য শাখায় স্থানান্তর করতে হবে। আপনি কি নিশ্চিত?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Delete Branch'
+      });
+
+      if (res.isConfirmed) {
+        branchesData = branchesData.filter(b => b.id != id);
+        localStorage.setItem('apex_branches', JSON.stringify(branchesData));
+
+        if (supabaseClient) {
+          supabaseClient.from('branches').delete().eq('id', id).then();
+        }
+
+        populateBranchDropdowns();
+        renderBranchesTable();
+        renderSystemUsersTable();
+        renderDashboard();
+        renderTransfersTable();
+        updateTransferBadges();
+
+        Swal.fire('Deleted!', 'Branch has been deleted from system', 'success');
+      }
     }
 
     // --- System Users & Settings Management ---
@@ -5384,6 +5794,152 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
 
     function renderInventorySection() {
       populateCategoryFilters();
+      renderInventoryAuditTable();
+    }
+
+    function renderInventoryAuditTable() {
+      const tbody = document.getElementById('inventory-audit-table-body');
+      if (!tbody) return;
+
+      const statusFilter = document.getElementById('inv-filter-status')?.value || 'ALL';
+      const catFilter = document.getElementById('inv-filter-category')?.value || 'ALL';
+
+      let totalSkus = productsData.length;
+      let totalSystemUnits = 0;
+      let totalScannedUnits = 0;
+      let shortageUnits = 0;
+      let shortageSkus = 0;
+      let shortageVal = 0;
+      let matchedSkus = 0;
+
+      const rowsData = productsData.map(p => {
+        const sysStock = getProductBranchStock(p, currentBranchId);
+        totalSystemUnits += sysStock;
+
+        const isScanned = inventoryAuditState.scannedCounts[p.id] !== undefined;
+        const physicalCount = isScanned ? inventoryAuditState.scannedCounts[p.id] : (inventoryAuditState.isAuditActive ? 0 : sysStock);
+        if (isScanned) totalScannedUnits += physicalCount;
+
+        const variance = physicalCount - sysStock;
+        const unitCost = Number(p.purchase_price) || 0;
+        const lossVal = variance < 0 ? Math.abs(variance) * unitCost : 0;
+
+        if (variance < 0) {
+          shortageUnits += Math.abs(variance);
+          shortageSkus++;
+          shortageVal += lossVal;
+        } else if (variance === 0 && (isScanned || !inventoryAuditState.isAuditActive)) {
+          matchedSkus++;
+        }
+
+        let itemStatus = 'MATCH';
+        if (!isScanned && inventoryAuditState.isAuditActive) itemStatus = 'UNSCANNED';
+        else if (variance < 0) itemStatus = 'SHORT';
+        else if (variance > 0) itemStatus = 'EXCESS';
+        else itemStatus = 'MATCH';
+
+        return {
+          product: p,
+          sysStock,
+          physicalCount,
+          variance,
+          unitCost,
+          lossVal,
+          itemStatus,
+          isScanned
+        };
+      });
+
+      // Update KPI widgets
+      const kpiSkus = document.getElementById('inv-kpi-total-skus');
+      const kpiSys = document.getElementById('inv-kpi-system-units');
+      const kpiScan = document.getElementById('inv-kpi-scanned-units');
+      const kpiShortUnits = document.getElementById('inv-kpi-shortage-units');
+      const kpiShortSkus = document.getElementById('inv-kpi-shortage-skus');
+      const kpiShortVal = document.getElementById('inv-kpi-shortage-val');
+      const kpiMatch = document.getElementById('inv-kpi-matched-skus');
+
+      if (kpiSkus) kpiSkus.innerText = totalSkus;
+      if (kpiSys) kpiSys.innerText = `${totalSystemUnits} Units`;
+      if (kpiScan) kpiScan.innerText = inventoryAuditState.isAuditActive ? `${totalScannedUnits} Scanned` : `${totalSystemUnits} Initial`;
+      if (kpiShortUnits) kpiShortUnits.innerText = `${shortageUnits} pcs`;
+      if (kpiShortSkus) kpiShortSkus.innerText = `${shortageSkus} items short`;
+      if (kpiShortVal) kpiShortVal.innerText = `৳ ${shortageVal.toLocaleString()}`;
+      if (kpiMatch) kpiMatch.innerText = `${matchedSkus} accurate`;
+
+      // Apply Filters
+      const filtered = rowsData.filter(r => {
+        const matchCat = (catFilter === 'ALL' || r.product.category === catFilter);
+        let matchStatus = true;
+        if (statusFilter === 'SHORT') matchStatus = (r.variance < 0);
+        else if (statusFilter === 'MATCH') matchStatus = (r.variance === 0);
+        else if (statusFilter === 'EXCESS') matchStatus = (r.variance > 0);
+        else if (statusFilter === 'UNSCANNED') matchStatus = (!r.isScanned && inventoryAuditState.isAuditActive);
+        return matchCat && matchStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400">কোনো অডিট ডাটা পাওয়া যায়নি</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => {
+        const p = r.product;
+        const isSelected = inventoryAuditState.lastScannedId === p.id;
+
+        const statusBadge = r.itemStatus === 'SHORT'
+          ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">🔴 Shortage</span>'
+          : r.itemStatus === 'EXCESS'
+          ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200">🔵 Excess</span>'
+          : r.itemStatus === 'UNSCANNED'
+          ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">⚪ Unscanned</span>'
+          : '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 Matched</span>';
+
+        const varianceText = r.variance === 0 
+          ? '<span class="font-black text-emerald-600">0</span>' 
+          : r.variance < 0 
+          ? `<span class="font-black text-rose-600">${r.variance} pcs</span>` 
+          : `<span class="font-black text-blue-600">+${r.variance} pcs</span>`;
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition ${isSelected ? 'bg-orange-50/60 ring-1 ring-orange-300' : ''}">
+            <td class="px-6 py-3.5 flex items-center space-x-3">
+              <img src="${p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.product_name)}&background=6366f1&color=fff'">
+              <div>
+                <div class="font-bold text-slate-900 text-xs">${p.product_name}</div>
+                <div class="text-[10px] text-slate-400 font-semibold">${p.category}</div>
+              </div>
+            </td>
+            <td class="px-6 py-3.5">
+              <span class="font-mono font-bold text-indigo-700 text-xs">${p.product_code}</span>
+            </td>
+            <td class="px-6 py-3.5 font-semibold text-slate-700">৳ ${r.unitCost}</td>
+            <td class="px-6 py-3.5 text-center font-black text-indigo-900 bg-indigo-50/30 text-sm">
+              ${r.sysStock} pcs
+            </td>
+            <td class="px-6 py-3.5 text-center bg-emerald-50/30">
+              <div class="inline-flex items-center space-x-1.5">
+                <button type="button" onclick="adjustAuditManualCount(${p.id}, -1)" class="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition cursor-pointer">-</button>
+                <span class="font-black text-emerald-800 text-sm min-w-[28px] text-center">${r.physicalCount}</span>
+                <button type="button" onclick="adjustAuditManualCount(${p.id}, 1)" class="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition cursor-pointer">+</button>
+              </div>
+            </td>
+            <td class="px-6 py-3.5 text-center">${varianceText}</td>
+            <td class="px-6 py-3.5 text-right font-black ${r.lossVal > 0 ? 'text-rose-600' : 'text-slate-400'}">
+              ${r.lossVal > 0 ? `৳ ${r.lossVal.toLocaleString()}` : '-'}
+            </td>
+            <td class="px-6 py-3.5 text-center">${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function adjustAuditManualCount(prodId, delta) {
+      inventoryAuditState.isAuditActive = true;
+      const current = inventoryAuditState.scannedCounts[prodId] !== undefined ? inventoryAuditState.scannedCounts[prodId] : (getProductBranchStock(productsData.find(p => p.id === prodId), currentBranchId));
+      const next = Math.max(0, current + delta);
+      inventoryAuditState.scannedCounts[prodId] = next;
+      inventoryAuditState.lastScannedId = prodId;
       renderInventoryAuditTable();
     }
 
