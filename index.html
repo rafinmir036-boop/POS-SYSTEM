@@ -1602,16 +1602,16 @@
           <!-- Transfer Tabs & Filter -->
           <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto">
-              <button onclick="setTransferFilter('ALL')" id="tab-trf-ALL" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-cyan-50 text-cyan-800 border border-cyan-300">
+              <button onclick="setTransferFilter('ALL')" id="tab-trf-ALL" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs transition">
                 All Transfers (সকল)
               </button>
-              <button onclick="setTransferFilter('INCOMING')" id="tab-trf-INCOMING" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200">
+              <button onclick="setTransferFilter('INCOMING')" id="tab-trf-INCOMING" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition">
                 📥 Incoming (রিসিভ করুন)
               </button>
-              <button onclick="setTransferFilter('OUTGOING')" id="tab-trf-OUTGOING" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200">
+              <button onclick="setTransferFilter('DISPATCHED')" id="tab-trf-DISPATCHED" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition">
                 📤 Dispatched (প্রেরিত)
               </button>
-              <button onclick="setTransferFilter('RECEIVED')" id="tab-trf-RECEIVED" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200">
+              <button onclick="setTransferFilter('RECEIVED')" id="tab-trf-RECEIVED" class="trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition">
                 ✓ Completed (গৃহীত)
               </button>
             </div>
@@ -4925,12 +4925,12 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       currentTransferFilter = filter;
       const filters = ['ALL', 'INCOMING', 'DISPATCHED', 'RECEIVED'];
       filters.forEach(f => {
-        const btn = document.getElementById(`trf-tab-${f.toLowerCase()}`);
+        const btn = document.getElementById(`tab-trf-${f}`);
         if (btn) {
           if (f === filter) {
-            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition';
+            btn.className = 'trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs transition';
           } else {
-            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition';
+            btn.className = 'trf-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition';
           }
         }
       });
@@ -5071,6 +5071,19 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
 
       onTransferProductDropdownChange();
 
+      // Recalculate or clamp cart items to available stock in newly selected source
+      transferCart = transferCart.filter(item => {
+        const prod = productsData.find(p => p.id === item.product_id);
+        const avail = prod ? getProductBranchStock(prod, fromBranchId) : 0;
+        return avail > 0;
+      });
+      transferCart.forEach(item => {
+        const prod = productsData.find(p => p.id === item.product_id);
+        const avail = prod ? getProductBranchStock(prod, fromBranchId) : 1;
+        if (item.qty > avail) item.qty = avail;
+      });
+      renderTransferCartTable();
+
       // Focus back to barcode input
       const scanInput = document.getElementById('trf-barcode-input');
       if (scanInput) scanInput.focus();
@@ -5191,6 +5204,185 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       renderTransferCartTable();
       input.value = '';
       input.focus();
+    }
+
+    function addItemToTransferCart() {
+      const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
+      const fromBranchName = getBranchName(fromBranchId);
+      const prodId = Number(document.getElementById('trf-form-product-select')?.value);
+      const qtyInput = document.getElementById('trf-form-qty');
+      const qty = parseInt(qtyInput?.value, 10) || 1;
+
+      if (!prodId) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'অনুগ্রহ করে একটি পণ্য নির্বাচন করুন', showConfirmButton: false, timer: 2000 });
+        return;
+      }
+
+      const prod = productsData.find(p => p.id === prodId);
+      if (!prod) return;
+
+      const availableStock = getProductBranchStock(prod, fromBranchId);
+      if (availableStock <= 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'স্টক খালি!',
+          html: `<p class="text-xs"><b>${fromBranchName}</b> এ <b>"${prod.product_name}"</b> এর কোনো স্টক নেই।</p>`,
+        });
+        return;
+      }
+
+      const existing = transferCart.find(i => i.product_id === prod.id);
+      const currentCartQty = existing ? existing.qty : 0;
+
+      if (currentCartQty + qty > availableStock) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'পর্যাপ্ত স্টক নেই!',
+          html: `<p class="text-xs">উপলব্ধ স্টক: <b>${availableStock} pcs</b>। কার্টে মোট <b>${currentCartQty + qty} pcs</b> দেওয়া সম্ভব নয়।</p>`,
+        });
+        return;
+      }
+
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        transferCart.push({
+          product_id: prod.id,
+          product_name: prod.product_name,
+          product_code: prod.product_code,
+          qty: qty
+        });
+      }
+
+      if (qtyInput) qtyInput.value = '1';
+      playScanBeep();
+      renderTransferCartTable();
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `+${qty} যোগ হয়েছে: ${prod.product_name}`,
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+
+    function renderTransferCartTable() {
+      const tbody = document.getElementById('trf-form-items-tbody');
+      const countBadge = document.getElementById('trf-cart-total-units');
+      if (!tbody) return;
+
+      const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
+      const totalUnits = transferCart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+
+      if (countBadge) {
+        countBadge.innerText = `${totalUnits} Unit${totalUnits !== 1 ? 's' : ''} (${transferCart.length} SKU${transferCart.length !== 1 ? 's' : ''})`;
+      }
+
+      if (transferCart.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-6 text-slate-400 font-medium">
+              <i class="fa-solid fa-cart-flatbed text-2xl text-slate-300 mb-1 block"></i>
+              স্থানান্তরের জন্য কোনো পণ্য নির্বাচন করা হয়নি। বারকোড স্ক্যান করুন বা ড্রপডাউন থেকে (+) যোগ করুন।
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = transferCart.map(item => {
+        const prod = productsData.find(p => p.id === item.product_id);
+        const availableStock = prod ? getProductBranchStock(prod, fromBranchId) : 0;
+
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition">
+            <td class="p-2.5 font-bold text-slate-800">
+              <div>${item.product_name}</div>
+            </td>
+            <td class="p-2.5 font-mono text-[11px] text-indigo-600 font-semibold">${item.product_code}</td>
+            <td class="p-2.5 text-center">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${availableStock >= item.qty ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                ${availableStock} pcs
+              </span>
+            </td>
+            <td class="p-2.5 text-center">
+              <div class="inline-flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl">
+                <button type="button" onclick="updateTransferCartItemQty(${item.product_id}, -1)" class="w-6 h-6 rounded-lg bg-white shadow-2xs hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs transition cursor-pointer">−</button>
+                <input type="number" min="1" max="${availableStock}" value="${item.qty}" onchange="setTransferCartItemQtyDirect(${item.product_id}, this.value)" class="w-12 text-center font-black text-xs bg-transparent outline-none">
+                <button type="button" onclick="updateTransferCartItemQty(${item.product_id}, 1)" class="w-6 h-6 rounded-lg bg-white shadow-2xs hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs transition cursor-pointer">+</button>
+              </div>
+            </td>
+            <td class="p-2.5 text-right">
+              <button type="button" onclick="removeTransferCartItem(${item.product_id})" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="Remove Item">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateTransferCartItemQty(prodId, delta) {
+      const item = transferCart.find(i => i.product_id === prodId);
+      if (!item) return;
+
+      const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
+      const prod = productsData.find(p => p.id === prodId);
+      const availableStock = prod ? getProductBranchStock(prod, fromBranchId) : 9999;
+
+      const newQty = item.qty + delta;
+      if (newQty <= 0) {
+        removeTransferCartItem(prodId);
+        return;
+      }
+      if (newQty > availableStock) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: `সর্বোচ্চ স্টক সীমা ${availableStock} pcs`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+        return;
+      }
+
+      item.qty = newQty;
+      renderTransferCartTable();
+    }
+
+    function setTransferCartItemQtyDirect(prodId, rawVal) {
+      const val = parseInt(rawVal, 10);
+      const item = transferCart.find(i => i.product_id === prodId);
+      if (!item) return;
+
+      const fromBranchId = Number(document.getElementById('trf-form-from-branch')?.value) || 1;
+      const prod = productsData.find(p => p.id === prodId);
+      const availableStock = prod ? getProductBranchStock(prod, fromBranchId) : 9999;
+
+      if (isNaN(val) || val <= 0) {
+        item.qty = 1;
+      } else if (val > availableStock) {
+        item.qty = availableStock;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: `সর্বোচ্চ স্টক সীমা ${availableStock} pcs দেওয়া হয়েছে`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+      } else {
+        item.qty = val;
+      }
+      renderTransferCartTable();
+    }
+
+    function removeTransferCartItem(prodId) {
+      transferCart = transferCart.filter(i => i.product_id !== prodId);
+      renderTransferCartTable();
     }
 
     async function handleDispatchTransferSubmit(e) {
