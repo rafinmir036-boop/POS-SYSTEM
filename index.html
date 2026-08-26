@@ -299,8 +299,11 @@
             </div>
             <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">SALE</span>
           </button>
-          <button id="nav-products" onclick="switchNav('products')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
-            <i class="fa-solid fa-boxes-stacked text-amber-400 w-4"></i><span>Products & Stock</span>
+          <button id="nav-products" onclick="switchNav('products')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-boxes-stacked text-amber-400 w-4"></i><span id="nav-products-label">Products & Stock</span>
+            </div>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">STOCK</span>
           </button>
           <button id="nav-sales" onclick="switchNav('sales')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
             <i class="fa-solid fa-file-invoice-dollar text-sky-400 w-4"></i><span>Sales & Invoices</span>
@@ -1997,19 +2000,33 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Purchase Price (৳) *</label>
-            <input type="number" id="prd-form-purchase" required min="0" step="any" placeholder="300" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:bg-white">
+            <label class="block font-bold text-slate-700 mb-1">Purchase Price (ক্রয়মূল্য ৳) *</label>
+            <input type="number" id="prd-form-purchase" required min="0" step="any" placeholder="300" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Sale Price (৳) *</label>
-            <input type="number" id="prd-form-sale" required min="0" step="any" placeholder="450" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-emerald-600 outline-none focus:bg-white">
+            <label class="block font-bold text-slate-700 mb-1">Sale Price (বিক্রয়মূল্য ৳) *</label>
+            <input type="number" id="prd-form-sale" required min="0" step="any" placeholder="450" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-emerald-600 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
           </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Initial Stock *</label>
-            <input type="number" id="prd-form-stock" required min="0" placeholder="50" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:bg-white">
+        </div>
+
+        <!-- Branch-Wise Stock Distribution Inputs -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+          <div class="flex justify-between items-center">
+            <label class="block font-bold text-slate-800 flex items-center space-x-1.5">
+              <i class="fa-solid fa-boxes-stacked text-indigo-600"></i>
+              <span>Branch Stock Allocation (শাখাভিত্তিক স্টক বণ্টন) *</span>
+            </label>
+            <span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+              Total Stock: <b id="prd-form-total-stock-badge">0</b> pcs
+            </span>
           </div>
+          <p class="text-[10px] text-slate-500">কোন শাখায় কত পিস স্টক থাকবে তা নিচে দিন (যে ব্রাঞ্চে কাজ করছেন তাতে স্বয়ংক্রিয়ভাবে স্টক যাবে):</p>
+          <div id="prd-form-branch-stocks-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
+            <!-- Populated dynamically via JS -->
+          </div>
+          <input type="hidden" id="prd-form-stock" value="0">
         </div>
 
         <!-- Photo Upload -->
@@ -3750,9 +3767,12 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const repBranchSelect = document.getElementById('rep-branch-select');
       const invBranchSelect = document.getElementById('inv-branch-select');
 
+      const isAdmin = !currentUser || currentUser.role === 'Admin';
+      const userBranch = currentUser ? (branchesData.find(b => b.id == currentUser.branch_id) || branchesData[0]) : branchesData[0];
+
       if (headerSelect) {
         let headerOpts = '';
-        if (!currentUser || currentUser.role === 'Admin') {
+        if (isAdmin) {
           headerOpts = '<option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>';
           branchesData.forEach(b => {
             headerOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
@@ -3760,7 +3780,6 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           headerSelect.disabled = false;
           headerSelect.classList.remove('cursor-not-allowed', 'opacity-80');
         } else {
-          const userBranch = branchesData.find(b => b.id == currentUser.branch_id) || branchesData[0];
           headerOpts = `<option value="${userBranch ? userBranch.id : 1}">🔒 ${userBranch ? userBranch.name : 'Assigned Branch'}</option>`;
           headerSelect.disabled = true;
           headerSelect.classList.add('cursor-not-allowed', 'opacity-80');
@@ -3770,7 +3789,12 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }
 
       if (empBranchSelect) {
-        empBranchSelect.innerHTML = branchesData.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+        if (isAdmin) {
+          empBranchSelect.innerHTML = branchesData.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+          empBranchSelect.disabled = false;
+        } else {
+          empBranchSelect.innerHTML = `<option value="${userBranch ? userBranch.id : 1}">${userBranch ? userBranch.name : 'My Branch'}</option>`;
+        }
       }
 
       if (trfFromSelect && trfToSelect) {
@@ -3778,23 +3802,47 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         const toOpts = branchesData.map(b => `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`).join('');
         trfFromSelect.innerHTML = fromOpts;
         trfToSelect.innerHTML = toOpts;
-        if (branchesData.length > 1) trfToSelect.selectedIndex = 1;
+        if (!isAdmin && userBranch) {
+          trfToSelect.value = String(userBranch.id);
+        } else if (branchesData.length > 1) {
+          trfToSelect.selectedIndex = 1;
+        }
       }
 
       if (repBranchSelect) {
-        let repOpts = '<option value="ALL">🌐 All Enterprise Branches</option>';
-        branchesData.forEach(b => {
-          repOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
-        });
-        repBranchSelect.innerHTML = repOpts;
+        if (isAdmin) {
+          let repOpts = '<option value="ALL">🌐 All Enterprise Branches</option>';
+          branchesData.forEach(b => {
+            repOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
+          });
+          repBranchSelect.innerHTML = repOpts;
+          repBranchSelect.disabled = false;
+          repBranchSelect.classList.remove('cursor-not-allowed', 'opacity-80');
+          repBranchSelect.value = String(currentBranchId);
+        } else {
+          repBranchSelect.innerHTML = `<option value="${userBranch ? userBranch.id : 1}">🏬 ${userBranch ? userBranch.name : 'Assigned Branch'}</option>`;
+          repBranchSelect.value = String(userBranch ? userBranch.id : 1);
+          repBranchSelect.disabled = true;
+          repBranchSelect.classList.add('cursor-not-allowed', 'opacity-80');
+        }
       }
 
       if (invBranchSelect) {
-        let invOpts = '<option value="ALL">🌐 All Branches Consolidated</option>';
-        branchesData.forEach(b => {
-          invOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
-        });
-        invBranchSelect.innerHTML = invOpts;
+        if (isAdmin) {
+          let invOpts = '<option value="ALL">🌐 All Branches Consolidated</option>';
+          branchesData.forEach(b => {
+            invOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
+          });
+          invBranchSelect.innerHTML = invOpts;
+          invBranchSelect.disabled = false;
+          invBranchSelect.classList.remove('cursor-not-allowed', 'opacity-80');
+          invBranchSelect.value = String(currentBranchId);
+        } else {
+          invBranchSelect.innerHTML = `<option value="${userBranch ? userBranch.id : 1}">🏬 ${userBranch ? userBranch.name : 'Assigned Branch'}</option>`;
+          invBranchSelect.value = String(userBranch ? userBranch.id : 1);
+          invBranchSelect.disabled = true;
+          invBranchSelect.classList.add('cursor-not-allowed', 'opacity-80');
+        }
       }
 
       if (document.getElementById('user-form-branch')) {
@@ -4159,19 +4207,20 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
     function applyRolePermissionsToUI() {
       if (!currentUser) return;
+      const isAdmin = !currentUser || currentUser.role === 'Admin';
+      const isManager = currentUser.role && (currentUser.role.includes('Manager') || currentUser.role === 'Branch Manager' || currentUser.role === 'Warehouse Manager');
       const p = currentUser.permissions || getDefaultPermissionsForRole(currentUser.role);
-      const isAdmin = currentUser.role === 'Admin';
 
       const navMap = {
-        'nav-pos': isAdmin || p.can_pos,
-        'nav-products': isAdmin || p.can_products,
-        'nav-sales': isAdmin || p.can_sales,
-        'nav-employees': isAdmin || p.can_employees,
-        'nav-accounts': isAdmin || p.can_accounts,
-        'nav-inventory': isAdmin || p.can_inventory,
-        'nav-transfers': isAdmin || p.can_transfers,
-        'nav-new-transfer': isAdmin || p.can_transfers,
-        'nav-reports': isAdmin || p.can_reports,
+        'nav-pos': isAdmin || isManager || p.can_pos,
+        'nav-products': isAdmin || isManager || p.can_products,
+        'nav-sales': isAdmin || isManager || p.can_sales,
+        'nav-employees': isAdmin || isManager || p.can_employees,
+        'nav-accounts': isAdmin || isManager || p.can_accounts,
+        'nav-inventory': isAdmin || isManager || p.can_inventory,
+        'nav-transfers': isAdmin || isManager || p.can_transfers,
+        'nav-new-transfer': isAdmin || isManager || p.can_transfers,
+        'nav-reports': isAdmin || isManager || p.can_reports,
         'nav-settings': isAdmin || p.can_settings,
         'nav-database': isAdmin // Strictly restricted to Super Admin only
       };
@@ -4182,6 +4231,16 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           el.style.display = isAllowed ? '' : 'none';
         }
       });
+
+      // Dynamic Sidebar Label for Products & Stock
+      const navProductsLabel = document.getElementById('nav-products-label');
+      if (navProductsLabel) {
+        if (isManager && !isAdmin) {
+          navProductsLabel.innerText = `Branch Stock (ব্রাঞ্চ স্টক)`;
+        } else {
+          navProductsLabel.innerText = `Products & Stock`;
+        }
+      }
 
       // Top Header PostgreSQL DB Pill (Only visible to Super Admin)
       const headerDbPill = document.getElementById('header-db-pill');
@@ -5613,11 +5672,52 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       if (elTableProfitBadge) elTableProfitBadge.innerText = `Profit: ৳ ${totalProfitPotential.toLocaleString()}`;
     }
 
+    function calcProductFormTotalStock() {
+      const inputs = document.querySelectorAll('.prd-branch-stock-input');
+      let total = 0;
+      inputs.forEach(inp => {
+        total += (Number(inp.value) || 0);
+      });
+      const badge = document.getElementById('prd-form-total-stock-badge');
+      const hiddenInput = document.getElementById('prd-form-stock');
+      if (badge) badge.innerText = total;
+      if (hiddenInput) hiddenInput.value = total;
+      return total;
+    }
+
     function openAddProductModal() {
       document.getElementById('form-product').reset();
       document.getElementById('prd-form-id').value = '';
-      document.getElementById('modal-product-title').innerText = 'Add New Product (পণ্য যোগ করুন)';
+      document.getElementById('modal-product-title').innerText = 'Add New Product (নতুন পণ্য যোগ করুন)';
       document.getElementById('prd-image-preview').src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150';
+
+      const container = document.getElementById('prd-form-branch-stocks-container');
+      if (container) {
+        // If user is currently on a specific branch (e.g. Dhanmondi, branch_id = 2), prefill 50 in that branch!
+        const defaultBranchId = (currentBranchId && currentBranchId !== 'ALL') ? Number(currentBranchId) : (branchesData[0] ? branchesData[0].id : 1);
+        
+        container.innerHTML = branchesData.map(b => {
+          const isCurrent = (b.id == defaultBranchId);
+          const initialQty = isCurrent ? 50 : 0;
+          return `
+            <div class="bg-white p-2.5 rounded-xl border ${isCurrent ? 'border-indigo-400 ring-2 ring-indigo-100 bg-indigo-50/20' : 'border-slate-200'} flex items-center justify-between gap-2 shadow-2xs">
+              <div class="truncate">
+                <div class="font-bold text-slate-800 text-[11px] truncate flex items-center gap-1.5">
+                  <span>${b.type === 'Warehouse' ? '🏭' : '🏬'}</span>
+                  <span class="truncate">${b.name}</span>
+                </div>
+                ${isCurrent ? '<span class="text-[9px] text-indigo-600 font-extrabold uppercase tracking-wide">● Active Operating Branch</span>' : '<span class="text-[9px] text-slate-400">Other Branch</span>'}
+              </div>
+              <div class="flex items-center gap-1">
+                <input type="number" min="0" value="${initialQty}" oninput="calcProductFormTotalStock()" data-branch-id="${b.id}" class="prd-branch-stock-input w-16 p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-center font-black text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 text-xs">
+                <span class="text-[10px] text-slate-400 font-bold">pcs</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+        calcProductFormTotalStock();
+      }
+
       openModal('modal-product');
     }
 
@@ -5631,10 +5731,40 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       document.getElementById('prd-form-category').value = prod.category;
       document.getElementById('prd-form-purchase').value = prod.purchase_price;
       document.getElementById('prd-form-sale').value = prod.sale_price;
-      document.getElementById('prd-form-stock').value = prod.stock;
       document.getElementById('prd-image-preview').src = prod.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150';
 
-      document.getElementById('modal-product-title').innerText = 'Edit Product (পণ্য এডিট করুন)';
+      // Ensure branch_stocks structure exists
+      if (!prod.branch_stocks || Object.keys(prod.branch_stocks).length === 0) {
+        prod.branch_stocks = { 1: prod.stock || 0 };
+      }
+
+      const container = document.getElementById('prd-form-branch-stocks-container');
+      if (container) {
+        const activeBId = (currentBranchId && currentBranchId !== 'ALL') ? Number(currentBranchId) : null;
+        
+        container.innerHTML = branchesData.map(b => {
+          const isCurrent = (b.id == activeBId);
+          const bStock = Number(prod.branch_stocks[b.id]) || 0;
+          return `
+            <div class="bg-white p-2.5 rounded-xl border ${isCurrent ? 'border-indigo-400 ring-2 ring-indigo-100 bg-indigo-50/20' : 'border-slate-200'} flex items-center justify-between gap-2 shadow-2xs">
+              <div class="truncate">
+                <div class="font-bold text-slate-800 text-[11px] truncate flex items-center gap-1.5">
+                  <span>${b.type === 'Warehouse' ? '🏭' : '🏬'}</span>
+                  <span class="truncate">${b.name}</span>
+                </div>
+                ${isCurrent ? '<span class="text-[9px] text-indigo-600 font-extrabold uppercase tracking-wide">● Active Operating Branch</span>' : '<span class="text-[9px] text-slate-400">Other Branch</span>'}
+              </div>
+              <div class="flex items-center gap-1">
+                <input type="number" min="0" value="${bStock}" oninput="calcProductFormTotalStock()" data-branch-id="${b.id}" class="prd-branch-stock-input w-16 p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-center font-black text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 text-xs">
+                <span class="text-[10px] text-slate-400 font-bold">pcs</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+        calcProductFormTotalStock();
+      }
+
+      document.getElementById('modal-product-title').innerText = `Edit Product: ${prod.product_name}`;
       openModal('modal-product');
     }
 
@@ -5646,8 +5776,28 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const cat = document.getElementById('prd-form-category').value.trim() || 'General';
       const purchase = Number(document.getElementById('prd-form-purchase').value) || 0;
       const sale = Number(document.getElementById('prd-form-sale').value) || 0;
-      const stock = Number(document.getElementById('prd-form-stock').value) || 0;
       const imgPreview = document.getElementById('prd-image-preview').src;
+
+      // Extract branch stocks
+      const branchStocks = {};
+      let totalStock = 0;
+      const inputs = document.querySelectorAll('.prd-branch-stock-input');
+      inputs.forEach(inp => {
+        const bId = Number(inp.getAttribute('data-branch-id'));
+        const val = Number(inp.value) || 0;
+        if (bId) {
+          branchStocks[bId] = val;
+          totalStock += val;
+        }
+      });
+
+      // If no branch stock inputs were present (fallback)
+      if (inputs.length === 0) {
+        const singleStock = Number(document.getElementById('prd-form-stock')?.value) || 0;
+        const targetB = (currentBranchId && currentBranchId !== 'ALL') ? Number(currentBranchId) : 1;
+        branchStocks[targetB] = singleStock;
+        totalStock = singleStock;
+      }
 
       const productPayload = {
         product_code: code,
@@ -5655,7 +5805,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         category: cat,
         purchase_price: purchase,
         sale_price: sale,
-        stock: stock,
+        stock: totalStock,
+        branch_stocks: branchStocks,
         image_url: imgPreview
       };
 
@@ -5681,7 +5832,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       renderProductsTable();
       renderPosProducts();
       renderDashboard();
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Product saved successfully!', showConfirmButton: false, timer: 1500 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Product & branch stocks saved successfully!', showConfirmButton: false, timer: 1500 });
     }
 
     async function deleteProduct(id) {
@@ -7639,20 +7790,37 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const branchSelect = document.getElementById('rep-branch-select');
       const staffSelect = document.getElementById('rep-salesperson-select');
 
+      const isAdmin = !currentUser || currentUser.role === 'Admin';
+      const userBranch = currentUser ? (branchesData.find(b => b.id == currentUser.branch_id) || branchesData[0]) : branchesData[0];
+
       if (branchSelect) {
-        let branchOpts = '<option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>';
-        branchesData.forEach(b => {
-          branchOpts += `<option value="${b.id}">${b.name}</option>`;
-        });
-        branchSelect.innerHTML = branchOpts;
-        if (currentBranchId !== 'ALL' && currentBranchId) {
-          branchSelect.value = String(currentBranchId);
+        if (isAdmin) {
+          let branchOpts = '<option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>';
+          branchesData.forEach(b => {
+            branchOpts += `<option value="${b.id}">${b.name}</option>`;
+          });
+          branchSelect.innerHTML = branchOpts;
+          branchSelect.disabled = false;
+          branchSelect.classList.remove('cursor-not-allowed', 'opacity-80');
+          if (currentBranchId !== 'ALL' && currentBranchId) {
+            branchSelect.value = String(currentBranchId);
+          }
+        } else {
+          // Branch Manager or Non-Admin: ONLY show their assigned branch!
+          branchSelect.innerHTML = `<option value="${userBranch ? userBranch.id : 1}">🏬 ${userBranch ? userBranch.name : 'Assigned Branch'}</option>`;
+          branchSelect.value = String(userBranch ? userBranch.id : 1);
+          branchSelect.disabled = true;
+          branchSelect.classList.add('cursor-not-allowed', 'opacity-80');
         }
       }
 
       if (staffSelect) {
+        const userBranchId = currentUser ? currentUser.branch_id : null;
         let staffOpts = '<option value="ALL">👥 All Staff (সকল কর্মী)</option>';
-        employeesData.forEach(emp => {
+        
+        const relevantEmps = employeesData.filter(emp => isAdmin || !userBranchId || userBranchId === 'ALL' || emp.branch_id == userBranchId);
+        
+        relevantEmps.forEach(emp => {
           staffOpts += `<option value="${emp.name}">${emp.name} (${emp.designation})</option>`;
         });
         staffSelect.innerHTML = staffOpts;
@@ -7746,7 +7914,12 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     function applyReportFilters() {
       const fromVal = document.getElementById('rep-from-date')?.value || '';
       const toVal = document.getElementById('rep-to-date')?.value || '';
-      const branchVal = document.getElementById('rep-branch-select')?.value || 'ALL';
+      
+      let branchVal = document.getElementById('rep-branch-select')?.value || 'ALL';
+      if (currentUser && currentUser.role !== 'Admin' && currentUser.branch_id && currentUser.branch_id !== 'ALL') {
+        branchVal = String(currentUser.branch_id);
+      }
+
       const staffVal = document.getElementById('rep-salesperson-select')?.value || 'ALL';
       const searchVal = (document.getElementById('rep-search-input')?.value || '').toLowerCase().trim();
 
