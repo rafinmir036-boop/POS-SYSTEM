@@ -186,14 +186,17 @@
         position: absolute;
         left: 0;
         top: 0;
-        width: 100%;
+        width: 1.90in;
         margin: 0;
-        padding: 4px;
+        padding: 0;
         box-shadow: none;
       }
       .barcode-sticker-item {
+        page-break-after: always !important;
+        break-after: page !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+        border: none !important;
       }
       .barcode-sticker-item.size-190x130 {
         width: 1.90in !important;
@@ -202,15 +205,15 @@
         min-height: 1.30in !important;
         max-width: 1.90in !important;
         max-height: 1.30in !important;
-        padding: 3px 5px !important;
-        margin: 2px !important;
+        padding: 0.04in 0.06in !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
         align-items: center !important;
         background: #fff !important;
-        border: 1px dashed #cbd5e1 !important;
+        border: none !important;
       }
     }
   </style>
@@ -6437,27 +6440,236 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     }
 
     function printBarcodeSheet() {
-      const container = document.getElementById('bc-preview-container');
-      const printArea = document.getElementById('printable-barcode-area');
-      const receiptArea = document.getElementById('printable-receipt-area');
+      const selId = Number(document.getElementById('bc-product-select')?.value);
+      const prod = productsData.find(p => p.id === selId);
+      const code = document.getElementById('bc-input-code')?.value.trim() || (prod ? prod.product_code : 'PRD-101');
+      const qty = Math.max(1, Math.min(100, Number(document.getElementById('bc-input-qty')?.value) || 1));
+      const paperLayout = document.getElementById('bc-paper-layout')?.value || 'thermal-190x130';
 
-      if (!container || !printArea) return;
+      const incStore = document.getElementById('bc-inc-store')?.checked;
+      const incName = document.getElementById('bc-inc-name')?.checked;
+      const incPrice = document.getElementById('bc-inc-price')?.checked;
+      const incSku = document.getElementById('bc-inc-sku')?.checked;
 
-      if (receiptArea) receiptArea.style.display = 'none';
-      printArea.style.display = 'block';
-      printArea.innerHTML = `
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-start; padding: 2px;">
-          ${container.innerHTML}
-        </div>
+      const prodName = prod ? prod.product_name : 'Product Item';
+      const prodPrice = prod ? `৳ ${Number(prod.sale_price).toLocaleString()}` : '৳ 0';
+
+      // Determine Page Size & Dimensions
+      let pageSize = '1.90in 1.30in';
+      let stickerW = '1.90in';
+      let stickerH = '1.30in';
+      let isA4 = false;
+
+      if (paperLayout === 'thermal-single') {
+        pageSize = '40mm 30mm';
+        stickerW = '40mm';
+        stickerH = '30mm';
+      } else if (paperLayout === 'thermal-double') {
+        pageSize = '80mm 30mm';
+        stickerW = '38mm';
+        stickerH = '28mm';
+      } else if (paperLayout === 'a4-sheet') {
+        pageSize = 'A4 portrait';
+        stickerW = '38mm';
+        stickerH = '25mm';
+        isA4 = true;
+      }
+
+      // Remove existing print iframe if any
+      let oldFrame = document.getElementById('barcode-print-frame');
+      if (oldFrame) oldFrame.remove();
+
+      const iframe = document.createElement('iframe');
+      iframe.id = 'barcode-print-frame';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+
+      let stickersMarkup = '';
+      for (let i = 0; i < qty; i++) {
+        stickersMarkup += `
+          <div class="sticker-page">
+            ${incStore ? `<div class="store-name">RTR POS & ERP</div>` : ''}
+            ${incName ? `<div class="product-title">${prodName}</div>` : ''}
+            <div class="barcode-wrapper">
+              <svg id="print-bc-svg-${i}"></svg>
+            </div>
+            <div class="bottom-info">
+              <span class="sku-label">${incSku ? code : ''}</span>
+              ${incPrice ? `<span class="price-label">${prodPrice}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      const printHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Print Barcode - ${code}</title>
+          <style>
+            @page {
+              size: ${pageSize};
+              margin: 0;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background: #fff;
+              font-family: Arial, -apple-system, sans-serif;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            ${isA4 ? `
+              body {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 3mm;
+                padding: 6mm;
+                justify-content: flex-start;
+              }
+              .sticker-page {
+                width: ${stickerW};
+                height: ${stickerH};
+                border: 1px dashed #cbd5e1;
+                padding: 1.5mm;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+                text-align: center;
+                overflow: hidden;
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
+            ` : `
+              body {
+                width: ${stickerW};
+                margin: 0;
+                padding: 0;
+              }
+              .sticker-page {
+                width: ${stickerW};
+                height: ${stickerH};
+                max-width: ${stickerW};
+                max-height: ${stickerH};
+                min-width: ${stickerW};
+                min-height: ${stickerH};
+                padding: 0.04in 0.05in;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+                text-align: center;
+                overflow: hidden;
+                page-break-after: always;
+                break-after: page;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                border: none;
+                background: #fff;
+              }
+            `}
+            .store-name {
+              font-size: 7pt;
+              font-weight: 900;
+              letter-spacing: 0.5px;
+              text-transform: uppercase;
+              color: #000;
+              line-height: 1;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              width: 100%;
+            }
+            .product-title {
+              font-size: 7.5pt;
+              font-weight: 700;
+              color: #000;
+              line-height: 1.05;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              width: 100%;
+              margin: 1px 0;
+            }
+            .barcode-wrapper {
+              width: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              overflow: hidden;
+              margin: 1px 0;
+            }
+            .barcode-wrapper svg {
+              max-height: 28px;
+              width: 95%;
+              display: block;
+            }
+            .bottom-info {
+              width: 100%;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0 1px;
+              line-height: 1;
+            }
+            .sku-label {
+              font-size: 7pt;
+              font-family: monospace;
+              font-weight: bold;
+              color: #000;
+            }
+            .price-label {
+              font-size: 8.5pt;
+              font-weight: 900;
+              color: #000;
+            }
+          </style>
+        </head>
+        <body>
+          ${stickersMarkup}
+        </body>
+        </html>
       `;
 
-      window.print();
+      doc.write(printHtml);
+      doc.close();
+
+      // Render JsBarcode inside the iframe
+      for (let i = 0; i < qty; i++) {
+        try {
+          const svgEl = doc.getElementById(`print-bc-svg-${i}`);
+          if (svgEl && window.JsBarcode) {
+            window.JsBarcode(svgEl, code, {
+              format: "CODE128",
+              width: 1.15,
+              height: 28,
+              displayValue: false,
+              margin: 0
+            });
+          }
+        } catch (e) {
+          console.warn('Iframe JsBarcode render error:', e);
+        }
+      }
 
       setTimeout(() => {
-        if (receiptArea) receiptArea.style.display = '';
-        printArea.innerHTML = '';
-        printArea.style.display = 'none';
-      }, 1000);
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }, 250);
     }
 
     // --- Universal Multi-Branch Stock Finder ---
