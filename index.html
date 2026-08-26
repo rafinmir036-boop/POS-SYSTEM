@@ -231,7 +231,7 @@
     <div class="absolute top-1/2 -right-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
     <!-- Watermark Text -->
-    <div class="watermark-login">RTR POS & ERP</div>
+    <div id="login-watermark-text" class="watermark-login">RTR POS & ERP</div>
 
     <!-- Login Container Card -->
     <div class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-2xl p-8 sm:p-9 rounded-3xl shadow-2xl border border-emerald-100 space-y-6">
@@ -259,10 +259,10 @@
             <text x="100" y="162" font-family="'Outfit', 'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="46" fill="#1e293b" text-anchor="middle" letter-spacing="4">RTR</text>
           </svg>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-black tracking-tight animated-title-gradient">
+        <h1 id="login-brand-title" class="text-2xl sm:text-3xl font-black tracking-tight animated-title-gradient">
           RTR POS & ERP
         </h1>
-        <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
+        <p id="login-brand-subtitle" class="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
           Enterprise Cloud Suite • Real-Time Database
         </p>
       </div>
@@ -345,8 +345,8 @@
               </svg>
             </div>
             <div>
-              <h2 class="font-extrabold text-sm text-white tracking-wide font-heading">RTR POS & ERP</h2>
-              <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Enterprise Suite</p>
+              <h2 id="sidebar-brand-name" class="font-extrabold text-sm text-white tracking-wide font-heading">RTR POS & ERP</h2>
+              <p id="sidebar-brand-tagline" class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Enterprise Suite</p>
             </div>
           </div>
         </div>
@@ -2047,21 +2047,21 @@
               <form onsubmit="handleSaveStoreProfile(event)" class="space-y-3 text-xs">
                 <div>
                   <label class="block font-bold text-slate-700 mb-1">Company / Store Name</label>
-                  <input type="text" id="store-name-input" value="ApexPOS & ERP Enterprise Suite" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
+                  <input type="text" id="store-name-input" placeholder="e.g. RTR Pos & Erp enterprise" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Contact Phone</label>
-                    <input type="text" id="store-phone-input" value="+880 1800-000000" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+                    <input type="text" id="store-phone-input" placeholder="+880 1800-000000" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
                   </div>
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Default Currency</label>
-                    <input type="text" id="store-currency-input" value="৳ (BDT)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
+                    <input type="text" id="store-currency-input" placeholder="৳ (BDT)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:bg-white">
                   </div>
                 </div>
                 <div>
                   <label class="block font-bold text-slate-700 mb-1">Store Address</label>
-                  <input type="text" id="store-address-input" value="Tejgaon Commercial Area, Dhaka - 1208, Bangladesh" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
+                  <input type="text" id="store-address-input" placeholder="Store address..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
                 </div>
                 <div class="pt-2 flex justify-end">
                   <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition flex items-center space-x-1.5 cursor-pointer shadow-xs">
@@ -2375,8 +2375,8 @@
       <!-- Printable Area -->
       <div id="printable-receipt-area" class="receipt-paper p-4 text-slate-900 text-xs space-y-3">
         <div class="text-center space-y-1">
-          <h2 class="font-black text-base uppercase tracking-wider">APEX ENTERPRISE</h2>
-          <p class="text-[10px] text-slate-600">Dhaka, Bangladesh • Hotline: 01800-000000</p>
+          <h2 id="rec-store-name" class="font-black text-base uppercase tracking-wider">RTR POS & ERP</h2>
+          <p id="rec-store-address-phone" class="text-[10px] text-slate-600">Tejgaon Commercial Area, Dhaka - 1208, Bangladesh • Hotline: +880 1800-000000</p>
           <div class="border-b border-dashed border-slate-400 pt-1"></div>
         </div>
 
@@ -2497,19 +2497,19 @@
             <div class="space-y-1.5 text-[11px] font-semibold text-slate-700">
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="bc-inc-store" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
-                <span>Store Name (RTR POS & ERP)</span>
+                <span>Store Name (<b id="bc-store-name-label">RTR POS & ERP</b>)</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="bc-inc-name" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
                 <span>Product Name</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" id="bc-inc-price" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
-                <span>Price (৳ Sale Price)</span>
+                <input type="checkbox" id="bc-inc-sku" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
+                <span>Barcode & SKU Code</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" id="bc-inc-sku" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
-                <span>SKU Text Below Barcode</span>
+                <input type="checkbox" id="bc-inc-price" checked onchange="updateBarcodePreview()" class="rounded text-amber-600">
+                <span>Price (৳ Sale Price + VAT)</span>
               </label>
             </div>
           </div>
@@ -5964,6 +5964,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const sale = salesData.find(s => s.invoice_no === invoiceNo);
       if (!sale) return;
 
+      if (document.getElementById('rec-store-name')) {
+        document.getElementById('rec-store-name').innerText = storeProfile.name || 'RTR POS & ERP';
+      }
+      if (document.getElementById('rec-store-address-phone')) {
+        document.getElementById('rec-store-address-phone').innerText = `${storeProfile.address || 'Dhaka, Bangladesh'} • Hotline: ${storeProfile.phone || '+880 1800-000000'}`;
+      }
+
       const isExchange = sale.is_exchange || (sale.invoice_no && sale.invoice_no.startsWith('EXC-'));
       document.getElementById('rec-inv-no').innerText = sale.invoice_no;
       document.getElementById('rec-date').innerText = new Date(sale.sale_date).toLocaleString();
@@ -6376,14 +6383,15 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       if (countLabel) countLabel.innerText = `${qty} Sticker${qty > 1 ? 's' : ''}`;
 
+      const storeName = (storeProfile && storeProfile.name) ? storeProfile.name : 'RTR POS & ERP';
       const prodName = prod ? prod.product_name : 'Product Item';
-      const prodPrice = prod ? `৳ ${Number(prod.sale_price).toLocaleString()}` : '৳ 0';
+      const prodPrice = prod ? `৳ ${Number(prod.sale_price).toLocaleString()} + VAT` : '৳ 0 + VAT';
 
       let stickerWidth = '1.90in';
       let stickerHeight = '1.30in';
       let sizeClass = 'size-190x130';
-      let barcodeHeight = 26;
-      let barcodeWidth = 1.15;
+      let barcodeHeight = 24;
+      let barcodeWidth = 1.05;
       let barcodeFontSize = 9;
 
       if (paperLayout === 'thermal-double') {
@@ -6403,16 +6411,14 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       let stickersHtml = '';
       for (let i = 0; i < qty; i++) {
         stickersHtml += `
-          <div class="barcode-sticker-item ${sizeClass} bg-white border border-slate-300 rounded-lg p-1.5 text-center shadow-xs flex flex-col items-center justify-between overflow-hidden" style="width: ${stickerWidth}; height: ${stickerHeight}; min-height: ${stickerHeight}; max-width: ${stickerWidth}; box-sizing: border-box;">
-            ${incStore ? '<div class="text-[8.5px] font-black tracking-widest text-slate-800 uppercase leading-none truncate w-full pt-0.5">RTR POS & ERP</div>' : ''}
-            ${incName ? `<div class="text-[9.5px] font-bold text-slate-900 truncate w-full px-0.5 leading-tight my-0.5">${prodName}</div>` : ''}
-            <div class="w-full flex justify-center my-0.5 overflow-hidden">
-              <svg class="barcode-svg-node-${i}" style="max-height: ${barcodeHeight}px; width: 100%;"></svg>
+          <div class="barcode-sticker-item ${sizeClass} bg-white border border-slate-300 rounded-lg p-1.5 text-center shadow-xs flex flex-col items-center justify-between overflow-hidden" style="width: ${stickerWidth}; height: ${stickerHeight}; min-height: ${stickerHeight}; max-width: ${stickerWidth}; box-sizing: border-box; text-align: center;">
+            ${incStore ? `<div class="text-[8px] font-black tracking-wider text-slate-800 uppercase leading-none truncate w-full text-center pt-0.5">${storeName}</div>` : ''}
+            ${incName ? `<div class="text-[9px] font-bold text-slate-900 truncate w-full px-0.5 leading-tight my-0.5 text-center">${prodName}</div>` : ''}
+            <div class="w-full flex justify-center my-0.5 overflow-hidden text-center">
+              <svg class="barcode-svg-node-${i}" style="max-height: ${barcodeHeight}px; max-width: 88%; margin: 0 auto; display: block;"></svg>
             </div>
-            <div class="w-full flex justify-between items-center px-1 text-[10px] font-black leading-none pb-0.5">
-              <span class="text-slate-500 font-mono font-semibold text-[8.5px]">${incSku ? code : ''}</span>
-              ${incPrice ? `<span class="text-[11px] font-black text-slate-900">${prodPrice}</span>` : ''}
-            </div>
+            ${incSku ? `<div class="text-slate-600 font-mono font-bold text-[8.5px] leading-none text-center w-full">${code}</div>` : ''}
+            ${incPrice ? `<div class="text-[10.5px] font-black text-slate-900 leading-tight text-center w-full pb-0.5">${prodPrice}</div>` : ''}
           </div>
         `;
       }
@@ -6451,8 +6457,9 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const incPrice = document.getElementById('bc-inc-price')?.checked;
       const incSku = document.getElementById('bc-inc-sku')?.checked;
 
+      const storeName = (storeProfile && storeProfile.name) ? storeProfile.name : 'RTR POS & ERP';
       const prodName = prod ? prod.product_name : 'Product Item';
-      const prodPrice = prod ? `৳ ${Number(prod.sale_price).toLocaleString()}` : '৳ 0';
+      const prodPrice = prod ? `৳ ${Number(prod.sale_price).toLocaleString()} + VAT` : '৳ 0 + VAT';
 
       // Determine Page Size & Dimensions
       let pageSize = '1.90in 1.30in';
@@ -6496,15 +6503,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       for (let i = 0; i < qty; i++) {
         stickersMarkup += `
           <div class="sticker-page">
-            ${incStore ? `<div class="store-name">RTR POS & ERP</div>` : ''}
+            ${incStore ? `<div class="store-name">${storeName}</div>` : ''}
             ${incName ? `<div class="product-title">${prodName}</div>` : ''}
             <div class="barcode-wrapper">
               <svg id="print-bc-svg-${i}"></svg>
             </div>
-            <div class="bottom-info">
-              <span class="sku-label">${incSku ? code : ''}</span>
-              ${incPrice ? `<span class="price-label">${prodPrice}</span>` : ''}
-            </div>
+            ${incSku ? `<div class="sku-label">${code}</div>` : ''}
+            ${incPrice ? `<div class="price-label">${prodPrice}</div>` : ''}
           </div>
         `;
       }
@@ -6567,7 +6572,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
                 max-height: ${stickerH};
                 min-width: ${stickerW};
                 min-height: ${stickerH};
-                padding: 0.04in 0.05in;
+                padding: 0.04in 0.08in;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
@@ -6589,20 +6594,22 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
               text-transform: uppercase;
               color: #000;
               line-height: 1;
+              text-align: center;
+              width: 100%;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
-              width: 100%;
             }
             .product-title {
               font-size: 7.5pt;
               font-weight: 700;
               color: #000;
               line-height: 1.05;
+              text-align: center;
+              width: 100%;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
-              width: 100%;
               margin: 1px 0;
             }
             .barcode-wrapper {
@@ -6610,32 +6617,32 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
               display: flex;
               justify-content: center;
               align-items: center;
+              text-align: center;
               overflow: hidden;
               margin: 1px 0;
             }
             .barcode-wrapper svg {
-              max-height: 28px;
-              width: 95%;
+              max-height: 24px;
+              max-width: 88%;
+              margin: 0 auto;
               display: block;
             }
-            .bottom-info {
-              width: 100%;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 0 1px;
-              line-height: 1;
-            }
             .sku-label {
-              font-size: 7pt;
+              font-size: 7.5pt;
               font-family: monospace;
               font-weight: bold;
               color: #000;
+              text-align: center;
+              width: 100%;
+              line-height: 1;
             }
             .price-label {
-              font-size: 8.5pt;
+              font-size: 9pt;
               font-weight: 900;
               color: #000;
+              text-align: center;
+              width: 100%;
+              line-height: 1.1;
             }
           </style>
         </head>
@@ -6655,8 +6662,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           if (svgEl && window.JsBarcode) {
             window.JsBarcode(svgEl, code, {
               format: "CODE128",
-              width: 1.15,
-              height: 28,
+              width: 1.05,
+              height: 24,
               displayValue: false,
               margin: 0
             });
@@ -10076,7 +10083,102 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       openModal('modal-supabase');
     }
 
+    // ============================================================
+    // --- STORE & BUSINESS PROFILE MANAGEMENT ---
+    // ============================================================
+    let storeProfile = {
+      name: 'RTR Pos & Erp enterprise',
+      phone: '+880 1800-000000',
+      currency: '৳ (BDT)',
+      address: 'Tejgaon Commercial Area, Dhaka - 1208, Bangladesh'
+    };
+
+    function loadStoreProfile() {
+      const saved = localStorage.getItem('rtr_store_profile') || localStorage.getItem('apex_store_profile');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            storeProfile = { ...storeProfile, ...parsed };
+          }
+        } catch (e) {
+          console.warn('Error parsing store profile:', e);
+        }
+      }
+
+      // Populate Settings Inputs
+      const nameInput = document.getElementById('store-name-input');
+      const phoneInput = document.getElementById('store-phone-input');
+      const currInput = document.getElementById('store-currency-input');
+      const addrInput = document.getElementById('store-address-input');
+
+      if (nameInput) nameInput.value = storeProfile.name;
+      if (phoneInput) phoneInput.value = storeProfile.phone;
+      if (currInput) currInput.value = storeProfile.currency;
+      if (addrInput) addrInput.value = storeProfile.address;
+
+      applyStoreProfileUI();
+    }
+
+    function applyStoreProfileUI() {
+      // 1. Update Document Title
+      document.title = `${storeProfile.name} - Cloud Suite`;
+
+      // 2. Update Sidebar Brand Name
+      const sideBrand = document.getElementById('sidebar-brand-name');
+      if (sideBrand) sideBrand.innerText = storeProfile.name;
+
+      // 3. Update Login Brand Title & Watermark
+      const loginBrand = document.getElementById('login-brand-title');
+      if (loginBrand) loginBrand.innerText = storeProfile.name;
+      const watermark = document.getElementById('login-watermark-text');
+      if (watermark) watermark.innerText = storeProfile.name;
+
+      // 4. Update Receipt Template Store Header
+      const recStore = document.getElementById('rec-store-name');
+      if (recStore) recStore.innerText = storeProfile.name;
+      const recAddrPhone = document.getElementById('rec-store-address-phone');
+      if (recAddrPhone) recAddrPhone.innerText = `${storeProfile.address} • Hotline: ${storeProfile.phone}`;
+
+      // 5. Update Barcode Modal Store Label
+      const bcStoreLabel = document.getElementById('bc-store-name-label');
+      if (bcStoreLabel) bcStoreLabel.innerText = storeProfile.name;
+    }
+
+    function handleSaveStoreProfile(e) {
+      if (e) e.preventDefault();
+
+      const name = document.getElementById('store-name-input')?.value.trim() || 'RTR Pos & Erp enterprise';
+      const phone = document.getElementById('store-phone-input')?.value.trim() || '+880 1800-000000';
+      const currency = document.getElementById('store-currency-input')?.value.trim() || '৳ (BDT)';
+      const address = document.getElementById('store-address-input')?.value.trim() || 'Dhaka, Bangladesh';
+
+      storeProfile = { name, phone, currency, address };
+      localStorage.setItem('rtr_store_profile', JSON.stringify(storeProfile));
+      localStorage.setItem('apex_store_profile', JSON.stringify(storeProfile));
+
+      if (supabaseClient) {
+        try {
+          supabaseClient.from('settings').upsert([{ key: 'store_profile', value: storeProfile }]).then();
+        } catch (err) {
+          console.warn('Supabase settings sync error:', err);
+        }
+      }
+
+      applyStoreProfileUI();
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Business Profile Updated! (স্টোর প্রোফাইল সংরক্ষিত)',
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
+
     // Initial Setup
+    loadStoreProfile();
     populateCategoryFilters();
     populatePosSalesEmployees();
   </script>
