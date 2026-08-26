@@ -878,6 +878,59 @@
             </div>
           </div>
 
+          <!-- Branch-Specific Stock Valuation & Quantity KPI Metric Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- 1. Total Stock Units -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-amber-300 transition">
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Stock Quantity (মোট স্টক)</span>
+                <h3 id="prd-summary-total-qty" class="text-2xl font-black text-slate-900 mt-0.5 font-heading">0 pcs</h3>
+                <span id="prd-summary-branch-label" class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-amber-200">Selected Branch</span>
+              </div>
+              <div class="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-boxes-stacked"></i>
+              </div>
+            </div>
+
+            <!-- 2. Total Purchase Cost Valuation -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-emerald-300 transition">
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Stock Value (ক্রয়মূল্য ইনভেস্টমেন্ট)</span>
+                <h3 id="prd-summary-cost-value" class="text-2xl font-black text-emerald-700 mt-0.5 font-heading">৳ 0</h3>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-emerald-200">Cost Valuation</span>
+              </div>
+              <div class="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-sack-dollar"></i>
+              </div>
+            </div>
+
+            <!-- 3. Total Retail Sale Worth -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-indigo-300 transition">
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Retail Worth (সম্ভাব্য বিক্রয়মূল্য)</span>
+                <h3 id="prd-summary-retail-value" class="text-2xl font-black text-indigo-700 mt-0.5 font-heading">৳ 0</h3>
+                <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-indigo-200">Expected Sales</span>
+              </div>
+              <div class="w-11 h-11 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-cash-register"></i>
+              </div>
+            </div>
+
+            <!-- 4. Estimated Stock Gross Profit Margin -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-purple-300 transition">
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Potential Profit (সম্ভাব্য মোট লাভ)</span>
+                <h3 id="prd-summary-profit-value" class="text-2xl font-black text-purple-700 mt-0.5 font-heading">৳ 0</h3>
+                <span id="prd-summary-margin-percent" class="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-purple-200">Margin: 0%</span>
+              </div>
+              <div class="w-11 h-11 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+            </div>
+
+          </div>
+
           <!-- Products Table -->
           <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             <div class="overflow-x-auto">
@@ -897,6 +950,20 @@
                 <tbody id="products-table-body">
                   <!-- Injected via JS -->
                 </tbody>
+                <tfoot class="bg-slate-50 font-bold border-t-2 border-slate-200 text-xs text-slate-800">
+                  <tr>
+                    <td class="px-6 py-3.5" colspan="3">
+                      <span class="font-black text-slate-900">Total Summary (সারসংক্ষেপ):</span>
+                      <span id="prd-table-total-items-badge" class="ml-2 text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">0 Products</span>
+                    </td>
+                    <td class="px-6 py-3.5 font-black text-slate-700" id="prd-table-total-cost">৳ 0</td>
+                    <td class="px-6 py-3.5 font-black text-emerald-700" id="prd-table-total-sale">৳ 0</td>
+                    <td class="px-6 py-3.5 font-black text-slate-900" id="prd-table-total-qty">0 units</td>
+                    <td class="px-6 py-3.5 text-center" colspan="2">
+                      <span id="prd-table-profit-badge" class="text-[10px] font-black text-purple-800 bg-purple-100 px-2.5 py-1 rounded-full">Profit: ৳ 0</span>
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>
@@ -5463,8 +5530,19 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       const isAdmin = !currentUser || currentUser.role === 'Admin';
 
+      let totalStockUnits = 0;
+      let totalCostValue = 0;
+      let totalRetailValue = 0;
+
       tbody.innerHTML = filtered.map(p => {
         const branchStock = getProductBranchStock(p, currentBranchId);
+        const buyPrice = Number(p.purchase_price) || 0;
+        const sellPrice = Number(p.sale_price) || 0;
+
+        totalStockUnits += branchStock;
+        totalCostValue += (branchStock * buyPrice);
+        totalRetailValue += (branchStock * sellPrice);
+
         const isOutOfStock = branchStock <= 0;
         const isLow = branchStock > 0 && branchStock <= 5;
         const statusBadge = isOutOfStock
@@ -5484,8 +5562,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
             </td>
             <td class="px-6 py-3.5 font-bold text-indigo-600 font-mono">${p.product_code}</td>
             <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded-md bg-slate-100 font-semibold">${p.category}</span></td>
-            <td class="px-6 py-3.5 font-semibold text-slate-600">৳ ${p.purchase_price}</td>
-            <td class="px-6 py-3.5 font-black text-emerald-600">৳ ${p.sale_price}</td>
+            <td class="px-6 py-3.5 font-semibold text-slate-600">৳ ${buyPrice.toLocaleString()}</td>
+            <td class="px-6 py-3.5 font-black text-emerald-600">৳ ${sellPrice.toLocaleString()}</td>
             <td class="px-6 py-3.5">
               <div class="font-black text-slate-800">${branchStock} units</div>
               <div class="text-[10px] text-indigo-600 font-bold">${currentBranchId === 'ALL' ? 'All Locations' : getBranchName(currentBranchId)}</div>
@@ -5501,6 +5579,38 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           </tr>
         `;
       }).join('') || '<tr><td colspan="8" class="text-center py-6 text-slate-400">কোনো পণ্য পাওয়া যায়নি</td></tr>';
+
+      // Update Metric KPI Summary Cards
+      const totalProfitPotential = totalRetailValue - totalCostValue;
+      const marginPct = totalRetailValue > 0 ? Math.round((totalProfitPotential / totalRetailValue) * 100) : 0;
+      const bName = (currentBranchId === 'ALL' || !currentBranchId) ? 'All Branches Consolidated' : getBranchName(currentBranchId);
+
+      const elTotalQty = document.getElementById('prd-summary-total-qty');
+      const elCostVal = document.getElementById('prd-summary-cost-value');
+      const elRetailVal = document.getElementById('prd-summary-retail-value');
+      const elProfitVal = document.getElementById('prd-summary-profit-value');
+      const elBranchLabel = document.getElementById('prd-summary-branch-label');
+      const elMarginLabel = document.getElementById('prd-summary-margin-percent');
+
+      if (elTotalQty) elTotalQty.innerText = `${totalStockUnits.toLocaleString()} pcs`;
+      if (elCostVal) elCostVal.innerText = `৳ ${totalCostValue.toLocaleString()}`;
+      if (elRetailVal) elRetailVal.innerText = `৳ ${totalRetailValue.toLocaleString()}`;
+      if (elProfitVal) elProfitVal.innerText = `৳ ${totalProfitPotential.toLocaleString()}`;
+      if (elBranchLabel) elBranchLabel.innerText = `${bName} (${filtered.length} Items)`;
+      if (elMarginLabel) elMarginLabel.innerText = `Potential Profit Margin: ${marginPct}%`;
+
+      // Update Table Footer Summary Row
+      const elTableItemsBadge = document.getElementById('prd-table-total-items-badge');
+      const elTableCost = document.getElementById('prd-table-total-cost');
+      const elTableSale = document.getElementById('prd-table-total-sale');
+      const elTableQty = document.getElementById('prd-table-total-qty');
+      const elTableProfitBadge = document.getElementById('prd-table-profit-badge');
+
+      if (elTableItemsBadge) elTableItemsBadge.innerText = `${filtered.length} Products`;
+      if (elTableCost) elTableCost.innerText = `৳ ${totalCostValue.toLocaleString()}`;
+      if (elTableSale) elTableSale.innerText = `৳ ${totalRetailValue.toLocaleString()}`;
+      if (elTableQty) elTableQty.innerText = `${totalStockUnits.toLocaleString()} units`;
+      if (elTableProfitBadge) elTableProfitBadge.innerText = `Profit: ৳ ${totalProfitPotential.toLocaleString()}`;
     }
 
     function openAddProductModal() {
