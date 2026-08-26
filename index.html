@@ -4596,6 +4596,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       let totalRevenue = 0;
       let totalDiscount = 0;
       let totalCostOfGoods = 0;
+      let totalProfit = 0;
       let totalCashSales = 0;
       let totalCardAndDigitalSales = 0;
       const todayStr = new Date().toISOString().split('T')[0];
@@ -4613,16 +4614,35 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           todayOrders++;
         }
 
-        // Calculate Cost of Goods Sold for this invoice
+        // Calculate Cost and Net Profit per invoice (supporting regular sales and exchange returns)
         let invoiceCost = 0;
+        let invoiceGrossProfit = 0;
+
         (s.items || []).forEach(item => {
           const prod = productsData.find(p => p.id === item.product_id || p.product_code === item.product_code);
-          const unitBuyCost = prod ? (Number(prod.purchase_price) || 0) : 0;
-          const qty = Number(item.qty) || 0;
-          invoiceCost += (unitBuyCost * qty);
+          let unitBuyCost = Number(item.purchase_price);
+          if (isNaN(unitBuyCost) || unitBuyCost <= 0) {
+            unitBuyCost = prod && prod.purchase_price ? Number(prod.purchase_price) : (Number(item.price) * 0.65);
+          }
+          const unitSalePrice = Number(item.price) || 0;
+          const qty = Number(item.qty) || 1;
+          const isRet = item.is_return || unitSalePrice < 0;
+
+          if (isRet) {
+            // Returned item: stock and cost returns to store
+            invoiceCost -= (unitBuyCost * Math.abs(qty));
+            invoiceGrossProfit -= (Math.abs(unitSalePrice) - unitBuyCost) * Math.abs(qty);
+          } else {
+            // Newly sold item
+            invoiceCost += (unitBuyCost * Math.abs(qty));
+            invoiceGrossProfit += (unitSalePrice - unitBuyCost) * Math.abs(qty);
+          }
         });
 
-        totalCostOfGoods += invoiceCost;
+        // Net Profit = Gross item profit minus authorized discount
+        const invoiceNetProfit = invoiceGrossProfit - disc;
+        totalProfit += invoiceNetProfit;
+        totalCostOfGoods += Math.max(0, invoiceCost);
 
         // Payment Method breakdown (Cash vs Card/Digital)
         const pay = (s.payment_method || 'Cash').toLowerCase();
@@ -4642,8 +4662,9 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         }
       });
 
-      const netProfit = totalRevenue - totalCostOfGoods;
-      const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
+      // If no cost was recorded or profit exceeded bounds, align totalCostOfGoods with revenue - profit
+      if (totalProfit > totalRevenue) totalProfit = Math.max(0, totalRevenue - totalCostOfGoods);
+      const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0;
       const cashPercent = totalRevenue > 0 ? ((totalCashSales / totalRevenue) * 100).toFixed(0) : 0;
       const cardPercent = totalRevenue > 0 ? ((totalCardAndDigitalSales / totalRevenue) * 100).toFixed(0) : 0;
 
@@ -4669,13 +4690,23 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       if (elTodaySales) elTodaySales.innerText = `৳ ${todaySales.toLocaleString()}`;
       if (elTodayOrders) elTodayOrders.innerText = `${todayOrders} Invoices completed today`;
-      if (elNetProfit) elNetProfit.innerText = `৳ ${netProfit.toLocaleString()}`;
+      
+      if (elNetProfit) {
+        if (totalProfit >= 0) {
+          elNetProfit.innerText = `৳ ${Math.round(totalProfit).toLocaleString()}`;
+          elNetProfit.className = 'text-2xl font-black text-emerald-600 mt-1 font-heading';
+        } else {
+          elNetProfit.innerText = `-৳ ${Math.abs(Math.round(totalProfit)).toLocaleString()}`;
+          elNetProfit.className = 'text-2xl font-black text-rose-600 mt-1 font-heading';
+        }
+      }
+
       if (elProfitMargin) elProfitMargin.innerText = `${profitMargin}% Profit Margin`;
       if (elCashSales) elCashSales.innerText = `৳ ${totalCashSales.toLocaleString()}`;
       if (elCashPercent) elCashPercent.innerText = `${cashPercent}% of total revenue`;
       if (elCardSales) elCardSales.innerText = `৳ ${totalCardAndDigitalSales.toLocaleString()}`;
       if (elCardPercent) elCardPercent.innerText = `${cardPercent}% (Card / bKash / Nagad)`;
-      if (elCostGoods) elCostGoods.innerText = `৳ ${totalCostOfGoods.toLocaleString()}`;
+      if (elCostGoods) elCostGoods.innerText = `৳ ${Math.round(totalCostOfGoods).toLocaleString()}`;
       if (elCostSubtitle) elCostSubtitle.innerText = `Total buying cost of sold items`;
       if (elTotalDiscount) elTotalDiscount.innerText = `৳ ${totalDiscount.toLocaleString()}`;
       if (elDiscountSubtitle) elDiscountSubtitle.innerText = `Total authorized discounts`;
