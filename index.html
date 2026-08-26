@@ -5919,9 +5919,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
             </td>
             <td class="px-6 py-3.5 text-center bg-emerald-50/30">
               <div class="inline-flex items-center space-x-1.5">
-                <button type="button" onclick="adjustAuditManualCount(${p.id}, -1)" class="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition cursor-pointer">-</button>
-                <span class="font-black text-emerald-800 text-sm min-w-[28px] text-center">${r.physicalCount}</span>
-                <button type="button" onclick="adjustAuditManualCount(${p.id}, 1)" class="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition cursor-pointer">+</button>
+                <button type="button" onclick="adjustAuditManualCount(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-bold text-xs flex items-center justify-center transition shadow-2xs cursor-pointer" title="১ পিস কমান">
+                  <i class="fa-solid fa-minus text-[10px]"></i>
+                </button>
+                <input type="number" min="0" value="${r.physicalCount}" onchange="setAuditManualCount(${p.id}, this.value)" class="w-14 text-center font-black text-emerald-800 text-sm bg-white border border-slate-300 rounded-lg py-1 outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs" title="সরাসরি টাইপ করুন">
+                <button type="button" onclick="adjustAuditManualCount(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 text-slate-600 font-bold text-xs flex items-center justify-center transition shadow-2xs cursor-pointer" title="১ পিস বাড়ান">
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                </button>
               </div>
             </td>
             <td class="px-6 py-3.5 text-center">${varianceText}</td>
@@ -5939,6 +5943,14 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const current = inventoryAuditState.scannedCounts[prodId] !== undefined ? inventoryAuditState.scannedCounts[prodId] : (getProductBranchStock(productsData.find(p => p.id === prodId), currentBranchId));
       const next = Math.max(0, current + delta);
       inventoryAuditState.scannedCounts[prodId] = next;
+      inventoryAuditState.lastScannedId = prodId;
+      renderInventoryAuditTable();
+    }
+
+    function setAuditManualCount(prodId, val) {
+      inventoryAuditState.isAuditActive = true;
+      const count = Math.max(0, parseInt(val, 10) || 0);
+      inventoryAuditState.scannedCounts[prodId] = count;
       inventoryAuditState.lastScannedId = prodId;
       renderInventoryAuditTable();
     }
