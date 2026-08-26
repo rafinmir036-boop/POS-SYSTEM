@@ -418,54 +418,102 @@
         <!-- ============================================================ -->
         <section id="sec-dashboard" class="space-y-6">
           
-          <!-- Key Metrics Grid -->
+          <!-- Key Metrics Grid: 8 Comprehensive Executive Cards -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            <!-- Metric 1: Total Sales -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <!-- 1. Today's Sales -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-indigo-200 transition">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Today's Sales</span>
-                <h3 id="dash-today-sales" class="text-2xl font-black text-slate-900 mt-1">৳ 0</h3>
-                <span id="dash-today-orders" class="text-[11px] font-bold text-emerald-600 mt-1 inline-block">0 Invoices completed</span>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Today's Sales (আজকের বিক্রয়)</span>
+                <h3 id="dash-today-sales" class="text-2xl font-black text-slate-900 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-today-orders" class="text-[11px] font-bold text-indigo-600 mt-1 inline-block">0 Invoices completed</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold shadow-2xs">
                 <i class="fa-solid fa-cash-register"></i>
               </div>
             </div>
 
-            <!-- Metric 2: Total Revenue -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <!-- 2. Net Profit -->
+            <div class="bg-white p-5 rounded-2xl border border-emerald-100 bg-emerald-50/20 shadow-xs flex items-center justify-between hover:border-emerald-300 transition">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue</span>
-                <h3 id="dash-total-revenue" class="text-2xl font-black text-indigo-600 mt-1">৳ 0</h3>
-                <span class="text-[11px] font-bold text-indigo-500 mt-1 inline-block">Lifetime Sales</span>
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Net Profit (নিট লাভ)</span>
+                <h3 id="dash-net-profit" class="text-2xl font-black text-emerald-600 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-profit-margin" class="text-[11px] font-bold text-emerald-700 mt-1 inline-block">0% Profit Margin</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold shadow-2xs">
+                <i class="fa-solid fa-sack-dollar"></i>
+              </div>
+            </div>
+
+            <!-- 3. Cash Sales -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-emerald-200 transition">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cash Sales (নগদ বিক্রয়)</span>
+                <h3 id="dash-cash-sales" class="text-2xl font-black text-slate-900 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-cash-percent" class="text-[11px] font-bold text-emerald-600 mt-1 inline-block">0% of total revenue</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+                <i class="fa-solid fa-money-bill-wave"></i>
+              </div>
+            </div>
+
+            <!-- 4. Card & Digital Sales -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-sky-200 transition">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Card / Digital (ডিজিটাল বিক্রয়)</span>
+                <h3 id="dash-card-sales" class="text-2xl font-black text-sky-700 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-card-percent" class="text-[11px] font-bold text-sky-600 mt-1 inline-block">Card, bKash, Nagad</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+                <i class="fa-solid fa-credit-card"></i>
+              </div>
+            </div>
+
+            <!-- 5. Product Purchase Cost -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-amber-200 transition">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Cost (ক্রয় খরচ)</span>
+                <h3 id="dash-cost-goods" class="text-2xl font-black text-slate-800 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-cost-subtitle" class="text-[11px] font-bold text-amber-600 mt-1 inline-block">Cost of goods sold</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+            </div>
+
+            <!-- 6. Total Discounts Given -->
+            <div class="bg-white p-5 rounded-2xl border border-rose-100 bg-rose-50/20 shadow-xs flex items-center justify-between hover:border-rose-300 transition">
+              <div>
+                <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Total Discount (মোট ছাড়)</span>
+                <h3 id="dash-total-discount" class="text-2xl font-black text-rose-600 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-discount-subtitle" class="text-[11px] font-bold text-rose-500 mt-1 inline-block">Discounts authorized</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+                <i class="fa-solid fa-tags"></i>
+              </div>
+            </div>
+
+            <!-- 7. Lifetime Revenue -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-indigo-200 transition">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue (সর্বমোট বিক্রয়)</span>
+                <h3 id="dash-total-revenue" class="text-2xl font-black text-indigo-600 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-total-invoices-count" class="text-[11px] font-bold text-indigo-500 mt-1 inline-block">Lifetime sales volume</span>
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold shadow-2xs">
                 <i class="fa-solid fa-chart-line"></i>
               </div>
             </div>
 
-            <!-- Metric 3: Products in Stock -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <!-- 8. Inventory & Stock Status -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-purple-200 transition">
               <div>
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Inventory & Stock</span>
-                <h3 id="dash-total-products" class="text-2xl font-black text-slate-900 mt-1">0</h3>
+                <h3 id="dash-total-products" class="text-2xl font-black text-slate-900 mt-1 font-heading">0 items</h3>
                 <span id="dash-low-stock-count" class="text-[11px] font-bold text-rose-500 mt-1 inline-block">0 Low stock alerts</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
-                <i class="fa-solid fa-box-open"></i>
-              </div>
-            </div>
-
-            <!-- Metric 4: Active Employees -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
-              <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Employees</span>
-                <h3 id="dash-total-employees" class="text-2xl font-black text-purple-600 mt-1">0</h3>
-                <span class="text-[11px] font-bold text-slate-400 mt-1 inline-block">HR & Staff</span>
-              </div>
-              <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold">
-                <i class="fa-solid fa-users"></i>
+              <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+                <i class="fa-solid fa-boxes-stacked"></i>
               </div>
             </div>
 
@@ -4546,30 +4594,100 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       let todaySales = 0;
       let todayOrders = 0;
       let totalRevenue = 0;
+      let totalDiscount = 0;
+      let totalCostOfGoods = 0;
+      let totalCashSales = 0;
+      let totalCardAndDigitalSales = 0;
       const todayStr = new Date().toISOString().split('T')[0];
 
-      salesData.forEach(s => {
+      const relevantSales = salesData.filter(s => currentBranchId === 'ALL' || s.branch_id == currentBranchId);
+
+      relevantSales.forEach(s => {
         const amt = Number(s.total_amount) || 0;
+        const disc = Number(s.discount) || 0;
         totalRevenue += amt;
+        totalDiscount += disc;
+
         if (s.sale_date && s.sale_date.startsWith(todayStr)) {
           todaySales += amt;
           todayOrders++;
         }
+
+        // Calculate Cost of Goods Sold for this invoice
+        let invoiceCost = 0;
+        (s.items || []).forEach(item => {
+          const prod = productsData.find(p => p.id === item.product_id || p.product_code === item.product_code);
+          const unitBuyCost = prod ? (Number(prod.purchase_price) || 0) : 0;
+          const qty = Number(item.qty) || 0;
+          invoiceCost += (unitBuyCost * qty);
+        });
+
+        totalCostOfGoods += invoiceCost;
+
+        // Payment Method breakdown (Cash vs Card/Digital)
+        const pay = (s.payment_method || 'Cash').toLowerCase();
+        if (pay.includes('cash') && !pay.includes('card') && !pay.includes('bkash') && !pay.includes('nagad') && !pay.includes('rocket')) {
+          totalCashSales += amt;
+        } else if (pay.includes('card') || pay.includes('bkash') || pay.includes('nagad') || pay.includes('rocket') || pay.includes('bank') || pay.includes('pos')) {
+          if (pay.startsWith('split') || pay.includes('+')) {
+            const cashMatch = pay.match(/cash:\s*৳?([\d,]+)/i);
+            const cashPart = cashMatch ? Number(cashMatch[1].replace(/,/g, '')) : 0;
+            totalCashSales += cashPart;
+            totalCardAndDigitalSales += Math.max(0, amt - cashPart);
+          } else {
+            totalCardAndDigitalSales += amt;
+          }
+        } else {
+          totalCashSales += amt;
+        }
       });
 
-      const lowStockCount = productsData.filter(p => p.stock <= 5).length;
+      const netProfit = totalRevenue - totalCostOfGoods;
+      const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
+      const cashPercent = totalRevenue > 0 ? ((totalCashSales / totalRevenue) * 100).toFixed(0) : 0;
+      const cardPercent = totalRevenue > 0 ? ((totalCardAndDigitalSales / totalRevenue) * 100).toFixed(0) : 0;
 
-      document.getElementById('dash-today-sales').innerText = `৳ ${todaySales.toLocaleString()}`;
-      document.getElementById('dash-today-orders').innerText = `${todayOrders} Invoices completed today`;
-      document.getElementById('dash-total-revenue').innerText = `৳ ${totalRevenue.toLocaleString()}`;
-      document.getElementById('dash-total-products').innerText = `${productsData.length} items`;
-      document.getElementById('dash-low-stock-count').innerText = `${lowStockCount} Low stock items`;
-      document.getElementById('dash-total-employees').innerText = `${employeesData.filter(e => e.status === 'Active').length} Active`;
+      const lowStockCount = productsData.filter(p => getProductBranchStock(p, currentBranchId) <= 5).length;
+
+      // Update Dashboard Metric Cards
+      const elTodaySales = document.getElementById('dash-today-sales');
+      const elTodayOrders = document.getElementById('dash-today-orders');
+      const elNetProfit = document.getElementById('dash-net-profit');
+      const elProfitMargin = document.getElementById('dash-profit-margin');
+      const elCashSales = document.getElementById('dash-cash-sales');
+      const elCashPercent = document.getElementById('dash-cash-percent');
+      const elCardSales = document.getElementById('dash-card-sales');
+      const elCardPercent = document.getElementById('dash-card-percent');
+      const elCostGoods = document.getElementById('dash-cost-goods');
+      const elCostSubtitle = document.getElementById('dash-cost-subtitle');
+      const elTotalDiscount = document.getElementById('dash-total-discount');
+      const elDiscountSubtitle = document.getElementById('dash-discount-subtitle');
+      const elTotalRevenue = document.getElementById('dash-total-revenue');
+      const elTotalInvoicesCount = document.getElementById('dash-total-invoices-count');
+      const elTotalProducts = document.getElementById('dash-total-products');
+      const elLowStockCount = document.getElementById('dash-low-stock-count');
+
+      if (elTodaySales) elTodaySales.innerText = `৳ ${todaySales.toLocaleString()}`;
+      if (elTodayOrders) elTodayOrders.innerText = `${todayOrders} Invoices completed today`;
+      if (elNetProfit) elNetProfit.innerText = `৳ ${netProfit.toLocaleString()}`;
+      if (elProfitMargin) elProfitMargin.innerText = `${profitMargin}% Profit Margin`;
+      if (elCashSales) elCashSales.innerText = `৳ ${totalCashSales.toLocaleString()}`;
+      if (elCashPercent) elCashPercent.innerText = `${cashPercent}% of total revenue`;
+      if (elCardSales) elCardSales.innerText = `৳ ${totalCardAndDigitalSales.toLocaleString()}`;
+      if (elCardPercent) elCardPercent.innerText = `${cardPercent}% (Card / bKash / Nagad)`;
+      if (elCostGoods) elCostGoods.innerText = `৳ ${totalCostOfGoods.toLocaleString()}`;
+      if (elCostSubtitle) elCostSubtitle.innerText = `Total buying cost of sold items`;
+      if (elTotalDiscount) elTotalDiscount.innerText = `৳ ${totalDiscount.toLocaleString()}`;
+      if (elDiscountSubtitle) elDiscountSubtitle.innerText = `Total authorized discounts`;
+      if (elTotalRevenue) elTotalRevenue.innerText = `৳ ${totalRevenue.toLocaleString()}`;
+      if (elTotalInvoicesCount) elTotalInvoicesCount.innerText = `${relevantSales.length} Total Invoices recorded`;
+      if (elTotalProducts) elTotalProducts.innerText = `${productsData.length} items`;
+      if (elLowStockCount) elLowStockCount.innerText = `${lowStockCount} Low stock alerts`;
 
       // Render Recent Invoices
       const tbody = document.getElementById('dash-recent-sales-body');
       if (tbody) {
-        const recent = salesData.slice(0, 5);
+        const recent = relevantSales.slice(0, 5);
         tbody.innerHTML = recent.map(s => `
           <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
             <td class="px-6 py-3.5 font-bold text-indigo-600">${s.invoice_no}</td>
