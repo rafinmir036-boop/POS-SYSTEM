@@ -555,7 +555,11 @@
                   </select>
                   <button type="button" onclick="openGlobalStockModal()" title="Check stock in all branches" class="py-2.5 px-3.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shrink-0">
                     <i class="fa-solid fa-magnifying-glass-location"></i>
-                    <span>All Branch Stocks</span>
+                    <span>All Stocks</span>
+                  </button>
+                  <button type="button" onclick="openProductExchangeModal()" title="Exchange product against invoice" class="py-2.5 px-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs shadow-md shadow-amber-500/20 transition flex items-center space-x-1.5 cursor-pointer shrink-0">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Exchange (বিনিময়)</span>
                   </button>
                 </div>
               </div>
@@ -578,9 +582,14 @@
                   </h3>
                   <p class="text-[11px] text-slate-400 font-medium" id="pos-cart-count">0 items added</p>
                 </div>
-                <button onclick="clearPosCart()" class="text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition">
-                  <i class="fa-solid fa-trash-can mr-1"></i>Clear
-                </button>
+                <div class="flex items-center space-x-1.5">
+                  <button type="button" onclick="openProductExchangeModal()" class="text-xs font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 transition flex items-center space-x-1 cursor-pointer">
+                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i><span>Exchange</span>
+                  </button>
+                  <button onclick="clearPosCart()" class="text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                    <i class="fa-solid fa-trash-can mr-1"></i>Clear
+                  </button>
+                </div>
               </div>
 
               <!-- Sales Employee Selection -->
@@ -2468,6 +2477,186 @@
           Close
         </button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- 8. PRODUCT EXCHANGE & RETURN MODAL -->
+  <!-- ============================================================ -->
+  <div id="modal-product-exchange" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[94vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-lg shadow-md shadow-amber-500/20">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 font-heading">POS Product Exchange & Return (পণ্য বিনিময়)</h3>
+            <p class="text-[11px] text-slate-500 font-medium">ইনভয়েস নম্বর দিয়ে পুরাতন পণ্য বাছাই করুন এবং নতুন পণ্যের সাথে এক্সচেঞ্জ চালান তৈরি করুন</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-product-exchange')" class="text-slate-400 hover:text-slate-700 cursor-pointer text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- STEP 1: Search Invoice Section -->
+      <div class="p-4 bg-gradient-to-r from-amber-50/70 via-orange-50/50 to-slate-50 rounded-2xl border border-amber-200/80 space-y-3">
+        <div class="flex justify-between items-center">
+          <label class="font-black text-slate-800 text-xs flex items-center space-x-1.5 font-heading">
+            <i class="fa-solid fa-file-invoice text-amber-600"></i>
+            <span>Step 1: Search Original Invoice (মূল চালান নম্বর লিখুন বা স্ক্যান করুন) *</span>
+          </label>
+          <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded-md">Invoice Lookup</span>
+        </div>
+
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-amber-500 text-xs"></i>
+            <input type="text" id="exchange-search-invoice" onkeydown="if(event.key==='Enter'){event.preventDefault();searchInvoiceForExchange();}" placeholder="e.g. INV-20260825-001 or Customer Phone 017..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-amber-300 rounded-xl font-bold text-xs text-slate-900 outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs">
+          </div>
+          <button type="button" onclick="searchInvoiceForExchange()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer shrink-0">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Find Invoice</span>
+          </button>
+        </div>
+
+        <!-- Invoice Meta Summary Card (Shown when invoice found) -->
+        <div id="exchange-invoice-meta" class="hidden bg-white p-3 rounded-xl border border-amber-200 text-xs space-y-2">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pb-2 border-b border-slate-100">
+            <div>
+              <span class="text-slate-400 font-bold block text-[9px] uppercase">Invoice No</span>
+              <b id="ex-meta-inv-no" class="font-mono text-indigo-700 font-black">-</b>
+            </div>
+            <div>
+              <span class="text-slate-400 font-bold block text-[9px] uppercase">Customer</span>
+              <b id="ex-meta-customer" class="text-slate-800 font-bold">-</b>
+            </div>
+            <div>
+              <span class="text-slate-400 font-bold block text-[9px] uppercase">Date & Branch</span>
+              <span id="ex-meta-date" class="text-slate-600 font-medium">-</span>
+            </div>
+            <div>
+              <span class="text-slate-400 font-bold block text-[9px] uppercase">Original Total</span>
+              <b id="ex-meta-total" class="text-emerald-700 font-black">৳ 0</b>
+            </div>
+          </div>
+
+          <!-- Items Selection Prompt -->
+          <div>
+            <span class="text-[11px] font-black text-slate-700 block mb-1.5">
+              👇 Select the item customer wants to RETURN (যে পণ্যটি ফেরত দিতে চায় সিলেক্ট করুন):
+            </span>
+            <div id="exchange-purchased-items-container" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Choose Replacement (New) Product -->
+      <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+        <div class="flex justify-between items-center">
+          <label class="font-black text-slate-800 text-xs flex items-center space-x-1.5 font-heading">
+            <i class="fa-solid fa-cart-flatbed-suitcase text-indigo-600"></i>
+            <span>Step 2: Select Replacement New Product (নতুন পণ্য স্ক্যান বা বাছাই করুন) *</span>
+          </label>
+          <span id="exchange-new-stock-badge" class="text-[10px] text-slate-600 font-bold bg-white px-2 py-0.5 rounded border border-slate-200">Current Stock</span>
+        </div>
+
+        <!-- Barcode Fast Scan Input -->
+        <div class="relative">
+          <i class="fa-solid fa-barcode absolute left-3.5 top-2.5 text-indigo-500 text-sm"></i>
+          <input type="text" id="exchange-barcode-input" onkeydown="handleExchangeBarcodeKey(event)" placeholder="Scan New Product Barcode / SKU and press Enter..." class="w-full pl-9 pr-4 py-2 bg-white border border-indigo-200 rounded-xl font-bold text-xs text-slate-900 outline-none focus:ring-2 focus:ring-indigo-400">
+        </div>
+
+        <!-- Dropdown & Image Manual Selector -->
+        <div class="flex gap-2 items-center">
+          <img id="exchange-new-product-img" src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=120" class="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=6366f1&color=fff'">
+          <select id="exchange-new-product-select" onchange="onExchangeNewProductChange()" class="flex-1 p-2 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-400">
+            <!-- Populated via JS -->
+          </select>
+          <div class="flex items-center space-x-1 bg-white p-1 rounded-xl border border-slate-200">
+            <span class="text-[10px] text-slate-400 font-bold pl-1">Qty:</span>
+            <input type="number" id="exchange-new-qty" min="1" value="1" oninput="calculateExchangeDifference()" class="w-12 text-center font-black text-xs outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Live Price Calculation & Business Rule Verification -->
+      <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+        <div class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center justify-between font-heading">
+          <span>Step 3: Exchange Calculation & Rule Engine (মূল্য হিসাব)</span>
+          <span class="text-[10px] font-bold text-slate-400">Policy: New Price &ge; Old Price</span>
+        </div>
+
+        <!-- 3-Box Comparison Matrix -->
+        <div class="grid grid-cols-3 gap-3 text-center text-xs">
+          <div class="p-3 bg-rose-50/70 rounded-xl border border-rose-200">
+            <span class="text-[10px] font-bold text-rose-700 block mb-0.5">(-) Return Credit (ফেরত মূল্য)</span>
+            <b id="exchange-credit-display" class="text-base font-black text-rose-700">৳ 0</b>
+          </div>
+          <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-200">
+            <span class="text-[10px] font-bold text-indigo-700 block mb-0.5">(+) New Item Price (নতুন পণ্যের মূল্য)</span>
+            <b id="exchange-new-price-display" class="text-base font-black text-indigo-700">৳ 0</b>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+            <span class="text-[10px] font-bold text-amber-800 block mb-0.5">(=) Difference to Pay (অতিরিক্ত প্রদেয়)</span>
+            <b id="exchange-diff-display" class="text-base font-black text-amber-900">৳ 0</b>
+          </div>
+        </div>
+
+        <!-- RULE VALIDATION WARNING (Shown if new price < old price) -->
+        <div id="exchange-rule-warning" class="hidden p-3 bg-rose-50 rounded-xl border border-rose-300 text-rose-800 text-xs flex items-start space-x-2">
+          <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base shrink-0 mt-0.5"></i>
+          <div>
+            <p class="font-bold">❌ এক্সচেঞ্জ শর্ত পূরণ হয়নি!</p>
+            <p class="text-[11px] text-rose-700 mt-0.5" id="exchange-rule-warning-text">
+              নতুন পণ্যের মূল্য অবশ্যই ফেরত পণ্যের মূল্যের সমান বা বেশি হতে হবে। কম মূল্যের পণ্যের সাথে এক্সচেঞ্জ করা যাবে না।
+            </p>
+          </div>
+        </div>
+
+        <!-- RULE SUCCESS BANNER -->
+        <div id="exchange-rule-success" class="hidden p-3 bg-emerald-50 rounded-xl border border-emerald-300 text-emerald-800 text-xs flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+            <span class="font-bold" id="exchange-rule-success-text">সঠিক মূল্য যাচাই সম্পন্ন হয়েছে।</span>
+          </div>
+          <span class="text-[10px] font-black uppercase bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">Eligible for Exchange</span>
+        </div>
+
+        <!-- Payment Breakdown for Difference (if diff > 0) -->
+        <div id="exchange-payment-section" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Difference Payment Method (পার্থক্য পরিশোধের মাধ্যম)</label>
+            <select id="exchange-pay-method" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+              <option value="Cash">💵 Cash (ক্যাশ টাকা)</option>
+              <option value="bKash">📱 bKash (বিকাশ)</option>
+              <option value="Card">💳 Card (কার্ড / ব্যাংক POS)</option>
+              <option value="Nagad">📲 Nagad (নগদ)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Exchange Note / Reason (বিনিময়ের কারণ/মন্তব্য)</label>
+            <input type="text" id="exchange-note" placeholder="e.g. Size mismatch / Color exchange" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="pt-2 flex justify-between items-center border-t border-slate-100">
+        <button type="button" onclick="closeModal('modal-product-exchange')" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+          Cancel (বাতিল)
+        </button>
+
+        <button type="button" id="btn-confirm-exchange" onclick="submitProductExchange()" class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/25 transition flex items-center space-x-2 cursor-pointer">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Confirm & Print Exchange Invoice (বিনিময় নিশ্চিত ও প্রিন্ট করুন)</span>
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -4532,32 +4721,46 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       const sale = salesData.find(s => s.invoice_no === invoiceNo);
       if (!sale) return;
 
+      const isExchange = sale.is_exchange || (sale.invoice_no && sale.invoice_no.startsWith('EXC-'));
       document.getElementById('rec-inv-no').innerText = sale.invoice_no;
       document.getElementById('rec-date').innerText = new Date(sale.sale_date).toLocaleString();
       document.getElementById('rec-customer').innerText = `${sale.customer_name} (${sale.customer_phone || ''})`;
       document.getElementById('rec-salesperson').innerText = sale.salesperson_name ? `${sale.salesperson_name} ${sale.employee_code ? `[${sale.employee_code}]` : ''}` : (sale.cashier_name || 'Admin');
       document.getElementById('rec-cashier').innerText = sale.cashier_name || 'Admin';
-      document.getElementById('rec-payment-method').innerText = sale.payment_method || 'Cash';
+      
+      let payText = sale.payment_method || 'Cash';
+      if (isExchange && sale.ref_invoice_no) {
+        payText += ` [Exchange Ref: ${sale.ref_invoice_no}]`;
+      }
+      document.getElementById('rec-payment-method').innerText = payText;
 
       const tbody = document.getElementById('rec-items-body');
       if (tbody) {
-        tbody.innerHTML = (sale.items || []).map(i => `
-          <tr class="border-b border-slate-100">
-            <td class="py-1 font-semibold">${i.product_name}</td>
-            <td class="py-1 text-center font-bold">${i.qty}</td>
-            <td class="py-1 text-right">৳ ${i.price}</td>
-            <td class="py-1 text-right font-black">৳ ${i.total}</td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = (sale.items || []).map(i => {
+          const isRet = i.is_return || i.price < 0;
+          const isExcNew = i.is_exchange_new;
+          return `
+            <tr class="border-b border-slate-100 ${isRet ? 'bg-rose-50/40' : isExcNew ? 'bg-emerald-50/40' : ''}">
+              <td class="py-1 font-semibold text-[10px]">
+                ${isRet ? '<span class="text-[8px] font-black text-rose-600 bg-rose-100 px-1 py-0.5 rounded mr-0.5">RETURN</span>' : ''}
+                ${isExcNew ? '<span class="text-[8px] font-black text-emerald-600 bg-emerald-100 px-1 py-0.5 rounded mr-0.5">NEW ITEM</span>' : ''}
+                ${i.product_name}
+              </td>
+              <td class="py-1 text-center font-bold">${i.qty}</td>
+              <td class="py-1 text-right font-mono ${isRet ? 'text-rose-600 font-bold' : ''}">${isRet ? `-৳ ${Math.abs(i.price)}` : `৳ ${i.price}`}</td>
+              <td class="py-1 text-right font-black font-mono ${isRet ? 'text-rose-600 font-black' : 'text-slate-900'}">${isRet ? `-৳ ${Math.abs(i.total)}` : `৳ ${i.total}`}</td>
+            </tr>
+          `;
+        }).join('');
       }
 
-      const sub = sale.subtotal || (sale.items || []).reduce((sum, i) => sum + i.total, 0);
+      const sub = sale.subtotal !== undefined ? sale.subtotal : (sale.items || []).reduce((sum, i) => sum + i.total, 0);
       document.getElementById('rec-subtotal').innerText = `৳ ${sub.toLocaleString()}`;
       document.getElementById('rec-discount').innerText = `-৳ ${(sale.discount || 0).toLocaleString()}`;
       if (document.getElementById('rec-tax-label')) {
         document.getElementById('rec-tax-label').innerText = `Tax / VAT (${sale.tax_rate !== undefined ? sale.tax_rate : 5}%):`;
       }
-      document.getElementById('rec-tax').innerText = `৳ ${(sale.tax || Math.round(sub * 0.05)).toLocaleString()}`;
+      document.getElementById('rec-tax').innerText = `৳ ${(sale.tax || 0).toLocaleString()}`;
       document.getElementById('rec-total').innerText = `৳ ${(Number(sale.total_amount) || 0).toLocaleString()}`;
 
       // Generate QR Code
@@ -4565,7 +4768,7 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       if (qrBox) {
         qrBox.innerHTML = '';
         new QRCode(qrBox, {
-          text: `ApexPOS\nInvoice: ${sale.invoice_no}\nSalesperson: ${sale.salesperson_name || 'Staff'}\nTotal: BDT ${sale.total_amount}\nPayment: ${sale.payment_method}`,
+          text: `ApexPOS\n${isExchange ? 'EXCHANGE INVOICE' : 'INVOICE'}: ${sale.invoice_no}\n${sale.ref_invoice_no ? `Ref: ${sale.ref_invoice_no}\n` : ''}Salesperson: ${sale.salesperson_name || 'Staff'}\nTotal Paid: BDT ${sale.total_amount}\nPayment: ${sale.payment_method}`,
           width: 80,
           height: 80
         });
@@ -5028,31 +5231,40 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         return matchSearch && matchPay;
       });
 
-      tbody.innerHTML = filtered.map(s => `
-        <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-          <td class="px-6 py-3.5 font-bold text-sky-600">${s.invoice_no}</td>
-          <td class="px-6 py-3.5">
-            <div class="font-bold text-slate-800">${s.customer_name || 'Walk-in'}</div>
-            <div class="text-[10px] text-slate-400">${s.customer_phone || ''}</div>
-          </td>
-          <td class="px-6 py-3.5 text-slate-500">${new Date(s.sale_date).toLocaleString()}</td>
-          <td class="px-6 py-3.5">
-            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold ${s.payment_method && s.payment_method.startsWith('Split') ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-sky-50 text-sky-700 border border-sky-200'} block max-w-[200px] truncate" title="${s.payment_method || 'Cash'}">
-              ${s.payment_method || 'Cash'}
-            </span>
-          </td>
-          <td class="px-6 py-3.5 font-black text-emerald-600 text-sm">৳ ${(Number(s.total_amount) || 0).toLocaleString()}</td>
-          <td class="px-6 py-3.5 text-slate-700">
-            <div class="font-bold text-indigo-700">${s.salesperson_name || s.cashier_name || 'Admin'}</div>
-            <div class="text-[10px] text-slate-400 font-semibold">${s.employee_code ? `[${s.employee_code}]` : ''}</div>
-          </td>
-          <td class="px-6 py-3.5 text-right space-x-1">
-            <button onclick="previewInvoiceReceipt('${s.invoice_no}')" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs font-bold transition">
-              <i class="fa-solid fa-receipt mr-1"></i>View Receipt
-            </button>
-          </td>
-        </tr>
-      `).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No invoices recorded</td></tr>';
+      tbody.innerHTML = filtered.map(s => {
+        const isExchange = s.is_exchange || (s.invoice_no && s.invoice_no.startsWith('EXC-'));
+        return `
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+            <td class="px-6 py-3.5">
+              <div class="font-bold text-sky-600 font-mono">${s.invoice_no}</div>
+              ${isExchange ? '<span class="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center space-x-1 w-fit mt-0.5"><i class="fa-solid fa-arrows-rotate text-[8px]"></i><span>Exchange</span></span>' : ''}
+            </td>
+            <td class="px-6 py-3.5">
+              <div class="font-bold text-slate-800">${s.customer_name || 'Walk-in'}</div>
+              <div class="text-[10px] text-slate-400">${s.customer_phone || ''}</div>
+            </td>
+            <td class="px-6 py-3.5 text-slate-500 text-xs">${new Date(s.sale_date).toLocaleString()}</td>
+            <td class="px-6 py-3.5">
+              <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold ${isExchange ? 'bg-amber-50 text-amber-900 border border-amber-300' : s.payment_method && s.payment_method.startsWith('Split') ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-sky-50 text-sky-700 border border-sky-200'} block max-w-[200px] truncate" title="${s.payment_method || 'Cash'}">
+                ${s.payment_method || 'Cash'}
+              </span>
+            </td>
+            <td class="px-6 py-3.5 font-black text-emerald-600 text-sm">৳ ${(Number(s.total_amount) || 0).toLocaleString()}</td>
+            <td class="px-6 py-3.5 text-slate-700">
+              <div class="font-bold text-indigo-700">${s.salesperson_name || s.cashier_name || 'Admin'}</div>
+              <div class="text-[10px] text-slate-400 font-semibold">${s.employee_code ? `[${s.employee_code}]` : ''}</div>
+            </td>
+            <td class="px-6 py-3.5 text-right space-x-1">
+              <button onclick="openProductExchangeModal('${s.invoice_no}')" title="Exchange items from this invoice (পণ্য বিনিময়)" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-bold transition">
+                <i class="fa-solid fa-arrows-rotate mr-1"></i>Exchange
+              </button>
+              <button onclick="previewInvoiceReceipt('${s.invoice_no}')" class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs font-bold transition">
+                <i class="fa-solid fa-receipt mr-1"></i>Receipt
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No invoices recorded</td></tr>';
     }
 
     // --- Accounts & Transactions ---
@@ -5155,63 +5367,6 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       closeModal('modal-transaction');
       renderAccountsTable();
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Transaction saved!', showConfirmButton: false, timer: 1500 });
-    }
-
-    async function deleteTransaction(id) {
-      accountsData = accountsData.filter(t => t.id !== id);
-      if (supabaseClient) {
-        await supabaseClient.from('transactions').delete().eq('id', id);
-      }
-      renderAccountsTable();
-    }
-
-    // --- Excel Exports ---
-    function exportSalesToExcel() {
-      const rows = salesData.map(s => ({
-        'Invoice No': s.invoice_no,
-        'Customer': s.customer_name,
-        'Phone': s.customer_phone,
-        'Total (BDT)': s.total_amount,
-        'Payment': s.payment_method,
-        'Date': s.sale_date,
-        'Cashier': s.cashier_name
-      }));
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Sales');
-      XLSX.writeFile(wb, `ApexPOS_Sales_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
-
-    function exportProductsToExcel() {
-      const rows = productsData.map(p => ({
-        'SKU Code': p.product_code,
-        'Product Name': p.product_name,
-        'Category': p.category,
-        'Purchase Price': p.purchase_price,
-        'Sale Price': p.sale_price,
-        'Stock': p.stock
-      }));
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
-      XLSX.writeFile(wb, `ApexPOS_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
-
-    function exportEmployeesToExcel() {
-      const rows = employeesData.map(e => ({
-        'Employee ID': e.employee_id,
-        'Full Name': e.name,
-        'Department': e.department,
-        'Designation': e.designation,
-        'Phone': e.phone,
-        'Email': e.email,
-        'Monthly Salary': e.salary,
-        'Status': e.status
-      }));
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-      XLSX.writeFile(wb, `ApexPOS_Employees_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
     // ============================================================
@@ -6868,6 +7023,488 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
 
     function exportSalesToExcel() {
       exportDetailedSalesReportToExcel();
+    }
+
+    // ============================================================
+    // --- POS PRODUCT EXCHANGE & RETURN CONTROLLER ---
+    // ============================================================
+    let exchangeSelectedInvoice = null;
+    let exchangeSelectedReturnItem = null;
+    let exchangeSelectedNewProduct = null;
+
+    function openProductExchangeModal(prefillInvoiceNo = null) {
+      exchangeSelectedInvoice = null;
+      exchangeSelectedReturnItem = null;
+      exchangeSelectedNewProduct = null;
+
+      const searchInput = document.getElementById('exchange-search-invoice');
+      if (searchInput) {
+        searchInput.value = prefillInvoiceNo || '';
+      }
+
+      const metaBox = document.getElementById('exchange-invoice-meta');
+      if (metaBox) metaBox.classList.add('hidden');
+
+      const itemsContainer = document.getElementById('exchange-purchased-items-container');
+      if (itemsContainer) itemsContainer.innerHTML = '';
+
+      const barcodeInput = document.getElementById('exchange-barcode-input');
+      if (barcodeInput) barcodeInput.value = '';
+
+      const qtyInput = document.getElementById('exchange-new-qty');
+      if (qtyInput) qtyInput.value = '1';
+
+      const noteInput = document.getElementById('exchange-note');
+      if (noteInput) noteInput.value = '';
+
+      populateExchangeNewProductDropdown();
+      calculateExchangeDifference();
+      openModal('modal-product-exchange');
+
+      if (prefillInvoiceNo) {
+        setTimeout(() => searchInvoiceForExchange(), 100);
+      } else {
+        setTimeout(() => { if (searchInput) searchInput.focus(); }, 150);
+      }
+    }
+
+    function populateExchangeNewProductDropdown() {
+      const select = document.getElementById('exchange-new-product-select');
+      if (!select) return;
+
+      const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
+      select.innerHTML = productsData.map(p => {
+        const bStock = getProductBranchStock(p, effectiveBranchId);
+        return `<option value="${p.id}" data-price="${p.sale_price}" data-code="${p.product_code}" data-img="${p.image_url || ''}">${p.product_name} [${p.product_code}] - ৳${p.sale_price.toLocaleString()} (Stock: ${bStock})</option>`;
+      }).join('') || '<option value="">No replacement products available</option>';
+
+      if (productsData.length > 0) {
+        select.value = productsData[0].id;
+        onExchangeNewProductChange();
+      }
+    }
+
+    function onExchangeNewProductChange() {
+      const select = document.getElementById('exchange-new-product-select');
+      const prodId = Number(select?.value);
+      const prod = productsData.find(p => p.id === prodId);
+      exchangeSelectedNewProduct = prod || null;
+
+      const imgEl = document.getElementById('exchange-new-product-img');
+      const badgeEl = document.getElementById('exchange-new-stock-badge');
+
+      if (prod) {
+        if (imgEl) {
+          imgEl.src = prod.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(prod.product_name)}&background=6366f1&color=fff`;
+        }
+        if (badgeEl) {
+          const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
+          const bStock = getProductBranchStock(prod, effectiveBranchId);
+          badgeEl.innerText = `Available Stock: ${bStock} pcs (${getBranchName(effectiveBranchId)})`;
+          badgeEl.className = bStock > 0 
+            ? 'text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200' 
+            : 'text-[10px] text-rose-800 font-bold bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200';
+        }
+      }
+      calculateExchangeDifference();
+    }
+
+    function handleExchangeBarcodeKey(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const codeInput = document.getElementById('exchange-barcode-input');
+        const query = (codeInput?.value || '').trim().toLowerCase();
+        if (!query) return;
+
+        const prod = productsData.find(p => 
+          p.product_code.toLowerCase() === query || 
+          p.product_name.toLowerCase().includes(query) ||
+          p.id == query
+        );
+
+        if (prod) {
+          const select = document.getElementById('exchange-new-product-select');
+          if (select) {
+            select.value = prod.id;
+            onExchangeNewProductChange();
+          }
+          if (codeInput) codeInput.value = '';
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Scanned: ${prod.product_name} (৳${prod.sale_price})`,
+            showConfirmButton: false,
+            timer: 1500
+          });
+        } else {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: `Barcode not found: "${query}"`,
+            showConfirmButton: false,
+            timer: 2000
+          });
+        }
+      }
+    }
+
+    function searchInvoiceForExchange() {
+      const searchInput = document.getElementById('exchange-search-invoice');
+      const query = (searchInput?.value || '').trim().toLowerCase();
+      if (!query) {
+        Swal.fire('Input Required', 'অনুগ্রহ করে পূর্বের বিক্রয় ইনভয়েস নম্বর বা গ্রাহকের ফোন নম্বর লিখুন।', 'warning');
+        return;
+      }
+
+      const inv = salesData.find(s => 
+        s.invoice_no.toLowerCase() === query || 
+        (s.customer_phone && s.customer_phone.toLowerCase().includes(query)) ||
+        s.id == query
+      );
+
+      if (!inv) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invoice Not Found',
+          html: `<p class="text-xs">ইনভয়েস বা ফোন নম্বর <b>"${query}"</b> এর কোনো রেকর্ড পাওয়া যায়নি। সঠিক ইনভয়েস নম্বর (যেমন: INV-20260825-001) দিয়ে চেষ্টা করুন।</p>`,
+          confirmButtonText: 'ঠিক আছে'
+        });
+        return;
+      }
+
+      exchangeSelectedInvoice = inv;
+      document.getElementById('ex-meta-inv-no').innerText = inv.invoice_no;
+      document.getElementById('ex-meta-customer').innerText = `${inv.customer_name || 'Walk-in'} (${inv.customer_phone || 'No Phone'})`;
+      document.getElementById('ex-meta-date').innerText = `${new Date(inv.sale_date).toLocaleDateString()} • ${inv.branch_name || getBranchName(inv.branch_id || 1)}`;
+      document.getElementById('ex-meta-total').innerText = `৳ ${(Number(inv.total_amount) || 0).toLocaleString()}`;
+
+      const metaBox = document.getElementById('exchange-invoice-meta');
+      if (metaBox) metaBox.classList.remove('hidden');
+
+      const itemsContainer = document.getElementById('exchange-purchased-items-container');
+      if (itemsContainer) {
+        const items = (inv.items || []).filter(i => !i.is_return);
+        if (items.length === 0) {
+          itemsContainer.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs">এই ইনভয়েসে কোনো এক্সচেঞ্জযোগ্য পণ্য নেই।</div>`;
+        } else {
+          itemsContainer.innerHTML = items.map((item, idx) => {
+            const prod = productsData.find(p => p.id === item.product_id || p.product_code === item.product_code);
+            const imgSrc = (prod && prod.image_url) ? prod.image_url : (item.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.product_name)}&background=6366f1&color=fff`);
+            const unitPrice = Math.abs(item.price || (item.total / (item.qty || 1)));
+
+            return `
+              <div id="exchange-return-card-${idx}" onclick="selectExchangeReturnItem(${item.product_id || 0}, ${unitPrice}, '${item.product_name.replace(/'/g, "\\'")}', '${item.product_code || ''}', ${item.qty || 1}, '${imgSrc}', ${idx})" class="exchange-item-row p-2.5 bg-slate-50 hover:bg-amber-50/60 border-2 border-slate-200 hover:border-amber-400 rounded-xl transition cursor-pointer flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <img src="${imgSrc}" class="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=6366f1&color=fff'">
+                  <div>
+                    <div class="font-bold text-slate-900 text-xs">${item.product_name}</div>
+                    <div class="text-[10px] text-slate-400 font-mono">Code: ${item.product_code || 'N/A'} • Sold Qty: ${item.qty} pcs</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="font-black text-rose-600 text-xs">৳ ${unitPrice.toLocaleString()}</div>
+                  <span class="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Select for Return</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // Auto-select first item
+          if (items.length > 0) {
+            const firstItem = items[0];
+            const prod = productsData.find(p => p.id === firstItem.product_id || p.product_code === firstItem.product_code);
+            const imgSrc = (prod && prod.image_url) ? prod.image_url : (firstItem.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(firstItem.product_name)}&background=6366f1&color=fff`);
+            const unitPrice = Math.abs(firstItem.price || (firstItem.total / (firstItem.qty || 1)));
+            selectExchangeReturnItem(firstItem.product_id || 0, unitPrice, firstItem.product_name, firstItem.product_code || '', firstItem.qty || 1, imgSrc, 0);
+          }
+        }
+      }
+    }
+
+    function selectExchangeReturnItem(prodId, soldPrice, prodName, prodCode, maxQty, imageUrl, cardIdx = null) {
+      exchangeSelectedReturnItem = {
+        id: prodId,
+        price: Math.abs(soldPrice),
+        name: prodName,
+        code: prodCode,
+        qty: 1,
+        maxQty: maxQty,
+        imageUrl: imageUrl
+      };
+
+      // Update card visual active styling
+      document.querySelectorAll('.exchange-item-row').forEach(row => {
+        row.className = 'exchange-item-row p-2.5 bg-slate-50 hover:bg-amber-50/60 border-2 border-slate-200 hover:border-amber-400 rounded-xl transition cursor-pointer flex items-center justify-between';
+      });
+
+      if (cardIdx !== null) {
+        const activeCard = document.getElementById(`exchange-return-card-${cardIdx}`);
+        if (activeCard) {
+          activeCard.className = 'exchange-item-row p-2.5 bg-amber-50 border-2 border-amber-500 rounded-xl transition cursor-pointer flex items-center justify-between shadow-xs';
+        }
+      }
+
+      calculateExchangeDifference();
+    }
+
+    function calculateExchangeDifference() {
+      const returnCredit = exchangeSelectedReturnItem ? exchangeSelectedReturnItem.price : 0;
+      const newUnitPrice = exchangeSelectedNewProduct ? exchangeSelectedNewProduct.sale_price : 0;
+      const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
+      const newTotalPrice = newUnitPrice * newQty;
+      const difference = newTotalPrice - returnCredit;
+
+      const creditDisplay = document.getElementById('exchange-credit-display');
+      const newPriceDisplay = document.getElementById('exchange-new-price-display');
+      const diffDisplay = document.getElementById('exchange-diff-display');
+
+      if (creditDisplay) creditDisplay.innerText = `৳ ${returnCredit.toLocaleString()}`;
+      if (newPriceDisplay) newPriceDisplay.innerText = `৳ ${newTotalPrice.toLocaleString()}`;
+      if (diffDisplay) diffDisplay.innerText = `৳ ${Math.max(0, difference).toLocaleString()}`;
+
+      const warningBanner = document.getElementById('exchange-rule-warning');
+      const warningText = document.getElementById('exchange-rule-warning-text');
+      const successBanner = document.getElementById('exchange-rule-success');
+      const successText = document.getElementById('exchange-rule-success-text');
+      const confirmBtn = document.getElementById('btn-confirm-exchange');
+
+      if (!exchangeSelectedReturnItem || !exchangeSelectedNewProduct) {
+        if (warningBanner) warningBanner.classList.add('hidden');
+        if (successBanner) successBanner.classList.add('hidden');
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+        return;
+      }
+
+      // Business Rule Validation: New Price >= Return Credit
+      if (newTotalPrice < returnCredit) {
+        const deficit = returnCredit - newTotalPrice;
+        if (warningBanner) {
+          warningBanner.classList.remove('hidden');
+          if (warningText) {
+            warningText.innerText = `নতুন পণ্যের মূল্য (৳${newTotalPrice.toLocaleString()}) ফেরত পণ্যের মূল্যের (৳${returnCredit.toLocaleString()}) চেয়ে ৳${deficit.toLocaleString()} কম! পলিসি অনুযায়ী নতুন পণ্যের মূল্য অবশ্যই সমান বা বেশি হতে হবে।`;
+          }
+        }
+        if (successBanner) successBanner.classList.add('hidden');
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+      } else {
+        if (warningBanner) warningBanner.classList.add('hidden');
+        if (successBanner) {
+          successBanner.classList.remove('hidden');
+          if (successText) {
+            successText.innerText = difference === 0 
+              ? `সমমূল্যে সরাসরি পণ্য বিনিময় অনুমোদিত (কোনো অতিরিক্ত টাকা লাগবে না)।` 
+              : `শর্ত পূরণ হয়েছে: গ্রাহক অতিরিক্ত ৳${difference.toLocaleString()} পরিশোধ করবেন।`;
+          }
+        }
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+      }
+    }
+
+    async function submitProductExchange() {
+      if (!exchangeSelectedInvoice) {
+        Swal.fire('Invoice Missing', 'অনুগ্রহ করে প্রথমে মূল ইনভয়েস সার্চ করে পণ্য সিলেক্ট করুন।', 'warning');
+        return;
+      }
+      if (!exchangeSelectedReturnItem) {
+        Swal.fire('Return Item Missing', 'গ্রাহক যে পণ্যটি ফেরত দিতে চায় তা সিলেক্ট করুন।', 'warning');
+        return;
+      }
+      if (!exchangeSelectedNewProduct) {
+        Swal.fire('New Product Missing', 'নতুন রিপ্লেসমেন্ট পণ্য সিলেক্ট বা স্ক্যান করুন।', 'warning');
+        return;
+      }
+
+      const returnCredit = exchangeSelectedReturnItem.price;
+      const newUnitPrice = exchangeSelectedNewProduct.sale_price;
+      const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
+      const newTotalPrice = newUnitPrice * newQty;
+
+      if (newTotalPrice < returnCredit) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Exchange Policy Violation',
+          text: 'নতুন পণ্যের মূল্য অবশ্যই ফেরত পণ্যের মূল্যের সমান বা বেশি হতে হবে।',
+          confirmButtonText: 'ঠিক আছে'
+        });
+        return;
+      }
+
+      const differenceToPay = newTotalPrice - returnCredit;
+      const payMethod = document.getElementById('exchange-pay-method')?.value || 'Cash';
+      const exchangeNote = document.getElementById('exchange-note')?.value.trim() || 'Product Size/Color Exchange';
+
+      const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
+      const effectiveBranchName = getBranchName(effectiveBranchId);
+
+      const confirmRes = await Swal.fire({
+        title: 'Confirm Product Exchange (পণ্য বিনিময় নিশ্চিতকরণ)',
+        html: `
+          <div class="text-left text-xs space-y-2 p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200 text-slate-800">
+            <div class="flex justify-between border-b border-amber-200 pb-1.5">
+              <span>মূল ইনভয়েস:</span>
+              <b class="font-mono text-indigo-700">${exchangeSelectedInvoice.invoice_no}</b>
+            </div>
+            <div class="flex justify-between text-rose-700">
+              <span>(-) ফেরত পণ্য (Return):</span>
+              <b>${exchangeSelectedReturnItem.name} (-৳${returnCredit.toLocaleString()})</b>
+            </div>
+            <div class="flex justify-between text-emerald-700">
+              <span>(+) নতুন পণ্য (New ${newQty} pcs):</span>
+              <b>${exchangeSelectedNewProduct.product_name} (+৳${newTotalPrice.toLocaleString()})</b>
+            </div>
+            <div class="flex justify-between font-black text-sm pt-2 border-t border-amber-300 text-slate-900">
+              <span>অতিরিক্ত প্রদেয় টাকা:</span>
+              <span class="text-amber-800 font-heading">৳ ${differenceToPay.toLocaleString()} (${differenceToPay > 0 ? payMethod : 'Even Exchange'})</span>
+            </div>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#d97706',
+        confirmButtonText: 'Yes, Confirm Exchange & Print',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (!confirmRes.isConfirmed) return;
+
+      // 1. Stock Adjustments:
+      // Return Product stock in current branch: +1
+      const retProd = productsData.find(p => p.id === exchangeSelectedReturnItem.id || p.product_code === exchangeSelectedReturnItem.code);
+      if (retProd) {
+        const curRetBStock = getProductBranchStock(retProd, effectiveBranchId);
+        setProductBranchStock(retProd, effectiveBranchId, curRetBStock + 1);
+        if (supabaseClient) {
+          supabaseClient.from('products').update({ stock: retProd.stock, branch_stocks: retProd.branch_stocks }).eq('id', retProd.id).then();
+        }
+      }
+
+      // New Replacement Product stock in current branch: -newQty
+      const newProd = productsData.find(p => p.id === exchangeSelectedNewProduct.id);
+      if (newProd) {
+        const curNewBStock = getProductBranchStock(newProd, effectiveBranchId);
+        setProductBranchStock(newProd, effectiveBranchId, Math.max(0, curNewBStock - newQty));
+        if (supabaseClient) {
+          supabaseClient.from('products').update({ stock: newProd.stock, branch_stocks: newProd.branch_stocks }).eq('id', newProd.id).then();
+        }
+      }
+
+      // 2. Generate Exchange Sales Invoice Record
+      const exchangeInvoiceNo = `EXC-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${String(salesData.length + 1).padStart(3, '0')}`;
+      const exchangeSaleRecord = {
+        id: Date.now(),
+        invoice_no: exchangeInvoiceNo,
+        ref_invoice_no: exchangeSelectedInvoice.invoice_no,
+        is_exchange: true,
+        exchange_note: exchangeNote,
+        customer_name: exchangeSelectedInvoice.customer_name || 'Walk-in Customer',
+        customer_phone: exchangeSelectedInvoice.customer_phone || '',
+        salesperson_name: currentUser ? currentUser.name : 'Admin',
+        employee_code: currentUser ? (currentUser.username || 'EMP-01') : 'EMP-01',
+        total_amount: differenceToPay,
+        subtotal: differenceToPay,
+        discount: 0,
+        tax_rate: 0,
+        tax: 0,
+        payment_method: differenceToPay > 0 ? `${payMethod} (Exchange Extra: ৳${differenceToPay.toLocaleString()})` : 'Even Exchange (৳0)',
+        sale_date: new Date().toISOString(),
+        items: [
+          {
+            product_id: exchangeSelectedReturnItem.id,
+            product_name: exchangeSelectedReturnItem.name,
+            product_code: exchangeSelectedReturnItem.code,
+            price: -returnCredit,
+            qty: 1,
+            total: -returnCredit,
+            is_return: true
+          },
+          {
+            product_id: exchangeSelectedNewProduct.id,
+            product_name: exchangeSelectedNewProduct.product_name,
+            product_code: exchangeSelectedNewProduct.product_code,
+            price: newUnitPrice,
+            qty: newQty,
+            total: newTotalPrice,
+            is_exchange_new: true
+          }
+        ],
+        branch_id: effectiveBranchId,
+        branch_name: effectiveBranchName,
+        cashier_name: currentUser ? currentUser.name : 'Admin'
+      };
+
+      salesData.unshift(exchangeSaleRecord);
+
+      // 3. Supabase Cloud Sync
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('sales').insert([{
+            invoice_no: exchangeSaleRecord.invoice_no,
+            customer_name: exchangeSaleRecord.customer_name,
+            customer_phone: exchangeSaleRecord.customer_phone,
+            branch_id: exchangeSaleRecord.branch_id,
+            branch_name: exchangeSaleRecord.branch_name,
+            salesperson_name: exchangeSaleRecord.salesperson_name,
+            employee_code: exchangeSaleRecord.employee_code,
+            subtotal: exchangeSaleRecord.subtotal,
+            discount: 0,
+            tax: 0,
+            total_amount: exchangeSaleRecord.total_amount,
+            payment_method: exchangeSaleRecord.payment_method,
+            sale_date: exchangeSaleRecord.sale_date,
+            items: exchangeSaleRecord.items,
+            cashier_name: exchangeSaleRecord.cashier_name
+          }]);
+        } catch (err) {
+          console.warn('Supabase exchange sale insert error:', err);
+        }
+      }
+
+      // 4. Record difference payment in Accounts Ledger if collected cash
+      if (differenceToPay > 0) {
+        const txnRecord = {
+          id: Date.now() + 1,
+          type: 'Income',
+          category: 'POS Product Exchange',
+          amount: differenceToPay,
+          date: new Date().toISOString().split('T')[0],
+          payment_method: payMethod,
+          note: `Exchange Invoice: ${exchangeInvoiceNo} (Ref: ${exchangeSelectedInvoice.invoice_no})`
+        };
+        accountsData.unshift(txnRecord);
+        if (supabaseClient) {
+          supabaseClient.from('accounts').insert([txnRecord]).then();
+        }
+      }
+
+      closeModal('modal-product-exchange');
+      renderPosProducts();
+      renderProductsTable();
+      renderSalesTable();
+      renderAccountsTable();
+      renderDashboard();
+
+      // Launch Thermal Receipt Preview for printing
+      previewInvoiceReceipt(exchangeSaleRecord.invoice_no);
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `Exchange Completed! Invoice: ${exchangeInvoiceNo}`,
+        showConfirmButton: false,
+        timer: 2500
+      });
     }
 
     // --- Helpers ---
