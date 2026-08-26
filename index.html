@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ApexPOS & ERP Enterprise Suite - PostgreSQL / Supabase</title>
+  <title>RTR Pos & Erp enterprise - Cloud Suite</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -47,30 +47,42 @@
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #f8fafc;
+      background: #f1f5f9;
     }
     ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: #10b981;
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+      background: #059669;
     }
 
+    /* Emerald Green Animated Active Tab */
     .sidebar-active {
-      background: linear-gradient(90deg, rgba(99, 102, 241, 0.22), rgba(168, 85, 247, 0.08)) !important;
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.28), rgba(4, 120, 87, 0.12)) !important;
       color: #ffffff !important;
-      border-left: 3.5px solid #6366f1 !important;
-      box-shadow: 0 4px 20px -2px rgba(99, 102, 241, 0.25);
+      border-left: 4px solid #10b981 !important;
+      box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.45);
+      transform: translateX(4px);
     }
-    .sidebar-active .sidebar-icon-box {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-      color: #ffffff !important;
-      box-shadow: 0 0 14px rgba(99, 102, 241, 0.6);
+    .sidebar-active i {
+      color: #34d399 !important;
+      filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.8));
     }
+    
     .sidebar-nav-btn {
       position: relative;
-      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar-nav-btn:hover {
+      transform: translateX(4px);
+      background: rgba(16, 185, 129, 0.14) !important;
+      color: #ecfdf5 !important;
+    }
+    .sidebar-nav-btn:hover i {
+      color: #6ee7b7 !important;
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
     }
 
     @keyframes gradientShift {
@@ -79,9 +91,9 @@
       100% { background-position: 0% 50%; }
     }
 
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
-      50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); }
+    @keyframes emeraldPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.35); }
+      50% { box-shadow: 0 0 32px rgba(16, 185, 129, 0.75); }
     }
 
     @keyframes floatWatermark {
@@ -94,11 +106,11 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) rotate(-12deg);
-      font-size: clamp(4rem, 15vw, 12rem);
+      font-size: clamp(3.5rem, 13vw, 10rem);
       font-weight: 900;
       color: #ffffff;
-      -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.12);
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.2));
+      -webkit-text-stroke: 1.5px rgba(16, 185, 129, 0.2);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.25));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       pointer-events: none;
@@ -109,18 +121,18 @@
     }
 
     .animated-title-gradient {
-      background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6, #06b6d4, #10b981, #ec4899);
-      background-size: 400% 400%;
+      background: linear-gradient(135deg, #10b981, #06b6d4, #6366f1, #10b981);
+      background-size: 300% 300%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: gradientShift 6s ease infinite;
     }
 
     .glass-panel {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(226, 232, 240, 0.8);
+      border: 1px solid rgba(226, 232, 240, 0.85);
     }
 
     .receipt-paper {
@@ -186,7 +198,7 @@
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-950 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
 
   <!-- ============================================================ -->
   <!-- 1. LOGIN SCREEN -->
@@ -194,26 +206,26 @@
   <div id="login-screen" class="relative min-h-screen flex items-center justify-center bg-slate-950 p-4 overflow-hidden">
     
     <!-- Background Animated Glow Blobs -->
-    <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/25 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-600/25 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-600/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
     <div class="absolute top-1/2 -right-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
     <!-- Watermark Text -->
-    <div class="watermark-login">APEX POS & ERP</div>
+    <div class="watermark-login">RTR POS & ERP</div>
 
     <!-- Login Container Card -->
-    <div class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-2xl p-8 sm:p-9 rounded-3xl shadow-2xl border border-white/30 space-y-6">
+    <div class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-2xl p-8 sm:p-9 rounded-3xl shadow-2xl border border-emerald-100 space-y-6">
       
       <!-- Brand Header -->
       <div class="text-center space-y-2">
-        <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 rounded-2xl mx-auto flex items-center justify-center text-white text-3xl shadow-xl shadow-indigo-500/30">
+        <div class="w-16 h-16 bg-gradient-to-tr from-emerald-500 via-teal-500 to-green-600 rounded-2xl mx-auto flex items-center justify-center text-white text-3xl shadow-xl shadow-emerald-500/30 ring-4 ring-emerald-500/20 transition-transform duration-300 hover:scale-105">
           <i class="fa-solid fa-store"></i>
         </div>
         <h1 class="text-2xl sm:text-3xl font-black tracking-tight animated-title-gradient">
-          APEX POS & ERP
+          RTR POS & ERP
         </h1>
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          PostgreSQL Cloud Suite • Real-Time Database
+        <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
+          Enterprise Cloud Suite • Real-Time Database
         </p>
       </div>
 
@@ -223,7 +235,7 @@
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Address or Phone Number (ইমেইল বা ফোন নম্বর) *</label>
           <div class="relative">
             <i class="fa-solid fa-id-card-clip absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-            <input type="text" id="login-email" required placeholder="admin@system.com or 01700-000000" value="admin@system.com" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+            <input type="text" id="login-email" required placeholder="admin@system.com or 01700-000000" value="admin@system.com" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
           </div>
         </div>
 
@@ -231,14 +243,14 @@
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password (পাসওয়ার্ড) *</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-            <input type="password" id="login-password" required placeholder="••••••••" value="admin123" class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+            <input type="password" id="login-password" required placeholder="••••••••" value="admin123" class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
             <button type="button" onclick="togglePasswordView('login-password')" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
               <i class="fa-solid fa-eye text-xs"></i>
             </button>
           </div>
         </div>
 
-        <button type="submit" id="login-btn" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white py-3 rounded-xl font-bold text-xs shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-2 cursor-pointer">
+        <button type="submit" id="login-btn" class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white py-3 rounded-xl font-bold text-xs shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-2 cursor-pointer">
           <span>Sign In to POS Dashboard</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
@@ -250,7 +262,7 @@
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
           <span class="font-semibold text-slate-600" id="login-db-status">PostgreSQL Ready</span>
         </span>
-        <button type="button" onclick="openSupabaseSettingsModal()" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+        <button type="button" onclick="openSupabaseSettingsModal()" class="text-emerald-700 hover:text-emerald-900 font-bold flex items-center space-x-1">
           <i class="fa-solid fa-gear"></i><span>DB Config</span>
         </button>
       </div>
@@ -261,92 +273,96 @@
   <!-- ============================================================ -->
   <!-- 2. MAIN APPLICATION WORKSPACE -->
   <!-- ============================================================ -->
-  <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-100 font-sans">
+  <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-slate-50 via-emerald-50/20 to-teal-50/15 font-sans">
 
-    <!-- Sidebar Navigation -->
-    <aside id="app-sidebar" class="w-full md:w-64 md:min-w-[16rem] md:max-w-[16rem] md:h-screen md:sticky md:top-0 bg-slate-950 text-slate-300 flex flex-col justify-between border-r border-slate-800 shrink-0 z-20 select-none">
-      <div class="flex flex-col min-h-0">
+    <!-- Emerald Green Animated Sidebar Navigation -->
+    <aside id="app-sidebar" class="w-full md:w-64 md:min-w-[16rem] md:max-w-[16rem] md:h-screen md:sticky md:top-0 bg-gradient-to-b from-[#032014] via-[#02180e] to-[#011009] text-emerald-100 flex flex-col justify-between border-r border-emerald-900/50 shrink-0 z-20 select-none shadow-2xl relative">
+      
+      <!-- Top Subtle Glow Effect inside Sidebar -->
+      <div class="absolute top-0 left-0 w-full h-40 bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+
+      <div class="flex flex-col min-h-0 relative z-10">
         <!-- Logo & App Title -->
-        <div class="p-5 flex items-center justify-between border-b border-slate-800/80">
+        <div class="p-5 flex items-center justify-between border-b border-emerald-900/50 bg-emerald-950/30">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-lg shadow-md shadow-indigo-600/30">
+            <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 rounded-2xl flex items-center justify-center text-white text-lg shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-400/30 transition-transform duration-300 hover:scale-105 hover:rotate-3">
               <i class="fa-solid fa-store"></i>
             </div>
             <div>
-              <h2 class="font-extrabold text-sm text-white tracking-wide font-heading">Apex POS & ERP</h2>
-              <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Enterprise Suite</p>
+              <h2 class="font-extrabold text-sm text-white tracking-wide font-heading">RTR POS & ERP</h2>
+              <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Enterprise Suite</p>
             </div>
           </div>
         </div>
 
         <!-- Role Badge -->
-        <div class="px-5 py-3 border-b border-slate-800/60 flex items-center justify-between">
+        <div class="px-5 py-3 border-b border-emerald-900/40 flex items-center justify-between bg-emerald-950/20 backdrop-blur-xs">
           <div class="flex items-center space-x-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-xs font-bold text-slate-300" id="current-user-role-label">Admin Role</span>
+            <span class="text-xs font-bold text-emerald-200" id="current-user-role-label">Admin Role</span>
           </div>
-          <span id="current-user-email-badge" class="text-[10px] text-slate-400 truncate max-w-[100px]">admin@system.com</span>
+          <span id="current-user-email-badge" class="text-[10px] text-emerald-400/80 truncate max-w-[100px]">admin@system.com</span>
         </div>
 
-        <!-- Navigation Links -->
+        <!-- Navigation Links with Green Animated Buttons -->
         <nav id="sidebar-nav" class="p-3 space-y-1.5 text-xs font-semibold overflow-y-auto">
-          <button id="nav-dashboard" onclick="switchNav('dashboard')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 transition text-slate-300 sidebar-active">
-            <i class="fa-solid fa-chart-pie text-indigo-400 w-4"></i><span>Dashboard</span>
+          <button id="nav-dashboard" onclick="switchNav('dashboard')" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-emerald-100 sidebar-active">
+            <i class="fa-solid fa-chart-pie text-emerald-400 w-4 text-center"></i><span>Dashboard</span>
           </button>
-          <button id="nav-pos" onclick="switchNav('pos')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-pos" onclick="switchNav('pos')" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-cash-register text-emerald-400 w-4"></i><span>POS Terminal (বিক্রি)</span>
+              <i class="fa-solid fa-cash-register text-emerald-400 w-4 text-center"></i><span>POS Terminal (বিক্রি)</span>
             </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">SALE</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/25 text-emerald-300 border border-emerald-500/40">SALE</span>
           </button>
-          <button id="nav-products" onclick="switchNav('products')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-products" onclick="switchNav('products')" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-boxes-stacked text-amber-400 w-4"></i><span id="nav-products-label">Products & Stock</span>
+              <i class="fa-solid fa-boxes-stacked text-amber-400 w-4 text-center"></i><span id="nav-products-label">Products & Stock</span>
             </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">STOCK</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/40">STOCK</span>
           </button>
-          <button id="nav-sales" onclick="switchNav('sales')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
-            <i class="fa-solid fa-file-invoice-dollar text-sky-400 w-4"></i><span>Sales & Invoices</span>
+          <button id="nav-sales" onclick="switchNav('sales')" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
+            <i class="fa-solid fa-file-invoice-dollar text-sky-400 w-4 text-center"></i><span>Sales & Invoices</span>
           </button>
-          <button id="nav-employees" onclick="switchNav('employees')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
-            <i class="fa-solid fa-users-gear text-pink-400 w-4"></i><span>Employees (কর্মী)</span>
+          <button id="nav-employees" onclick="switchNav('employees')" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
+            <i class="fa-solid fa-users-gear text-pink-400 w-4 text-center"></i><span>Employees (কর্মী)</span>
           </button>
-          <button id="nav-accounts" onclick="switchNav('accounts')" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
-            <i class="fa-solid fa-wallet text-teal-400 w-4"></i><span>Accounts (আয় / ব্যয়)</span>
+          <button id="nav-accounts" onclick="switchNav('accounts')" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
+            <i class="fa-solid fa-wallet text-teal-400 w-4 text-center"></i><span>Accounts (আয় / ব্যয়)</span>
           </button>
-          <button id="nav-inventory" onclick="switchNav('inventory')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-inventory" onclick="switchNav('inventory')" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-clipboard-check text-orange-400 w-4"></i><span>Inventory Audit (অডিট)</span>
+              <i class="fa-solid fa-clipboard-check text-orange-400 w-4 text-center"></i><span>Inventory Audit (অডিট)</span>
             </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-orange-500/20 text-orange-400 border border-orange-500/30">AUDIT</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-orange-500/25 text-orange-300 border border-orange-500/40">AUDIT</span>
           </button>
-          <button id="nav-transfers" onclick="switchNav('transfers')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-transfers" onclick="switchNav('transfers')" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-truck-ramp-box text-cyan-400 w-4"></i><span>Stock Transfer (স্থানান্তর)</span>
+              <i class="fa-solid fa-truck-ramp-box text-cyan-400 w-4 text-center"></i><span>Stock Transfer (স্থানান্তর)</span>
             </div>
-            <span id="sidebar-incoming-transfer-badge" class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">0</span>
+            <span id="sidebar-incoming-transfer-badge" class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-500/40">0</span>
           </button>
-          <button id="nav-new-transfer" onclick="openCreateTransferModal()" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 hover:text-white border border-cyan-500/30 transition shadow-2xs cursor-pointer">
+          <button id="nav-new-transfer" onclick="openCreateTransferModal()" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-200 hover:text-white border border-emerald-500/40 transition shadow-2xs cursor-pointer">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-file-circle-plus text-cyan-400 w-4"></i><span>+ New Transfer (নতুন চালান)</span>
+              <i class="fa-solid fa-file-circle-plus text-emerald-400 w-4 text-center"></i><span>+ New Transfer (নতুন চালান)</span>
             </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500 text-slate-950">FORM</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-400 text-emerald-950 font-bold">FORM</span>
           </button>
-          <button id="nav-reports" onclick="switchNav('reports')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-reports" onclick="switchNav('reports')" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-chart-pie text-violet-400 w-4"></i><span>Manager Reports (রিপোর্ট)</span>
+              <i class="fa-solid fa-chart-pie text-violet-400 w-4 text-center"></i><span>Manager Reports (রিপোর্ট)</span>
             </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-violet-500/20 text-violet-400 border border-violet-500/30">PROFIT</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-violet-500/25 text-violet-300 border border-violet-500/40">PROFIT</span>
           </button>
-          <button id="nav-settings" onclick="switchNav('settings')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-settings" onclick="switchNav('settings')" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-user-shield text-indigo-400 w-4"></i><span>Settings & Permissions</span>
+              <i class="fa-solid fa-user-shield text-indigo-400 w-4 text-center"></i><span>Settings & Permissions</span>
             </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">ROLES</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-500/25 text-indigo-300 border border-indigo-500/40">ROLES</span>
           </button>
-          <button id="nav-database" onclick="openSupabaseSettingsModal()" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition">
+          <button id="nav-database" onclick="openSupabaseSettingsModal()" class="sidebar-nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-emerald-200/80 hover:text-white transition">
             <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-database text-cyan-400 w-4"></i><span>PostgreSQL DB</span>
+              <i class="fa-solid fa-database text-teal-400 w-4 text-center"></i><span>PostgreSQL DB</span>
             </div>
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           </button>
@@ -354,8 +370,8 @@
       </div>
 
       <!-- User Logout Box -->
-      <div class="p-4 border-t border-slate-800 space-y-2">
-        <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-800 rounded-xl text-xs font-bold transition">
+      <div class="p-4 border-t border-emerald-900/50 space-y-2 relative z-10 bg-emerald-950/40">
+        <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2.5 bg-emerald-950/80 hover:bg-rose-950/60 text-emerald-300 hover:text-rose-300 border border-emerald-800/50 hover:border-rose-800/50 rounded-xl text-xs font-bold transition duration-200 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
         </button>
       </div>
@@ -421,101 +437,101 @@
         <!-- ============================================================ -->
         <section id="sec-dashboard" class="space-y-6">
           
-          <!-- Key Metrics Grid: 8 Comprehensive Executive Cards -->
+          <!-- Key Metrics Grid: 8 Comprehensive Executive Cards with Colorful Gradients -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <!-- 1. Today's Sales -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-indigo-200 transition">
+            <div class="bg-gradient-to-br from-white via-indigo-50/30 to-indigo-50/10 p-5 rounded-2xl border border-indigo-100/90 shadow-xs flex items-center justify-between hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Today's Sales (আজকের বিক্রয়)</span>
-                <h3 id="dash-today-sales" class="text-2xl font-black text-slate-900 mt-1 font-heading">৳ 0</h3>
+                <span class="text-xs font-bold text-indigo-900/60 uppercase tracking-wider">Today's Sales (আজকের বিক্রয়)</span>
+                <h3 id="dash-today-sales" class="text-2xl font-black text-indigo-900 mt-1 font-heading">৳ 0</h3>
                 <span id="dash-today-orders" class="text-[11px] font-bold text-indigo-600 mt-1 inline-block">0 Invoices completed</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-100/80 text-indigo-600 flex items-center justify-center text-xl font-bold shadow-xs">
                 <i class="fa-solid fa-cash-register"></i>
               </div>
             </div>
 
             <!-- 2. Net Profit -->
-            <div class="bg-white p-5 rounded-2xl border border-emerald-100 bg-emerald-50/20 shadow-xs flex items-center justify-between hover:border-emerald-300 transition">
+            <div class="bg-gradient-to-br from-emerald-50/60 via-teal-50/30 to-white p-5 rounded-2xl border border-emerald-200/90 shadow-xs flex items-center justify-between hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Net Profit (নিট লাভ)</span>
-                <h3 id="dash-net-profit" class="text-2xl font-black text-emerald-600 mt-1 font-heading">৳ 0</h3>
+                <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Net Profit (নিট লাভ)</span>
+                <h3 id="dash-net-profit" class="text-2xl font-black text-emerald-700 mt-1 font-heading">৳ 0</h3>
                 <span id="dash-profit-margin" class="text-[11px] font-bold text-emerald-700 mt-1 inline-block">0% Profit Margin</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold shadow-xs ring-2 ring-emerald-300/40">
                 <i class="fa-solid fa-sack-dollar"></i>
               </div>
             </div>
 
             <!-- 3. Cash Sales -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-emerald-200 transition">
+            <div class="bg-gradient-to-br from-white via-teal-50/35 to-teal-50/10 p-5 rounded-2xl border border-teal-100/90 shadow-xs flex items-center justify-between hover:border-teal-300 hover:shadow-md hover:shadow-teal-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cash Sales (নগদ বিক্রয়)</span>
-                <h3 id="dash-cash-sales" class="text-2xl font-black text-slate-900 mt-1 font-heading">৳ 0</h3>
-                <span id="dash-cash-percent" class="text-[11px] font-bold text-emerald-600 mt-1 inline-block">0% of total revenue</span>
+                <span class="text-xs font-bold text-teal-900/60 uppercase tracking-wider">Cash Sales (নগদ বিক্রয়)</span>
+                <h3 id="dash-cash-sales" class="text-2xl font-black text-teal-900 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-cash-percent" class="text-[11px] font-bold text-teal-600 mt-1 inline-block">0% of total revenue</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-teal-100/80 text-teal-700 flex items-center justify-center text-xl font-bold shadow-xs">
                 <i class="fa-solid fa-money-bill-wave"></i>
               </div>
             </div>
 
             <!-- 4. Card & Digital Sales -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-sky-200 transition">
+            <div class="bg-gradient-to-br from-white via-sky-50/35 to-sky-50/10 p-5 rounded-2xl border border-sky-100/90 shadow-xs flex items-center justify-between hover:border-sky-300 hover:shadow-md hover:shadow-sky-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Card / Digital (ডিজিটাল বিক্রয়)</span>
-                <h3 id="dash-card-sales" class="text-2xl font-black text-sky-700 mt-1 font-heading">৳ 0</h3>
+                <span class="text-xs font-bold text-sky-900/60 uppercase tracking-wider">Card / Digital (ডিজিটাল বিক্রয়)</span>
+                <h3 id="dash-card-sales" class="text-2xl font-black text-sky-800 mt-1 font-heading">৳ 0</h3>
                 <span id="dash-card-percent" class="text-[11px] font-bold text-sky-600 mt-1 inline-block">Card, bKash, Nagad</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-sky-100/80 text-sky-600 flex items-center justify-center text-xl font-bold shadow-xs">
                 <i class="fa-solid fa-credit-card"></i>
               </div>
             </div>
 
             <!-- 5. Product Purchase Cost -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-amber-200 transition">
+            <div class="bg-gradient-to-br from-white via-amber-50/35 to-amber-50/10 p-5 rounded-2xl border border-amber-100/90 shadow-xs flex items-center justify-between hover:border-amber-300 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Cost (ক্রয় খরচ)</span>
-                <h3 id="dash-cost-goods" class="text-2xl font-black text-slate-800 mt-1 font-heading">৳ 0</h3>
-                <span id="dash-cost-subtitle" class="text-[11px] font-bold text-amber-600 mt-1 inline-block">Cost of goods sold</span>
+                <span class="text-xs font-bold text-amber-900/60 uppercase tracking-wider">Total Cost (ক্রয় খরচ)</span>
+                <h3 id="dash-cost-goods" class="text-2xl font-black text-amber-950 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-cost-subtitle" class="text-[11px] font-bold text-amber-700 mt-1 inline-block">Cost of goods sold</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-amber-100/80 text-amber-600 flex items-center justify-center text-xl font-bold shadow-xs">
                 <i class="fa-solid fa-coins"></i>
               </div>
             </div>
 
             <!-- 6. Total Discounts Given -->
-            <div class="bg-white p-5 rounded-2xl border border-rose-100 bg-rose-50/20 shadow-xs flex items-center justify-between hover:border-rose-300 transition">
+            <div class="bg-gradient-to-br from-white via-rose-50/40 to-rose-50/10 p-5 rounded-2xl border border-rose-100/90 shadow-xs flex items-center justify-between hover:border-rose-300 hover:shadow-md hover:shadow-rose-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Total Discount (মোট ছাড়)</span>
+                <span class="text-xs font-bold text-rose-800 uppercase tracking-wider">Total Discount (মোট ছাড়)</span>
                 <h3 id="dash-total-discount" class="text-2xl font-black text-rose-600 mt-1 font-heading">৳ 0</h3>
                 <span id="dash-discount-subtitle" class="text-[11px] font-bold text-rose-500 mt-1 inline-block">Discounts authorized</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-rose-100/80 text-rose-600 flex items-center justify-center text-xl font-bold shadow-xs">
                 <i class="fa-solid fa-tags"></i>
               </div>
             </div>
 
             <!-- 7. Lifetime Revenue -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-indigo-200 transition">
+            <div class="bg-gradient-to-br from-white via-purple-50/35 to-purple-50/10 p-5 rounded-2xl border border-purple-100/90 shadow-xs flex items-center justify-between hover:border-purple-300 hover:shadow-md hover:shadow-purple-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue (সর্বমোট বিক্রয়)</span>
-                <h3 id="dash-total-revenue" class="text-2xl font-black text-indigo-600 mt-1 font-heading">৳ 0</h3>
-                <span id="dash-total-invoices-count" class="text-[11px] font-bold text-indigo-500 mt-1 inline-block">Lifetime sales volume</span>
+                <span class="text-xs font-bold text-purple-900/60 uppercase tracking-wider">Total Revenue (সর্বমোট বিক্রয়)</span>
+                <h3 id="dash-total-revenue" class="text-2xl font-black text-purple-700 mt-1 font-heading">৳ 0</h3>
+                <span id="dash-total-invoices-count" class="text-[11px] font-bold text-purple-600 mt-1 inline-block">Lifetime sales volume</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-purple-100/80 text-purple-600 flex items-center justify-center text-xl font-bold shadow-xs">
                 <i class="fa-solid fa-chart-line"></i>
               </div>
             </div>
 
             <!-- 8. Inventory & Stock Status -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-purple-200 transition">
+            <div class="bg-gradient-to-br from-white via-emerald-50/35 to-teal-50/10 p-5 rounded-2xl border border-emerald-100/90 shadow-xs flex items-center justify-between hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-200">
               <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Inventory & Stock</span>
+                <span class="text-xs font-bold text-emerald-900/60 uppercase tracking-wider">Inventory & Stock</span>
                 <h3 id="dash-total-products" class="text-2xl font-black text-slate-900 mt-1 font-heading">0 items</h3>
                 <span id="dash-low-stock-count" class="text-[11px] font-bold text-rose-500 mt-1 inline-block">0 Low stock alerts</span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center text-xl font-bold shadow-xs">
                 <i class="fa-solid fa-boxes-stacked"></i>
               </div>
             </div>
@@ -881,53 +897,53 @@
             </div>
           </div>
 
-          <!-- Branch-Specific Stock Valuation & Quantity KPI Metric Cards -->
+          <!-- Branch-Specific Stock Valuation & Quantity KPI Metric Cards with Colorful Gradients -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <!-- 1. Total Stock Units -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-amber-300 transition">
+            <div class="bg-gradient-to-br from-white via-amber-50/40 to-amber-50/10 p-4 rounded-2xl border border-amber-100/90 shadow-xs flex items-center justify-between hover:border-amber-300 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Stock Quantity (মোট স্টক)</span>
-                <h3 id="prd-summary-total-qty" class="text-2xl font-black text-slate-900 mt-0.5 font-heading">0 pcs</h3>
-                <span id="prd-summary-branch-label" class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-amber-200">Selected Branch</span>
+                <span class="text-[11px] font-bold text-amber-900/60 uppercase tracking-wider">Total Stock Quantity (মোট স্টক)</span>
+                <h3 id="prd-summary-total-qty" class="text-2xl font-black text-amber-950 mt-0.5 font-heading">0 pcs</h3>
+                <span id="prd-summary-branch-label" class="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md mt-1 inline-block border border-amber-200">Selected Branch</span>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-lg">
+              <div class="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-700 flex items-center justify-center text-lg shadow-xs">
                 <i class="fa-solid fa-boxes-stacked"></i>
               </div>
             </div>
 
             <!-- 2. Total Purchase Cost Valuation -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-emerald-300 transition">
+            <div class="bg-gradient-to-br from-white via-emerald-50/40 to-emerald-50/10 p-4 rounded-2xl border border-emerald-100/90 shadow-xs flex items-center justify-between hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-200">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Stock Value (ক্রয়মূল্য ইনভেস্টমেন্ট)</span>
+                <span class="text-[11px] font-bold text-emerald-900/60 uppercase tracking-wider">Total Stock Value (ক্রয়মূল্য ইনভেস্টমেন্ট)</span>
                 <h3 id="prd-summary-cost-value" class="text-2xl font-black text-emerald-700 mt-0.5 font-heading">৳ 0</h3>
-                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-emerald-200">Cost Valuation</span>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md mt-1 inline-block border border-emerald-200">Cost Valuation</span>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-lg">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center text-lg shadow-xs ring-2 ring-emerald-300/30">
                 <i class="fa-solid fa-sack-dollar"></i>
               </div>
             </div>
 
             <!-- 3. Total Retail Sale Worth -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-indigo-300 transition">
+            <div class="bg-gradient-to-br from-white via-indigo-50/40 to-indigo-50/10 p-4 rounded-2xl border border-indigo-100/90 shadow-xs flex items-center justify-between hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-200">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Retail Worth (সম্ভাব্য বিক্রয়মূল্য)</span>
-                <h3 id="prd-summary-retail-value" class="text-2xl font-black text-indigo-700 mt-0.5 font-heading">৳ 0</h3>
-                <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-indigo-200">Expected Sales</span>
+                <span class="text-[11px] font-bold text-indigo-900/60 uppercase tracking-wider">Total Retail Worth (সম্ভাব্য বিক্রয়মূল্য)</span>
+                <h3 id="prd-summary-retail-value" class="text-2xl font-black text-indigo-800 mt-0.5 font-heading">৳ 0</h3>
+                <span class="text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-md mt-1 inline-block border border-indigo-200">Expected Sales</span>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center text-lg">
+              <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-700 flex items-center justify-center text-lg shadow-xs">
                 <i class="fa-solid fa-cash-register"></i>
               </div>
             </div>
 
             <!-- 4. Estimated Stock Gross Profit Margin -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-purple-300 transition">
+            <div class="bg-gradient-to-br from-white via-purple-50/40 to-purple-50/10 p-4 rounded-2xl border border-purple-100/90 shadow-xs flex items-center justify-between hover:border-purple-300 hover:shadow-md hover:shadow-purple-500/10 transition-all duration-200">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Potential Profit (সম্ভাব্য মোট লাভ)</span>
-                <h3 id="prd-summary-profit-value" class="text-2xl font-black text-purple-700 mt-0.5 font-heading">৳ 0</h3>
-                <span id="prd-summary-margin-percent" class="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md mt-1 inline-block border border-purple-200">Margin: 0%</span>
+                <span class="text-[11px] font-bold text-purple-900/60 uppercase tracking-wider">Potential Profit (সম্ভাব্য মোট লাভ)</span>
+                <h3 id="prd-summary-profit-value" class="text-2xl font-black text-purple-800 mt-0.5 font-heading">৳ 0</h3>
+                <span id="prd-summary-margin-percent" class="text-[10px] font-bold text-purple-700 bg-purple-100/80 px-2 py-0.5 rounded-md mt-1 inline-block border border-purple-200">Margin: 0%</span>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center text-lg">
+              <div class="w-11 h-11 rounded-2xl bg-purple-500/20 text-purple-700 flex items-center justify-center text-lg shadow-xs">
                 <i class="fa-solid fa-chart-line"></i>
               </div>
             </div>
@@ -1347,19 +1363,19 @@
               </div>
 
               <!-- History Sesh-e Grand Totals Summary Box -->
-              <div id="rep-sales-grand-summary" class="p-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-b-3xl space-y-4">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-700 pb-3">
+              <div id="rep-sales-grand-summary" class="p-6 bg-gradient-to-br from-[#032014] via-[#02180e] to-[#011009] text-white rounded-b-3xl space-y-4 border-t border-emerald-900/40">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-emerald-900/50 pb-3">
                   <div class="flex items-center space-x-2">
-                    <span class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
                       <i class="fa-solid fa-calculator"></i>
                     </span>
                     <div>
-                      <h4 class="font-black text-sm tracking-wide">GRAND TOTALS SUMMARY STATEMENT (হিস্টোরির সর্বমোট হিসাব)</h4>
-                      <p class="text-[11px] text-slate-400" id="rep-summary-period-label">Selected Period Summary</p>
+                      <h4 class="font-black text-sm tracking-wide text-emerald-100">GRAND TOTALS SUMMARY STATEMENT (হিস্টোরির সর্বমোট হিসাব)</h4>
+                      <p class="text-[11px] text-emerald-400/80" id="rep-summary-period-label">Selected Period Summary</p>
                     </div>
                   </div>
                   <div class="flex items-center space-x-2">
-                    <button onclick="printManagerReport()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                    <button onclick="printManagerReport()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-sm">
                       <i class="fa-solid fa-print"></i><span>Print Statement</span>
                     </button>
                   </div>
@@ -1368,41 +1384,41 @@
                 <!-- Grand Summary 4 Big Metrics -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div class="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sales (মোট বিক্রয়)</span>
+                    <span class="text-[10px] font-bold text-emerald-300/80 uppercase tracking-wider block">Total Sales (মোট বিক্রয়)</span>
                     <div class="text-xl font-black text-white mt-1 font-heading" id="rep-sum-total-sales">৳ 0</div>
-                    <span class="text-[10px] text-slate-400" id="rep-sum-total-invoices">0 Invoices</span>
+                    <span class="text-[10px] text-emerald-400/70" id="rep-sum-total-invoices">0 Invoices</span>
                   </div>
 
                   <div class="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Quantity (মোট Qty)</span>
-                    <div class="text-xl font-black text-indigo-400 mt-1" id="rep-sum-total-qty">0 pcs</div>
-                    <span class="text-[10px] text-slate-400">Products sold</span>
+                    <span class="text-[10px] font-bold text-sky-300/80 uppercase tracking-wider block">Total Quantity (মোট Qty)</span>
+                    <div class="text-xl font-black text-sky-400 mt-1" id="rep-sum-total-qty">0 pcs</div>
+                    <span class="text-[10px] text-sky-300/70">Products sold</span>
                   </div>
 
-                  <div class="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                  <div class="p-3 bg-emerald-500/15 rounded-2xl border border-emerald-500/30">
                     <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Total Net Profit (মোট লাভ)</span>
-                    <div class="text-xl font-black text-emerald-400 mt-1 font-heading" id="rep-sum-total-profit">৳ 0</div>
-                    <span class="text-[10px] text-emerald-300" id="rep-sum-profit-margin">0% Net Margin</span>
+                    <div class="text-xl font-black text-emerald-300 mt-1 font-heading" id="rep-sum-total-profit">৳ 0</div>
+                    <span class="text-[10px] text-emerald-300 font-semibold" id="rep-sum-profit-margin">0% Net Margin</span>
                   </div>
 
-                  <div class="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+                  <div class="p-3 bg-amber-500/15 rounded-2xl border border-amber-500/30">
                     <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Total Discount (মোট ছাড়)</span>
-                    <div class="text-xl font-black text-amber-400 mt-1 font-heading" id="rep-sum-total-discount">৳ 0</div>
-                    <span class="text-[10px] text-amber-300">Given to customers</span>
+                    <div class="text-xl font-black text-amber-300 mt-1 font-heading" id="rep-sum-total-discount">৳ 0</div>
+                    <span class="text-[10px] text-amber-300/80">Given to customers</span>
                   </div>
                 </div>
 
                 <!-- Payment Methods Breakdown Row -->
                 <div class="p-3 bg-white/5 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
-                  <div class="font-bold text-slate-300 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-wallet text-indigo-400"></i>
+                  <div class="font-bold text-emerald-200 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-wallet text-emerald-400"></i>
                     <span>Payment Channel Breakdown:</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-4 text-xs font-semibold">
-                    <span class="text-slate-300">💵 Cash: <b class="text-white" id="rep-sum-pay-cash">৳ 0</b></span>
-                    <span class="text-slate-300">📱 bKash: <b class="text-pink-400" id="rep-sum-pay-bkash">৳ 0</b></span>
-                    <span class="text-slate-300">💳 Card: <b class="text-blue-400" id="rep-sum-pay-card">৳ 0</b></span>
-                    <span class="text-slate-300">📲 Nagad: <b class="text-orange-400" id="rep-sum-pay-nagad">৳ 0</b></span>
+                    <span class="text-emerald-100">💵 Cash: <b class="text-white font-bold" id="rep-sum-pay-cash">৳ 0</b></span>
+                    <span class="text-emerald-100">📱 bKash: <b class="text-pink-400 font-bold" id="rep-sum-pay-bkash">৳ 0</b></span>
+                    <span class="text-emerald-100">💳 Card: <b class="text-sky-400 font-bold" id="rep-sum-pay-card">৳ 0</b></span>
+                    <span class="text-emerald-100">📲 Nagad: <b class="text-orange-400 font-bold" id="rep-sum-pay-nagad">৳ 0</b></span>
                   </div>
                 </div>
               </div>
@@ -1557,42 +1573,42 @@
             </div>
           </div>
 
-          <!-- KPI Summary Cards -->
+          <!-- KPI Summary Cards with Colorful Gradients -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Products (আইটেম)</span>
+            <div class="bg-gradient-to-br from-white via-slate-50 to-slate-100/60 p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Products (আইটেম)</span>
               <div class="text-lg font-black text-slate-900 mt-1" id="inv-kpi-total-skus">0</div>
               <span class="text-[10px] text-slate-500 font-semibold">Active SKUs</span>
             </div>
 
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">System Stock (সিস্টেম)</span>
-              <div class="text-lg font-black text-indigo-600 mt-1" id="inv-kpi-system-units">0</div>
-              <span class="text-[10px] text-slate-500 font-semibold">Total database units</span>
+            <div class="bg-gradient-to-br from-white via-indigo-50/40 to-indigo-50/10 p-4 rounded-2xl border border-indigo-100/90 shadow-2xs">
+              <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">System Stock (সিস্টেম)</span>
+              <div class="text-lg font-black text-indigo-700 mt-1" id="inv-kpi-system-units">0</div>
+              <span class="text-[10px] text-indigo-600/80 font-semibold">Total database units</span>
             </div>
 
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Scanned Stock (গণনাকৃত)</span>
-              <div class="text-lg font-black text-emerald-600 mt-1" id="inv-kpi-scanned-units">0</div>
-              <span class="text-[10px] text-slate-500 font-semibold">Physical units counted</span>
+            <div class="bg-gradient-to-br from-white via-emerald-50/40 to-emerald-50/10 p-4 rounded-2xl border border-emerald-100/90 shadow-2xs">
+              <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Scanned Stock (গণনাকৃত)</span>
+              <div class="text-lg font-black text-emerald-700 mt-1" id="inv-kpi-scanned-units">0</div>
+              <span class="text-[10px] text-emerald-600/80 font-semibold">Physical units counted</span>
             </div>
 
-            <div class="bg-white p-4 rounded-2xl border border-rose-100 bg-rose-50/30 shadow-2xs">
-              <span class="text-[10px] font-bold text-rose-500 uppercase tracking-wider block">Shortage (ঘাটতি পণ্য)</span>
+            <div class="bg-gradient-to-br from-white via-rose-50/50 to-rose-50/20 p-4 rounded-2xl border border-rose-200 shadow-2xs">
+              <span class="text-[10px] font-bold text-rose-600 uppercase tracking-wider block">Shortage (ঘাটতি পণ্য)</span>
               <div class="text-lg font-black text-rose-600 mt-1" id="inv-kpi-shortage-units">0 pcs</div>
-              <span class="text-[10px] text-rose-500 font-bold" id="inv-kpi-shortage-skus">0 items short</span>
+              <span class="text-[10px] text-rose-600 font-bold" id="inv-kpi-shortage-skus">0 items short</span>
             </div>
 
-            <div class="bg-white p-4 rounded-2xl border border-rose-100 bg-rose-50/40 shadow-2xs">
-              <span class="text-[10px] font-bold text-rose-600 uppercase tracking-wider block">Shortage Value (ঘাটতি টাকা)</span>
+            <div class="bg-gradient-to-br from-white via-rose-50/60 to-rose-50/30 p-4 rounded-2xl border border-rose-200 shadow-2xs">
+              <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Shortage Value (ঘাটতি টাকা)</span>
               <div class="text-lg font-black text-rose-700 mt-1 font-heading" id="inv-kpi-shortage-val">৳ 0</div>
-              <span class="text-[10px] text-rose-500 font-semibold">Total financial gap</span>
+              <span class="text-[10px] text-rose-600 font-semibold">Total financial gap</span>
             </div>
 
-            <div class="bg-white p-4 rounded-2xl border border-emerald-100 bg-emerald-50/30 shadow-2xs">
-              <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Matched (মিল আছে)</span>
-              <div class="text-lg font-black text-emerald-700 mt-1" id="inv-kpi-matched-skus">0</div>
-              <span class="text-[10px] text-emerald-600 font-semibold">100% accurate items</span>
+            <div class="bg-gradient-to-br from-white via-teal-50/50 to-emerald-50/30 p-4 rounded-2xl border border-emerald-200 shadow-2xs">
+              <span class="text-[10px] font-bold text-teal-700 uppercase tracking-wider block">Matched (মিল আছে)</span>
+              <div class="text-lg font-black text-teal-700 mt-1" id="inv-kpi-matched-skus">0</div>
+              <span class="text-[10px] text-teal-600 font-semibold">100% accurate items</span>
             </div>
           </div>
 
