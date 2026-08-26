@@ -758,29 +758,42 @@
                   <span id="pos-subtotal" class="font-bold text-slate-800">৳ 0</span>
                 </div>
 
-                <!-- Discount (Directly Editable by All Staff) -->
+                <!-- Discount with % Percentage and ৳ Taka toggle -->
                 <div class="flex justify-between items-center font-semibold text-slate-600">
                   <div class="flex items-center space-x-1.5">
-                    <span>Discount (ছাড় ৳)</span>
-                    <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                      <i class="fa-solid fa-tag text-[8px] mr-0.5"></i>ছাড়
-                    </span>
+                    <span>Discount (ছাড়)</span>
+                    <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10px] font-bold">
+                      <button type="button" id="pos-disc-type-taka" onclick="setPosDiscountType('taka')" class="px-1.5 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs transition cursor-pointer">৳ Taka</button>
+                      <button type="button" id="pos-disc-type-percent" onclick="setPosDiscountType('percent')" class="px-1.5 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer">% Percent</button>
+                    </div>
                   </div>
                   <div class="flex items-center space-x-1">
-                    <input type="number" id="pos-discount" min="0" value="0" oninput="onDiscountInputChange()" placeholder="0" class="w-24 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                    <div class="relative flex items-center">
+                      <input type="number" id="pos-discount" min="0" value="0" oninput="onDiscountInputChange()" placeholder="0" class="w-20 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                      <span id="pos-discount-unit" class="text-xs font-bold text-slate-500 pl-1">৳</span>
+                    </div>
+                    <span id="pos-discount-applied-text" class="text-[10px] font-bold text-rose-600 hidden"></span>
                   </div>
                 </div>
 
-                <!-- Custom Editable VAT -->
+                <!-- Custom Editable VAT with 7.5% and 5% Options -->
                 <div class="flex justify-between items-center font-semibold text-slate-600">
                   <div class="flex items-center space-x-1.5">
                     <span>Tax / VAT</span>
+                    <select id="pos-vat-preset" onchange="onPosVatPresetChange(this.value)" class="bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-700 py-0.5 px-1 outline-none cursor-pointer">
+                      <option value="7.5" selected>7.5% VAT</option>
+                      <option value="5">5% VAT</option>
+                      <option value="0">0% (No VAT)</option>
+                      <option value="custom">Custom %</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
                     <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
-                      <input type="number" id="pos-tax-rate" min="0" max="100" value="5" step="0.5" oninput="calculatePosTotals()" class="w-10 text-center font-bold text-slate-800 bg-transparent outline-none text-[11px]">
+                      <input type="number" id="pos-tax-rate" min="0" max="100" value="7.5" step="0.5" oninput="onPosTaxRateCustomInput()" class="w-11 text-center font-bold text-slate-800 bg-transparent outline-none text-[11px]">
                       <span class="text-[10px] font-bold text-slate-500 pr-1">%</span>
                     </div>
+                    <span id="pos-tax" class="font-bold text-slate-700 text-xs w-14 text-right">৳ 0</span>
                   </div>
-                  <span id="pos-tax" class="font-bold text-slate-700">৳ 0</span>
                 </div>
 
                 <div class="flex justify-between font-black text-lg text-slate-900 pt-2 border-t border-slate-200">
@@ -2889,6 +2902,53 @@
             <input type="number" id="exchange-new-qty" min="1" value="1" oninput="calculateExchangeDifference()" class="w-12 text-center font-black text-xs outline-none">
           </div>
         </div>
+
+        <!-- Replacement Item VAT & Optional Discount Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
+          <!-- VAT on Replacement Product -->
+          <div class="bg-white p-2.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-700 text-[11px] flex items-center space-x-1">
+                <i class="fa-solid fa-percent text-indigo-600 text-[10px]"></i>
+                <span>VAT on Replacement (নতুন পণ্যে ভ্যাট)</span>
+              </label>
+              <select id="exchange-vat-preset" onchange="onExchangeVatPresetChange(this.value)" class="bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-700 py-0.5 px-1 outline-none cursor-pointer">
+                <option value="7.5" selected>7.5% Standard VAT</option>
+                <option value="5">5% Basic VAT</option>
+                <option value="0">0% No VAT</option>
+                <option value="custom">Custom %</option>
+              </select>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+                <input type="number" id="exchange-vat-rate" min="0" max="100" value="7.5" step="0.5" oninput="onExchangeVatCustomInput()" class="w-12 text-center font-bold text-slate-800 bg-transparent outline-none text-xs">
+                <span class="text-[10px] font-bold text-slate-500 pr-1">%</span>
+              </div>
+              <span id="exchange-vat-calc-display" class="font-bold text-indigo-700 text-xs">+৳ 0 VAT</span>
+            </div>
+          </div>
+
+          <!-- Discount on Exchange (Taka / Percent) -->
+          <div class="bg-white p-2.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-700 text-[11px] flex items-center space-x-1">
+                <i class="fa-solid fa-tag text-emerald-600 text-[10px]"></i>
+                <span>Exchange Discount (ছাড়)</span>
+              </label>
+              <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[9px] font-bold">
+                <button type="button" id="exchange-disc-type-taka" onclick="setExchangeDiscountType('taka')" class="px-1.5 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs transition cursor-pointer">৳ Taka</button>
+                <button type="button" id="exchange-disc-type-percent" onclick="setExchangeDiscountType('percent')" class="px-1.5 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer">% Percent</button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-1">
+                <input type="number" id="exchange-discount-input" min="0" value="0" oninput="calculateExchangeDifference()" placeholder="0" class="w-20 p-1 text-right bg-slate-50 border border-slate-200 rounded-lg font-bold text-rose-600 outline-none text-xs focus:bg-white">
+                <span id="exchange-discount-unit" class="text-xs font-bold text-slate-500">৳</span>
+              </div>
+              <span id="exchange-disc-calc-display" class="font-bold text-rose-600 text-xs">-৳ 0</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- STEP 3: Live Price Calculation & Business Rule Verification -->
@@ -2898,19 +2958,23 @@
           <span class="text-[10px] font-bold text-slate-400">Policy: New Price &ge; Old Price</span>
         </div>
 
-        <!-- 3-Box Comparison Matrix -->
-        <div class="grid grid-cols-3 gap-3 text-center text-xs">
-          <div class="p-3 bg-rose-50/70 rounded-xl border border-rose-200">
-            <span class="text-[10px] font-bold text-rose-700 block mb-0.5">(-) Return Credit (ফেরত মূল্য)</span>
-            <b id="exchange-credit-display" class="text-base font-black text-rose-700">৳ 0</b>
+        <!-- 4-Box Comparison Matrix -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center text-xs">
+          <div class="p-2.5 bg-rose-50/70 rounded-xl border border-rose-200">
+            <span class="text-[10px] font-bold text-rose-700 block mb-0.5">(-) Return Credit (ফেরত)</span>
+            <b id="exchange-credit-display" class="text-sm font-black text-rose-700">৳ 0</b>
           </div>
-          <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-200">
-            <span class="text-[10px] font-bold text-indigo-700 block mb-0.5">(+) New Item Price (নতুন পণ্যের মূল্য)</span>
-            <b id="exchange-new-price-display" class="text-base font-black text-indigo-700">৳ 0</b>
+          <div class="p-2.5 bg-indigo-50/70 rounded-xl border border-indigo-200">
+            <span class="text-[10px] font-bold text-indigo-700 block mb-0.5">(+) New Product (নতুন)</span>
+            <b id="exchange-new-price-display" class="text-sm font-black text-indigo-700">৳ 0</b>
           </div>
-          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
-            <span class="text-[10px] font-bold text-amber-800 block mb-0.5">(=) Difference to Pay (অতিরিক্ত প্রদেয়)</span>
-            <b id="exchange-diff-display" class="text-base font-black text-amber-900">৳ 0</b>
+          <div class="p-2.5 bg-purple-50/70 rounded-xl border border-purple-200">
+            <span class="text-[10px] font-bold text-purple-700 block mb-0.5">(+) New Item VAT (ভ্যাট)</span>
+            <b id="exchange-vat-amount-display" class="text-sm font-black text-purple-700">৳ 0</b>
+          </div>
+          <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-300 ring-2 ring-amber-100">
+            <span class="text-[10px] font-bold text-amber-800 block mb-0.5">(=) Difference to Pay (মোট প্রদেয়)</span>
+            <b id="exchange-diff-display" class="text-base font-black text-amber-950 font-heading">৳ 0</b>
           </div>
         </div>
 
@@ -2934,22 +2998,38 @@
           <span class="text-[10px] font-black uppercase bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">Eligible for Exchange</span>
         </div>
 
-        <!-- Payment Breakdown for Difference (if diff > 0) -->
-        <div id="exchange-payment-section" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Difference Payment Method (পার্থক্য পরিশোধের মাধ্যম)</label>
-            <select id="exchange-pay-method" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
-              <option value="Cash">💵 Cash (ক্যাশ টাকা)</option>
-              <option value="bKash">📱 bKash (বিকাশ)</option>
-              <option value="Card">💳 Card (কার্ড / ব্যাংক POS)</option>
-              <option value="Nagad">📲 Nagad (নগদ)</option>
-            </select>
+        <!-- Payment Breakdown & Paid Amount Input (User can input amount paid) -->
+        <div id="exchange-payment-section" class="space-y-2.5 pt-2 border-t border-slate-100 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Difference Payment Method (পরিশোধ মাধ্যম)</label>
+              <select id="exchange-pay-method" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:bg-white text-xs">
+                <option value="Cash">💵 Cash (ক্যাশ টাকা)</option>
+                <option value="bKash">📱 bKash (বিকাশ)</option>
+                <option value="Card">💳 Card (কার্ড / ব্যাংক POS)</option>
+                <option value="Nagad">📲 Nagad (নগদ)</option>
+              </select>
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="font-bold text-slate-700">Customer Paid Amount (জমা টাকা ৳) *</label>
+                <button type="button" onclick="fillExactExchangePaidAmount()" class="text-[9px] font-bold text-indigo-600 hover:underline cursor-pointer">[Exact Amount]</button>
+              </div>
+              <input type="number" id="exchange-paid-amount" min="0" oninput="onExchangePaidAmountChange()" placeholder="Enter Paid Amount ৳" class="w-full p-2 bg-white border border-emerald-300 rounded-xl font-black text-emerald-700 outline-none focus:ring-2 focus:ring-emerald-500 text-xs shadow-2xs">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Exchange Note / Reason (বিনিময়ের কারণ/মন্তব্য)</label>
+              <input type="text" id="exchange-note" placeholder="e.g. Size mismatch / Color change" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white text-xs">
+            </div>
           </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Exchange Note / Reason (বিনিময়ের কারণ/মন্তব্য)</label>
-            <input type="text" id="exchange-note" placeholder="e.g. Size mismatch / Color exchange" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white">
+
+          <!-- Real-time Live Change / Due Balance Banner -->
+          <div id="exchange-balance-banner" class="p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all bg-slate-50 border-slate-200 text-slate-600">
+            <span id="exchange-balance-status-label" class="font-bold">Payment Status:</span>
+            <span id="exchange-balance-val" class="font-black text-slate-800">৳ 0</span>
           </div>
         </div>
+      </div>
       </div>
 
       <!-- Action Footer -->
@@ -5394,16 +5474,81 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }
     }
 
+    let posDiscountType = 'taka'; // 'taka' or 'percent'
+
+    function setPosDiscountType(type) {
+      posDiscountType = type;
+      const btnTaka = document.getElementById('pos-disc-type-taka');
+      const btnPercent = document.getElementById('pos-disc-type-percent');
+      const unitSpan = document.getElementById('pos-discount-unit');
+
+      if (type === 'percent') {
+        if (btnPercent) {
+          btnPercent.className = 'px-1.5 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs transition cursor-pointer';
+        }
+        if (btnTaka) {
+          btnTaka.className = 'px-1.5 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        }
+        if (unitSpan) unitSpan.innerText = '%';
+      } else {
+        if (btnTaka) {
+          btnTaka.className = 'px-1.5 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs transition cursor-pointer';
+        }
+        if (btnPercent) {
+          btnPercent.className = 'px-1.5 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        }
+        if (unitSpan) unitSpan.innerText = '৳';
+      }
+      calculatePosTotals();
+    }
+
+    function onPosVatPresetChange(val) {
+      const taxRateInput = document.getElementById('pos-tax-rate');
+      if (val !== 'custom') {
+        if (taxRateInput) taxRateInput.value = val;
+      }
+      calculatePosTotals();
+    }
+
+    function onPosTaxRateCustomInput() {
+      const presetSelect = document.getElementById('pos-vat-preset');
+      const taxRateInput = document.getElementById('pos-tax-rate');
+      const curVal = taxRateInput ? taxRateInput.value : '';
+      if (presetSelect) {
+        if (curVal === '7.5' || curVal === '5' || curVal === '0') {
+          presetSelect.value = curVal;
+        } else {
+          presetSelect.value = 'custom';
+        }
+      }
+      calculatePosTotals();
+    }
+
     function onDiscountInputChange() {
       calculatePosTotals();
     }
 
     function calculatePosTotals() {
       const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
-      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const rawDiscount = Number(document.getElementById('pos-discount')?.value) || 0;
+      
+      let discountTaka = 0;
+      const appliedText = document.getElementById('pos-discount-applied-text');
+      if (posDiscountType === 'percent') {
+        discountTaka = Math.round((subtotal * rawDiscount) / 100);
+        if (appliedText) {
+          appliedText.classList.remove('hidden');
+          appliedText.innerText = `(-৳${discountTaka.toLocaleString()})`;
+        }
+      } else {
+        discountTaka = rawDiscount;
+        if (appliedText) appliedText.classList.add('hidden');
+      }
+
       const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
-      const tax = Math.round(subtotal * (taxRate / 100));
-      const grandTotal = Math.max(0, subtotal - discount + tax);
+      const taxableAmount = Math.max(0, subtotal - discountTaka);
+      const tax = Math.round(taxableAmount * (taxRate / 100));
+      const grandTotal = Math.max(0, taxableAmount + tax);
 
       if (document.getElementById('pos-subtotal')) document.getElementById('pos-subtotal').innerText = `৳ ${subtotal.toLocaleString()}`;
       if (document.getElementById('pos-tax')) document.getElementById('pos-tax').innerText = `৳ ${tax.toLocaleString()}`;
@@ -5414,10 +5559,12 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
     function getPosGrandTotal() {
       const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
-      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const rawDiscount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const discountTaka = (posDiscountType === 'percent') ? Math.round((subtotal * rawDiscount) / 100) : rawDiscount;
       const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
-      const tax = Math.round(subtotal * (taxRate / 100));
-      return Math.max(0, subtotal - discount + tax);
+      const taxableAmount = Math.max(0, subtotal - discountTaka);
+      const tax = Math.round(taxableAmount * (taxRate / 100));
+      return Math.max(0, taxableAmount + tax);
     }
 
     // --- Multi-Tender Live Payment Logic ---
@@ -5671,10 +5818,12 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }
 
       const subtotal = posCart.reduce((sum, item) => sum + item.total, 0);
-      const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const rawDiscount = Number(document.getElementById('pos-discount')?.value) || 0;
+      const discount = (posDiscountType === 'percent') ? Math.round((subtotal * rawDiscount) / 100) : rawDiscount;
       const taxRate = Number(document.getElementById('pos-tax-rate')?.value) || 0;
-      const tax = Math.round(subtotal * (taxRate / 100));
-      const grandTotal = Math.max(0, subtotal - discount + tax);
+      const taxableAmount = Math.max(0, subtotal - discount);
+      const tax = Math.round(taxableAmount * (taxRate / 100));
+      const grandTotal = Math.max(0, taxableAmount + tax);
 
       const cash = Number(document.getElementById('pay-input-cash')?.value) || 0;
       const bkash = Number(document.getElementById('pay-input-bkash')?.value) || 0;
@@ -8907,6 +9056,19 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const noteInput = document.getElementById('exchange-note');
       if (noteInput) noteInput.value = '';
 
+      const paidInput = document.getElementById('exchange-paid-amount');
+      if (paidInput) paidInput.value = '';
+
+      const discInput = document.getElementById('exchange-discount-input');
+      if (discInput) discInput.value = '0';
+
+      const vatPreset = document.getElementById('exchange-vat-preset');
+      if (vatPreset) vatPreset.value = '7.5';
+
+      const vatRate = document.getElementById('exchange-vat-rate');
+      if (vatRate) vatRate.value = '7.5';
+
+      setExchangeDiscountType('taka');
       populateExchangeNewProductDropdown();
       calculateExchangeDifference();
       openModal('modal-product-exchange');
@@ -9099,20 +9261,152 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       calculateExchangeDifference();
     }
 
+    let exchangeDiscountType = 'taka'; // 'taka' or 'percent'
+
+    function setExchangeDiscountType(type) {
+      exchangeDiscountType = type;
+      const btnTaka = document.getElementById('exchange-disc-type-taka');
+      const btnPercent = document.getElementById('exchange-disc-type-percent');
+      const unitSpan = document.getElementById('exchange-discount-unit');
+
+      if (type === 'percent') {
+        if (btnPercent) btnPercent.className = 'px-1.5 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs transition cursor-pointer';
+        if (btnTaka) btnTaka.className = 'px-1.5 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        if (unitSpan) unitSpan.innerText = '%';
+      } else {
+        if (btnTaka) btnTaka.className = 'px-1.5 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs transition cursor-pointer';
+        if (btnPercent) btnPercent.className = 'px-1.5 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        if (unitSpan) unitSpan.innerText = '৳';
+      }
+      calculateExchangeDifference();
+    }
+
+    function onExchangeVatPresetChange(val) {
+      const vatInput = document.getElementById('exchange-vat-rate');
+      if (val !== 'custom') {
+        if (vatInput) vatInput.value = val;
+      }
+      calculateExchangeDifference();
+    }
+
+    function onExchangeVatCustomInput() {
+      const presetSelect = document.getElementById('exchange-vat-preset');
+      const vatInput = document.getElementById('exchange-vat-rate');
+      const curVal = vatInput ? vatInput.value : '';
+      if (presetSelect) {
+        if (curVal === '7.5' || curVal === '5' || curVal === '0') {
+          presetSelect.value = curVal;
+        } else {
+          presetSelect.value = 'custom';
+        }
+      }
+      calculateExchangeDifference();
+    }
+
+    function fillExactExchangePaidAmount() {
+      const returnCredit = exchangeSelectedReturnItem ? exchangeSelectedReturnItem.price : 0;
+      const newUnitPrice = exchangeSelectedNewProduct ? exchangeSelectedNewProduct.sale_price : 0;
+      const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
+      const newSubtotal = newUnitPrice * newQty;
+      
+      const newVatRate = Number(document.getElementById('exchange-vat-rate')?.value) || 0;
+      const newVatAmount = Math.round((newSubtotal * newVatRate) / 100);
+
+      const rawExDisc = Number(document.getElementById('exchange-discount-input')?.value) || 0;
+      const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
+
+      const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
+      const netDifference = Math.max(0, totalNewPayable - returnCredit);
+
+      const paidInput = document.getElementById('exchange-paid-amount');
+      if (paidInput) {
+        paidInput.value = netDifference > 0 ? netDifference : 0;
+      }
+      onExchangePaidAmountChange();
+    }
+
+    function onExchangePaidAmountChange() {
+      const returnCredit = exchangeSelectedReturnItem ? exchangeSelectedReturnItem.price : 0;
+      const newUnitPrice = exchangeSelectedNewProduct ? exchangeSelectedNewProduct.sale_price : 0;
+      const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
+      const newSubtotal = newUnitPrice * newQty;
+      
+      const newVatRate = Number(document.getElementById('exchange-vat-rate')?.value) || 0;
+      const newVatAmount = Math.round((newSubtotal * newVatRate) / 100);
+
+      const rawExDisc = Number(document.getElementById('exchange-discount-input')?.value) || 0;
+      const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
+
+      const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
+      const netDifference = Math.max(0, totalNewPayable - returnCredit);
+
+      const paidInput = document.getElementById('exchange-paid-amount');
+      const paidAmount = Number(paidInput?.value) || 0;
+
+      const banner = document.getElementById('exchange-balance-banner');
+      const statusLabel = document.getElementById('exchange-balance-status-label');
+      const balanceVal = document.getElementById('exchange-balance-val');
+
+      if (!banner || !statusLabel || !balanceVal) return;
+
+      if (netDifference === 0) {
+        banner.className = 'p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all bg-emerald-50 border-emerald-200 text-emerald-800';
+        statusLabel.innerText = '✓ Even Exchange (সমমূল্য বিনিময়):';
+        balanceVal.innerText = 'অতিরিক্ত টাকা প্রযোজ্য নয় (৳0)';
+        return;
+      }
+
+      const diff = netDifference - paidAmount;
+
+      if (diff === 0 && paidAmount > 0) {
+        banner.className = 'p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all bg-emerald-50 border-emerald-200 text-emerald-800 font-bold';
+        statusLabel.innerHTML = '<i class="fa-solid fa-circle-check text-xs mr-1 text-emerald-600"></i><span>✓ Fully Paid (পরিশোধ সম্পন্ন):</span>';
+        balanceVal.innerText = `৳ ${paidAmount.toLocaleString()}`;
+      } else if (diff > 0) {
+        banner.className = 'p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all bg-rose-50 border-rose-200 text-rose-800 font-semibold';
+        statusLabel.innerText = 'বাকি পরিশোধ করতে হবে (Due):';
+        balanceVal.className = 'font-black text-rose-600 text-sm';
+        balanceVal.innerText = `৳ ${diff.toLocaleString()}`;
+      } else if (diff < 0) {
+        banner.className = 'p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all bg-sky-50 border-sky-200 text-sky-800 font-semibold';
+        statusLabel.innerText = 'কাস্টমারকে ফেরত দিন (Change):';
+        balanceVal.className = 'font-black text-sky-600 text-sm';
+        balanceVal.innerText = `৳ ${Math.abs(diff).toLocaleString()}`;
+      } else {
+        banner.className = 'p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all bg-amber-50 border-amber-200 text-amber-900';
+        statusLabel.innerText = 'অতিরিক্ত প্রদেয় টাকা (Net Payable):';
+        balanceVal.innerText = `৳ ${netDifference.toLocaleString()}`;
+      }
+    }
+
     function calculateExchangeDifference() {
       const returnCredit = exchangeSelectedReturnItem ? exchangeSelectedReturnItem.price : 0;
       const newUnitPrice = exchangeSelectedNewProduct ? exchangeSelectedNewProduct.sale_price : 0;
       const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
-      const newTotalPrice = newUnitPrice * newQty;
-      const difference = newTotalPrice - returnCredit;
+      const newSubtotal = newUnitPrice * newQty;
+      
+      const newVatRate = Number(document.getElementById('exchange-vat-rate')?.value) || 0;
+      const newVatAmount = Math.round((newSubtotal * newVatRate) / 100);
+
+      const rawExDisc = Number(document.getElementById('exchange-discount-input')?.value) || 0;
+      const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
+
+      const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
+      const netDifference = Math.max(0, totalNewPayable - returnCredit);
 
       const creditDisplay = document.getElementById('exchange-credit-display');
       const newPriceDisplay = document.getElementById('exchange-new-price-display');
+      const vatAmountDisplay = document.getElementById('exchange-vat-amount-display');
+      const vatCalcDisplay = document.getElementById('exchange-vat-calc-display');
+      const discCalcDisplay = document.getElementById('exchange-disc-calc-display');
       const diffDisplay = document.getElementById('exchange-diff-display');
 
       if (creditDisplay) creditDisplay.innerText = `৳ ${returnCredit.toLocaleString()}`;
-      if (newPriceDisplay) newPriceDisplay.innerText = `৳ ${newTotalPrice.toLocaleString()}`;
-      if (diffDisplay) diffDisplay.innerText = `৳ ${Math.max(0, difference).toLocaleString()}`;
+      if (newPriceDisplay) newPriceDisplay.innerText = `৳ ${newSubtotal.toLocaleString()}`;
+      if (vatAmountDisplay) vatAmountDisplay.innerText = `+৳ ${newVatAmount.toLocaleString()} (${newVatRate}%)`;
+      if (vatCalcDisplay) vatCalcDisplay.innerText = `+৳ ${newVatAmount.toLocaleString()} VAT`;
+      if (discCalcDisplay) discCalcDisplay.innerText = `-৳ ${exDiscountTaka.toLocaleString()}`;
+      if (diffDisplay) diffDisplay.innerText = `৳ ${netDifference.toLocaleString()}`;
 
       const warningBanner = document.getElementById('exchange-rule-warning');
       const warningText = document.getElementById('exchange-rule-warning-text');
@@ -9127,16 +9421,17 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           confirmBtn.disabled = true;
           confirmBtn.classList.add('opacity-50', 'pointer-events-none');
         }
+        onExchangePaidAmountChange();
         return;
       }
 
-      // Business Rule Validation: New Price >= Return Credit
-      if (newTotalPrice < returnCredit) {
-        const deficit = returnCredit - newTotalPrice;
+      // Business Rule Validation: New Product Subtotal >= Return Credit
+      if (newSubtotal < returnCredit) {
+        const deficit = returnCredit - newSubtotal;
         if (warningBanner) {
           warningBanner.classList.remove('hidden');
           if (warningText) {
-            warningText.innerText = `নতুন পণ্যের মূল্য (৳${newTotalPrice.toLocaleString()}) ফেরত পণ্যের মূল্যের (৳${returnCredit.toLocaleString()}) চেয়ে ৳${deficit.toLocaleString()} কম! পলিসি অনুযায়ী নতুন পণ্যের মূল্য অবশ্যই সমান বা বেশি হতে হবে।`;
+            warningText.innerText = `নতুন পণ্যের মূল্য (৳${newSubtotal.toLocaleString()}) ফেরত পণ্যের মূল্যের (৳${returnCredit.toLocaleString()}) চেয়ে ৳${deficit.toLocaleString()} কম! পলিসি অনুযায়ী নতুন পণ্যের মূল্য অবশ্যই সমান বা বেশি হতে হবে।`;
           }
         }
         if (successBanner) successBanner.classList.add('hidden');
@@ -9149,9 +9444,9 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         if (successBanner) {
           successBanner.classList.remove('hidden');
           if (successText) {
-            successText.innerText = difference === 0 
+            successText.innerText = netDifference === 0 
               ? `সমমূল্যে সরাসরি পণ্য বিনিময় অনুমোদিত (কোনো অতিরিক্ত টাকা লাগবে না)।` 
-              : `শর্ত পূরণ হয়েছে: গ্রাহক অতিরিক্ত ৳${difference.toLocaleString()} পরিশোধ করবেন।`;
+              : `শর্ত পূরণ হয়েছে: ভ্যাট ও ছাড় সমন্বয়ের পর অতিরিক্ত ৳${netDifference.toLocaleString()} প্রদেয়।`;
           }
         }
         if (confirmBtn) {
@@ -9159,6 +9454,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
         }
       }
+
+      onExchangePaidAmountChange();
     }
 
     async function submitProductExchange() {
@@ -9178,9 +9475,9 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const returnCredit = exchangeSelectedReturnItem.price;
       const newUnitPrice = exchangeSelectedNewProduct.sale_price;
       const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
-      const newTotalPrice = newUnitPrice * newQty;
+      const newSubtotal = newUnitPrice * newQty;
 
-      if (newTotalPrice < returnCredit) {
+      if (newSubtotal < returnCredit) {
         Swal.fire({
           icon: 'error',
           title: 'Exchange Policy Violation',
@@ -9190,9 +9487,32 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         return;
       }
 
-      const differenceToPay = newTotalPrice - returnCredit;
+      const newVatRate = Number(document.getElementById('exchange-vat-rate')?.value) || 0;
+      const newVatAmount = Math.round((newSubtotal * newVatRate) / 100);
+
+      const rawExDisc = Number(document.getElementById('exchange-discount-input')?.value) || 0;
+      const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
+
+      const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
+      const differenceToPay = Math.max(0, totalNewPayable - returnCredit);
+
+      const paidAmount = Number(document.getElementById('exchange-paid-amount')?.value) || (differenceToPay > 0 ? 0 : 0);
       const payMethod = document.getElementById('exchange-pay-method')?.value || 'Cash';
       const exchangeNote = document.getElementById('exchange-note')?.value.trim() || 'Product Size/Color Exchange';
+
+      // Check payment adequacy if difference is greater than 0
+      if (differenceToPay > 0 && paidAmount < differenceToPay) {
+        const confirmUnderpaid = await Swal.fire({
+          title: 'Incomplete Payment (বকেয়া রয়ে গেছে)',
+          html: `<p>অতিরিক্ত প্রদেয় <b>৳${differenceToPay.toLocaleString()}</b> কিন্তু জমা নেওয়া হয়েছে <b>৳${paidAmount.toLocaleString()}</b>।</p><p class="text-rose-600 font-bold mt-1">বাকি বকেয়া: ৳${(differenceToPay - paidAmount).toLocaleString()}</p><p class="text-xs text-slate-500 mt-2">আপনি কি এই এক্সচেঞ্জ সম্পন্ন করতে চান?</p>`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#f59e0b',
+          confirmButtonText: 'হ্যাঁ, চালিয়ে যান',
+          cancelButtonText: 'টাকা সংশোধন করুন'
+        });
+        if (!confirmUnderpaid.isConfirmed) return;
+      }
 
       const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
       const effectiveBranchName = getBranchName(effectiveBranchId);
@@ -9206,16 +9526,32 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
               <b class="font-mono text-indigo-700">${exchangeSelectedInvoice.invoice_no}</b>
             </div>
             <div class="flex justify-between text-rose-700">
-              <span>(-) ফেরত পণ্য (Return):</span>
+              <span>(-) ফেরত পণ্য (Return Credit):</span>
               <b>${exchangeSelectedReturnItem.name} (-৳${returnCredit.toLocaleString()})</b>
             </div>
-            <div class="flex justify-between text-emerald-700">
+            <div class="flex justify-between text-indigo-700">
               <span>(+) নতুন পণ্য (New ${newQty} pcs):</span>
-              <b>${exchangeSelectedNewProduct.product_name} (+৳${newTotalPrice.toLocaleString()})</b>
+              <b>${exchangeSelectedNewProduct.product_name} (+৳${newSubtotal.toLocaleString()})</b>
             </div>
+            ${newVatAmount > 0 ? `
+              <div class="flex justify-between text-purple-700">
+                <span>(+) নতুন পণ্যে ভ্যাট (${newVatRate}%):</span>
+                <b>+৳${newVatAmount.toLocaleString()}</b>
+              </div>
+            ` : ''}
+            ${exDiscountTaka > 0 ? `
+              <div class="flex justify-between text-rose-600">
+                <span>(-) এক্সচেঞ্জ বিশেষ ছাড়:</span>
+                <b>-৳${exDiscountTaka.toLocaleString()}</b>
+              </div>
+            ` : ''}
             <div class="flex justify-between font-black text-sm pt-2 border-t border-amber-300 text-slate-900">
-              <span>অতিরিক্ত প্রদেয় টাকা:</span>
-              <span class="text-amber-800 font-heading">৳ ${differenceToPay.toLocaleString()} (${differenceToPay > 0 ? payMethod : 'Even Exchange'})</span>
+              <span>সর্বমোট প্রদেয় টাকা:</span>
+              <span class="text-amber-800 font-heading">৳ ${differenceToPay.toLocaleString()}</span>
+            </div>
+            <div class="flex justify-between font-bold text-xs pt-1 text-emerald-700">
+              <span>জমা প্রদান:</span>
+              <span>৳ ${(paidAmount > 0 ? paidAmount : differenceToPay).toLocaleString()} (${payMethod})</span>
             </div>
           </div>
         `,
@@ -9251,6 +9587,11 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       // 2. Generate Exchange Sales Invoice Record
       const exchangeInvoiceNo = `EXC-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${String(salesData.length + 1).padStart(3, '0')}`;
+      let formattedPay = differenceToPay > 0 ? `${payMethod}: ৳${paidAmount > 0 ? paidAmount.toLocaleString() : differenceToPay.toLocaleString()}` : 'Even Exchange (৳0)';
+      if (paidAmount > differenceToPay) {
+        formattedPay += ` (Change: ৳${(paidAmount - differenceToPay).toLocaleString()})`;
+      }
+
       const exchangeSaleRecord = {
         id: Date.now(),
         invoice_no: exchangeInvoiceNo,
@@ -9262,11 +9603,11 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         salesperson_name: currentUser ? currentUser.name : 'Admin',
         employee_code: currentUser ? (currentUser.username || 'EMP-01') : 'EMP-01',
         total_amount: differenceToPay,
-        subtotal: differenceToPay,
-        discount: 0,
-        tax_rate: 0,
-        tax: 0,
-        payment_method: differenceToPay > 0 ? `${payMethod} (Exchange Extra: ৳${differenceToPay.toLocaleString()})` : 'Even Exchange (৳0)',
+        subtotal: newSubtotal,
+        discount: exDiscountTaka,
+        tax_rate: newVatRate,
+        tax: newVatAmount,
+        payment_method: formattedPay,
         sale_date: new Date().toISOString(),
         items: [
           {
@@ -9284,7 +9625,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
             product_code: exchangeSelectedNewProduct.product_code,
             price: newUnitPrice,
             qty: newQty,
-            total: newTotalPrice,
+            total: newSubtotal,
             is_exchange_new: true
           }
         ],
@@ -9307,8 +9648,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
             salesperson_name: exchangeSaleRecord.salesperson_name,
             employee_code: exchangeSaleRecord.employee_code,
             subtotal: exchangeSaleRecord.subtotal,
-            discount: 0,
-            tax: 0,
+            discount: exchangeSaleRecord.discount,
+            tax: exchangeSaleRecord.tax,
             total_amount: exchangeSaleRecord.total_amount,
             payment_method: exchangeSaleRecord.payment_method,
             sale_date: exchangeSaleRecord.sale_date,
