@@ -667,9 +667,12 @@
               
               <!-- POS Top Control Toolbar -->
               <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-3">
-                <div class="flex-1 min-w-[200px] relative">
-                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                  <input type="text" id="pos-search-input" oninput="renderPosProducts()" placeholder="পণ্য খুঁজুন বা বারকোড স্ক্যান করুন..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition">
+                <div class="flex-1 min-w-[220px] relative">
+                  <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-indigo-600 text-sm"></i>
+                  <input type="text" id="pos-search-input" oninput="renderPosProducts()" onkeydown="handlePosBarcodeKey(event)" autofocus placeholder="বারকোড স্ক্যান করুন (সরাসরি কার্টে যোগ হবে)..." class="w-full pl-9 pr-20 py-2.5 bg-slate-50 border-2 border-indigo-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 transition shadow-2xs">
+                  <button type="button" onclick="submitPosBarcodeFromInput()" class="absolute right-1.5 top-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                    <i class="fa-solid fa-cart-plus text-[10px]"></i><span>Add</span>
+                  </button>
                 </div>
 
                 <div class="flex items-center space-x-2">
@@ -4601,6 +4604,10 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       if (tabId === 'pos') {
         renderPosProducts();
         populatePosSalesEmployees();
+        setTimeout(() => {
+          const sInput = document.getElementById('pos-search-input');
+          if (sInput) sInput.focus();
+        }, 150);
       }
       if (tabId === 'products') renderProductsTable();
       if (tabId === 'sales') renderSalesTable();
@@ -5307,6 +5314,154 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         });
       }
     }
+
+    // --- Instant Barcode Scanner & Cart Engine ---
+    function playScanBeep(isSuccess = true) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        if (isSuccess) {
+          osc.frequency.setValueAtTime(1400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.12);
+        } else {
+          osc.frequency.setValueAtTime(320, ctx.currentTime);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.22);
+        }
+      } catch (e) {}
+    }
+
+    function handlePosBarcodeKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitPosBarcodeFromInput();
+      }
+    }
+
+    function submitPosBarcodeFromInput() {
+      const input = document.getElementById('pos-search-input');
+      if (!input) return;
+      const rawVal = input.value.trim();
+      if (!rawVal) return;
+
+      const q = rawVal.toLowerCase();
+
+      // 1. Exact match by product_code, numeric id, or exact product_name
+      let prod = productsData.find(p => 
+        (p.product_code && p.product_code.toLowerCase() === q) || 
+        String(p.id) === q ||
+        (p.product_name && p.product_name.toLowerCase() === q)
+      );
+
+      // 2. If no exact match, check if exactly 1 product matches search query
+      if (!prod) {
+        const matches = productsData.filter(p => 
+          (p.product_code && p.product_code.toLowerCase().includes(q)) || 
+          (p.product_name && p.product_name.toLowerCase().includes(q))
+        );
+        if (matches.length === 1) {
+          prod = matches[0];
+        } else if (matches.length > 1) {
+          renderPosProducts();
+          return;
+        }
+      }
+
+      if (prod) {
+        const branchStock = getProductBranchStock(prod, currentBranchId);
+        if (branchStock <= 0) {
+          playScanBeep(false);
+          Swal.fire({
+            icon: 'warning',
+            title: 'Out of Stock in this Branch',
+            html: `<p class="text-xs">এই ব্রাঞ্চে <b>${prod.product_name}</b> (${prod.product_code}) এর কোনো স্টক নেই!</p><button onclick="Swal.close(); openGlobalStockModal('${prod.product_code}')" class="mt-3 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-xl font-bold cursor-pointer">🔍 অন্যান্য ব্রাঞ্চে স্টক দেখুন</button>`,
+            showConfirmButton: false,
+            timer: 3500
+          });
+          return;
+        }
+
+        // Add directly to POS Bill / Cart
+        addToPosCart(prod.id);
+        playScanBeep(true);
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `✓ কার্টে যুক্ত হয়েছে: ${prod.product_name} (+1)`,
+          showConfirmButton: false,
+          timer: 1200
+        });
+
+        input.value = '';
+        renderPosProducts();
+        input.focus();
+      } else {
+        playScanBeep(false);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: `বারকোড "${rawVal}" এর কোনো পণ্য পাওয়া যায়নি!`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+      }
+    }
+
+    // Global Hardware Barcode Scanner Listener for POS Screen
+    let posHardwareBuffer = '';
+    let posLastScanKeyTime = 0;
+
+    window.addEventListener('keydown', function (e) {
+      const posSec = document.getElementById('sec-pos');
+      if (!posSec || posSec.classList.contains('hidden')) return;
+
+      const activeEl = document.activeElement;
+      const activeTag = activeEl ? activeEl.tagName.toLowerCase() : '';
+      const activeId = activeEl ? activeEl.id : '';
+
+      // Allow typing normally in other inputs (e.g. customer phone, customer name, notes)
+      if (activeTag === 'input' && activeId !== 'pos-search-input') {
+        return;
+      }
+
+      const now = Date.now();
+
+      if (e.key === 'Enter') {
+        if (posHardwareBuffer.length >= 2) {
+          e.preventDefault();
+          const scannedCode = posHardwareBuffer.trim();
+          posHardwareBuffer = '';
+          const sInput = document.getElementById('pos-search-input');
+          if (sInput) sInput.value = scannedCode;
+          submitPosBarcodeFromInput();
+        } else {
+          posHardwareBuffer = '';
+        }
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (now - posLastScanKeyTime > 250 && posHardwareBuffer.length > 0) {
+          posHardwareBuffer = '';
+        }
+        posHardwareBuffer += e.key;
+        posLastScanKeyTime = now;
+      }
+    });
 
     // --- POS Sales Terminal Logic ---
     function renderPosProducts() {
