@@ -2865,10 +2865,17 @@
 
           <!-- Items Selection Prompt -->
           <div>
-            <span class="text-[11px] font-black text-slate-700 block mb-1.5">
-              👇 Select the item customer wants to RETURN (যে পণ্যটি ফেরত দিতে চায় সিলেক্ট করুন):
-            </span>
-            <div id="exchange-purchased-items-container" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-[11px] font-black text-slate-800 flex items-center space-x-1">
+                <span>👇 Select Item(s) & Return Qty (যে পণ্যগুলো ফেরত দিতে চান টিক দিন ও পরিমাণ নির্বাচন করুন):</span>
+              </span>
+              <div class="flex items-center space-x-1.5">
+                <button type="button" onclick="selectAllExchangeReturnItems(true)" class="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-1.5 py-0.5 rounded cursor-pointer transition">Select All</button>
+                <button type="button" onclick="selectAllExchangeReturnItems(false)" class="text-[9px] font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded cursor-pointer transition">Clear All</button>
+                <span id="exchange-return-summary-badge" class="text-[9px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded ml-1">0 items</span>
+              </div>
+            </div>
+            <div id="exchange-purchased-items-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
               <!-- Injected by JS -->
             </div>
           </div>
@@ -9028,12 +9035,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     // --- POS PRODUCT EXCHANGE & RETURN CONTROLLER ---
     // ============================================================
     let exchangeSelectedInvoice = null;
-    let exchangeSelectedReturnItem = null;
+    let exchangeReturnSelections = {}; // Keyed by item index: { id, name, code, unitPrice, soldQty, returnQty, selected, imageUrl }
     let exchangeSelectedNewProduct = null;
+    let exchangeDiscountType = 'taka'; // 'taka' or 'percent'
 
     function openProductExchangeModal(prefillInvoiceNo = null) {
       exchangeSelectedInvoice = null;
-      exchangeSelectedReturnItem = null;
+      exchangeReturnSelections = {};
       exchangeSelectedNewProduct = null;
 
       const searchInput = document.getElementById('exchange-search-invoice');
@@ -9046,6 +9054,9 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       const itemsContainer = document.getElementById('exchange-purchased-items-container');
       if (itemsContainer) itemsContainer.innerHTML = '';
+
+      const summaryBadge = document.getElementById('exchange-return-summary-badge');
+      if (summaryBadge) summaryBadge.innerText = '0 items';
 
       const barcodeInput = document.getElementById('exchange-barcode-input');
       if (barcodeInput) barcodeInput.value = '';
@@ -9102,36 +9113,31 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const prod = productsData.find(p => p.id === prodId);
       exchangeSelectedNewProduct = prod || null;
 
-      const imgEl = document.getElementById('exchange-new-product-img');
-      const badgeEl = document.getElementById('exchange-new-stock-badge');
-
-      if (prod) {
-        if (imgEl) {
-          imgEl.src = prod.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(prod.product_name)}&background=6366f1&color=fff`;
-        }
-        if (badgeEl) {
-          const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
-          const bStock = getProductBranchStock(prod, effectiveBranchId);
-          badgeEl.innerText = `Available Stock: ${bStock} pcs (${getBranchName(effectiveBranchId)})`;
-          badgeEl.className = bStock > 0 
-            ? 'text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200' 
-            : 'text-[10px] text-rose-800 font-bold bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200';
+      const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
+      const stockBadge = document.getElementById('exchange-new-stock-badge');
+      if (stockBadge && prod) {
+        const bStock = getProductBranchStock(prod, effectiveBranchId);
+        stockBadge.innerText = `Available Stock: ${bStock} pcs (${getBranchName(effectiveBranchId)})`;
+        if (bStock <= 0) {
+          stockBadge.className = 'text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-200';
+        } else {
+          stockBadge.className = 'text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200';
         }
       }
+
       calculateExchangeDifference();
     }
 
-    function handleExchangeBarcodeKey(event) {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        const codeInput = document.getElementById('exchange-barcode-input');
-        const query = (codeInput?.value || '').trim().toLowerCase();
+    function onExchangeBarcodeScan(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const barcodeInput = document.getElementById('exchange-barcode-input');
+        const query = (barcodeInput?.value || '').trim();
         if (!query) return;
 
         const prod = productsData.find(p => 
-          p.product_code.toLowerCase() === query || 
-          p.product_name.toLowerCase().includes(query) ||
-          p.id == query
+          p.product_code.toLowerCase() === query.toLowerCase() || 
+          (p.barcode && p.barcode.toLowerCase() === query.toLowerCase())
         );
 
         if (prod) {
@@ -9140,12 +9146,12 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
             select.value = prod.id;
             onExchangeNewProductChange();
           }
-          if (codeInput) codeInput.value = '';
+          barcodeInput.value = '';
           Swal.fire({
             toast: true,
             position: 'top-end',
             icon: 'success',
-            title: `Scanned: ${prod.product_name} (৳${prod.sale_price})`,
+            title: `Selected: ${prod.product_name}`,
             showConfirmButton: false,
             timer: 1500
           });
@@ -9187,6 +9193,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }
 
       exchangeSelectedInvoice = inv;
+      exchangeReturnSelections = {};
+
       document.getElementById('ex-meta-inv-no').innerText = inv.invoice_no;
       document.getElementById('ex-meta-customer').innerText = `${inv.customer_name || 'Walk-in'} (${inv.customer_phone || 'No Phone'})`;
       document.getElementById('ex-meta-date').innerText = `${new Date(inv.sale_date).toLocaleDateString()} • ${inv.branch_name || getBranchName(inv.branch_id || 1)}`;
@@ -9195,73 +9203,132 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const metaBox = document.getElementById('exchange-invoice-meta');
       if (metaBox) metaBox.classList.remove('hidden');
 
-      const itemsContainer = document.getElementById('exchange-purchased-items-container');
-      if (itemsContainer) {
-        const items = (inv.items || []).filter(i => !i.is_return);
-        if (items.length === 0) {
-          itemsContainer.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs">এই ইনভয়েসে কোনো এক্সচেঞ্জযোগ্য পণ্য নেই।</div>`;
-        } else {
-          itemsContainer.innerHTML = items.map((item, idx) => {
-            const prod = productsData.find(p => p.id === item.product_id || p.product_code === item.product_code);
-            const imgSrc = (prod && prod.image_url) ? prod.image_url : (item.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.product_name)}&background=6366f1&color=fff`);
-            const unitPrice = Math.abs(item.price || (item.total / (item.qty || 1)));
+      const items = (inv.items || []).filter(i => !i.is_return);
+      items.forEach((item, idx) => {
+        const prod = productsData.find(p => p.id === item.product_id || p.product_code === item.product_code);
+        const imgSrc = (prod && prod.image_url) ? prod.image_url : (item.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.product_name)}&background=6366f1&color=fff`);
+        const soldQty = Math.max(1, Number(item.qty) || 1);
+        const unitPrice = Math.abs(item.price || (item.total / soldQty));
 
-            return `
-              <div id="exchange-return-card-${idx}" onclick="selectExchangeReturnItem(${item.product_id || 0}, ${unitPrice}, '${item.product_name.replace(/'/g, "\\'")}', '${item.product_code || ''}', ${item.qty || 1}, '${imgSrc}', ${idx})" class="exchange-item-row p-2.5 bg-slate-50 hover:bg-amber-50/60 border-2 border-slate-200 hover:border-amber-400 rounded-xl transition cursor-pointer flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                  <img src="${imgSrc}" class="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=6366f1&color=fff'">
-                  <div>
-                    <div class="font-bold text-slate-900 text-xs">${item.product_name}</div>
-                    <div class="text-[10px] text-slate-400 font-mono">Code: ${item.product_code || 'N/A'} • Sold Qty: ${item.qty} pcs</div>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="font-black text-rose-600 text-xs">৳ ${unitPrice.toLocaleString()}</div>
-                  <span class="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Select for Return</span>
-                </div>
-              </div>
-            `;
-          }).join('');
-
-          // Auto-select first item
-          if (items.length > 0) {
-            const firstItem = items[0];
-            const prod = productsData.find(p => p.id === firstItem.product_id || p.product_code === firstItem.product_code);
-            const imgSrc = (prod && prod.image_url) ? prod.image_url : (firstItem.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(firstItem.product_name)}&background=6366f1&color=fff`);
-            const unitPrice = Math.abs(firstItem.price || (firstItem.total / (firstItem.qty || 1)));
-            selectExchangeReturnItem(firstItem.product_id || 0, unitPrice, firstItem.product_name, firstItem.product_code || '', firstItem.qty || 1, imgSrc, 0);
-          }
-        }
-      }
-    }
-
-    function selectExchangeReturnItem(prodId, soldPrice, prodName, prodCode, maxQty, imageUrl, cardIdx = null) {
-      exchangeSelectedReturnItem = {
-        id: prodId,
-        price: Math.abs(soldPrice),
-        name: prodName,
-        code: prodCode,
-        qty: 1,
-        maxQty: maxQty,
-        imageUrl: imageUrl
-      };
-
-      // Update card visual active styling
-      document.querySelectorAll('.exchange-item-row').forEach(row => {
-        row.className = 'exchange-item-row p-2.5 bg-slate-50 hover:bg-amber-50/60 border-2 border-slate-200 hover:border-amber-400 rounded-xl transition cursor-pointer flex items-center justify-between';
+        exchangeReturnSelections[idx] = {
+          id: item.product_id || (prod ? prod.id : 0),
+          name: item.product_name,
+          code: item.product_code || (prod ? prod.product_code : ''),
+          unitPrice: unitPrice,
+          soldQty: soldQty,
+          returnQty: soldQty,
+          selected: true, // Default checked so user sees it right away
+          imageUrl: imgSrc
+        };
       });
 
-      if (cardIdx !== null) {
-        const activeCard = document.getElementById(`exchange-return-card-${cardIdx}`);
-        if (activeCard) {
-          activeCard.className = 'exchange-item-row p-2.5 bg-amber-50 border-2 border-amber-500 rounded-xl transition cursor-pointer flex items-center justify-between shadow-xs';
-        }
-      }
-
+      renderExchangeReturnItemsList();
       calculateExchangeDifference();
     }
 
-    let exchangeDiscountType = 'taka'; // 'taka' or 'percent'
+    function renderExchangeReturnItemsList() {
+      const itemsContainer = document.getElementById('exchange-purchased-items-container');
+      if (!itemsContainer) return;
+
+      const keys = Object.keys(exchangeReturnSelections);
+      if (keys.length === 0) {
+        itemsContainer.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs">এই ইনভয়েসে কোনো এক্সচেঞ্জযোগ্য পণ্য নেই।</div>`;
+        return;
+      }
+
+      itemsContainer.innerHTML = keys.map(idxKey => {
+        const idx = Number(idxKey);
+        const sel = exchangeReturnSelections[idx];
+        const isSel = sel.selected;
+        const creditAmount = isSel ? (sel.returnQty * sel.unitPrice) : 0;
+
+        return `
+          <div id="exchange-return-card-${idx}" class="p-2.5 rounded-xl border-2 transition-all flex items-center justify-between ${isSel ? 'bg-amber-50/90 border-amber-500 shadow-xs' : 'bg-slate-50 border-slate-200 opacity-75'}">
+            <div class="flex items-center space-x-2.5 min-w-0 pr-2">
+              <input type="checkbox" id="ex-check-${idx}" onchange="toggleExchangeReturnItemSelection(${idx}, this.checked)" ${isSel ? 'checked' : ''} class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer shrink-0">
+              <img src="${sel.imageUrl}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=6366f1&color=fff'">
+              <div class="min-w-0">
+                <label for="ex-check-${idx}" class="font-bold text-slate-900 text-xs cursor-pointer flex items-center space-x-1.5 truncate">
+                  <span class="truncate">${sel.name}</span>
+                  ${isSel ? '<span class="text-[8px] font-black text-amber-800 bg-amber-200/80 px-1.5 py-0.2 rounded shrink-0">Returning</span>' : ''}
+                </label>
+                <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+                  Code: ${sel.code || 'N/A'} • Unit: ৳${sel.unitPrice.toLocaleString()} • Sold: <b class="text-slate-800">${sel.soldQty} pcs</b>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-right flex items-center space-x-2.5 shrink-0">
+              ${isSel ? `
+                <div class="flex items-center space-x-1 bg-white border border-amber-300 rounded-lg px-1.5 py-0.5 shadow-2xs">
+                  <span class="text-[9px] text-slate-500 font-bold">Qty:</span>
+                  <button type="button" onclick="updateExchangeReturnQty(${idx}, -1)" class="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs cursor-pointer shadow-2xs leading-none">-</button>
+                  <input type="number" min="1" max="${sel.soldQty}" value="${sel.returnQty}" oninput="setExchangeReturnQty(${idx}, this.value)" class="w-8 text-center font-black text-xs text-amber-900 outline-none">
+                  <button type="button" onclick="updateExchangeReturnQty(${idx}, 1)" class="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs cursor-pointer shadow-2xs leading-none">+</button>
+                  <span class="text-[9px] text-slate-400 font-bold">/${sel.soldQty}</span>
+                </div>
+                <div class="min-w-[65px] text-right">
+                  <div class="text-[8px] text-slate-400 font-bold uppercase">Credit</div>
+                  <div class="font-black text-rose-600 text-xs font-mono">-৳ ${creditAmount.toLocaleString()}</div>
+                </div>
+              ` : `
+                <label for="ex-check-${idx}" class="text-[10px] text-slate-400 font-bold cursor-pointer hover:text-amber-700 transition px-2 py-1 bg-white rounded border border-slate-200">
+                  <i class="fa-regular fa-square-check mr-1"></i>সিলেক্ট করুন
+                </label>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const selectedList = Object.values(exchangeReturnSelections).filter(s => s.selected && s.returnQty > 0);
+      const totalQty = selectedList.reduce((sum, s) => sum + s.returnQty, 0);
+      const summaryBadge = document.getElementById('exchange-return-summary-badge');
+      if (summaryBadge) {
+        summaryBadge.innerText = `${selectedList.length} items (${totalQty} pcs)`;
+      }
+    }
+
+    function toggleExchangeReturnItemSelection(idx, isChecked) {
+      if (exchangeReturnSelections[idx]) {
+        exchangeReturnSelections[idx].selected = isChecked;
+        if (isChecked && (!exchangeReturnSelections[idx].returnQty || exchangeReturnSelections[idx].returnQty <= 0)) {
+          exchangeReturnSelections[idx].returnQty = exchangeReturnSelections[idx].soldQty || 1;
+        }
+      }
+      renderExchangeReturnItemsList();
+      calculateExchangeDifference();
+    }
+
+    function selectAllExchangeReturnItems(shouldSelect) {
+      Object.keys(exchangeReturnSelections).forEach(idx => {
+        exchangeReturnSelections[idx].selected = shouldSelect;
+        if (shouldSelect && (!exchangeReturnSelections[idx].returnQty || exchangeReturnSelections[idx].returnQty <= 0)) {
+          exchangeReturnSelections[idx].returnQty = exchangeReturnSelections[idx].soldQty || 1;
+        }
+      });
+      renderExchangeReturnItemsList();
+      calculateExchangeDifference();
+    }
+
+    function updateExchangeReturnQty(idx, delta) {
+      if (exchangeReturnSelections[idx]) {
+        const cur = exchangeReturnSelections[idx].returnQty || 1;
+        const max = exchangeReturnSelections[idx].soldQty || 1;
+        exchangeReturnSelections[idx].returnQty = Math.max(1, Math.min(max, cur + delta));
+      }
+      renderExchangeReturnItemsList();
+      calculateExchangeDifference();
+    }
+
+    function setExchangeReturnQty(idx, val) {
+      if (exchangeReturnSelections[idx]) {
+        const num = parseInt(val) || 1;
+        const max = exchangeReturnSelections[idx].soldQty || 1;
+        exchangeReturnSelections[idx].returnQty = Math.max(1, Math.min(max, num));
+      }
+      calculateExchangeDifference();
+    }
 
     function setExchangeDiscountType(type) {
       exchangeDiscountType = type;
@@ -9303,8 +9370,14 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       calculateExchangeDifference();
     }
 
+    function getSelectedReturnItemsList() {
+      return Object.values(exchangeReturnSelections).filter(s => s.selected && s.returnQty > 0);
+    }
+
     function fillExactExchangePaidAmount() {
-      const returnCredit = exchangeSelectedReturnItem ? exchangeSelectedReturnItem.price : 0;
+      const selectedReturns = getSelectedReturnItemsList();
+      const totalReturnCredit = selectedReturns.reduce((sum, s) => sum + (s.returnQty * s.unitPrice), 0);
+
       const newUnitPrice = exchangeSelectedNewProduct ? exchangeSelectedNewProduct.sale_price : 0;
       const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
       const newSubtotal = newUnitPrice * newQty;
@@ -9316,7 +9389,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
 
       const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
-      const netDifference = Math.max(0, totalNewPayable - returnCredit);
+      const netDifference = Math.max(0, totalNewPayable - totalReturnCredit);
 
       const paidInput = document.getElementById('exchange-paid-amount');
       if (paidInput) {
@@ -9326,7 +9399,9 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     }
 
     function onExchangePaidAmountChange() {
-      const returnCredit = exchangeSelectedReturnItem ? exchangeSelectedReturnItem.price : 0;
+      const selectedReturns = getSelectedReturnItemsList();
+      const totalReturnCredit = selectedReturns.reduce((sum, s) => sum + (s.returnQty * s.unitPrice), 0);
+
       const newUnitPrice = exchangeSelectedNewProduct ? exchangeSelectedNewProduct.sale_price : 0;
       const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
       const newSubtotal = newUnitPrice * newQty;
@@ -9338,7 +9413,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
 
       const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
-      const netDifference = Math.max(0, totalNewPayable - returnCredit);
+      const netDifference = Math.max(0, totalNewPayable - totalReturnCredit);
 
       const paidInput = document.getElementById('exchange-paid-amount');
       const paidAmount = Number(paidInput?.value) || 0;
@@ -9380,7 +9455,10 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     }
 
     function calculateExchangeDifference() {
-      const returnCredit = exchangeSelectedReturnItem ? exchangeSelectedReturnItem.price : 0;
+      const selectedReturns = getSelectedReturnItemsList();
+      const totalReturnCredit = selectedReturns.reduce((sum, s) => sum + (s.returnQty * s.unitPrice), 0);
+      const totalReturnQty = selectedReturns.reduce((sum, s) => sum + s.returnQty, 0);
+
       const newUnitPrice = exchangeSelectedNewProduct ? exchangeSelectedNewProduct.sale_price : 0;
       const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
       const newSubtotal = newUnitPrice * newQty;
@@ -9392,7 +9470,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
 
       const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
-      const netDifference = Math.max(0, totalNewPayable - returnCredit);
+      const netDifference = Math.max(0, totalNewPayable - totalReturnCredit);
 
       const creditDisplay = document.getElementById('exchange-credit-display');
       const newPriceDisplay = document.getElementById('exchange-new-price-display');
@@ -9401,7 +9479,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const discCalcDisplay = document.getElementById('exchange-disc-calc-display');
       const diffDisplay = document.getElementById('exchange-diff-display');
 
-      if (creditDisplay) creditDisplay.innerText = `৳ ${returnCredit.toLocaleString()}`;
+      if (creditDisplay) creditDisplay.innerText = `৳ ${totalReturnCredit.toLocaleString()}`;
       if (newPriceDisplay) newPriceDisplay.innerText = `৳ ${newSubtotal.toLocaleString()}`;
       if (vatAmountDisplay) vatAmountDisplay.innerText = `+৳ ${newVatAmount.toLocaleString()} (${newVatRate}%)`;
       if (vatCalcDisplay) vatCalcDisplay.innerText = `+৳ ${newVatAmount.toLocaleString()} VAT`;
@@ -9414,8 +9492,11 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const successText = document.getElementById('exchange-rule-success-text');
       const confirmBtn = document.getElementById('btn-confirm-exchange');
 
-      if (!exchangeSelectedReturnItem || !exchangeSelectedNewProduct) {
-        if (warningBanner) warningBanner.classList.add('hidden');
+      if (selectedReturns.length === 0) {
+        if (warningBanner) {
+          warningBanner.classList.remove('hidden');
+          if (warningText) warningText.innerText = 'অনুগ্রহ করে পূর্বের ইনভয়েস থেকে অন্তত একটি ফেরত পণ্য সিলেক্ট করুন (টিক দিন)।';
+        }
         if (successBanner) successBanner.classList.add('hidden');
         if (confirmBtn) {
           confirmBtn.disabled = true;
@@ -9425,13 +9506,27 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         return;
       }
 
-      // Business Rule Validation: New Product Subtotal >= Return Credit
-      if (newSubtotal < returnCredit) {
-        const deficit = returnCredit - newSubtotal;
+      if (!exchangeSelectedNewProduct) {
+        if (warningBanner) {
+          warningBanner.classList.remove('hidden');
+          if (warningText) warningText.innerText = 'অনুগ্রহ করে নতুন রিপ্লেসমেন্ট পণ্য সিলেক্ট বা স্ক্যান করুন।';
+        }
+        if (successBanner) successBanner.classList.add('hidden');
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+        onExchangePaidAmountChange();
+        return;
+      }
+
+      // Business Rule Validation: New Product Subtotal >= Total Return Credit
+      if (newSubtotal < totalReturnCredit) {
+        const deficit = totalReturnCredit - newSubtotal;
         if (warningBanner) {
           warningBanner.classList.remove('hidden');
           if (warningText) {
-            warningText.innerText = `নতুন পণ্যের মূল্য (৳${newSubtotal.toLocaleString()}) ফেরত পণ্যের মূল্যের (৳${returnCredit.toLocaleString()}) চেয়ে ৳${deficit.toLocaleString()} কম! পলিসি অনুযায়ী নতুন পণ্যের মূল্য অবশ্যই সমান বা বেশি হতে হবে।`;
+            warningText.innerText = `নতুন পণ্যের মূল্য (৳${newSubtotal.toLocaleString()}) নির্বাচিত ফেরত পণ্যের মূল্যের (৳${totalReturnCredit.toLocaleString()}) চেয়ে ৳${deficit.toLocaleString()} কম! পলিসি অনুযায়ী নতুন পণ্যের মূল্য অবশ্যই সমান বা বেশি হতে হবে।`;
           }
         }
         if (successBanner) successBanner.classList.add('hidden');
@@ -9445,8 +9540,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           successBanner.classList.remove('hidden');
           if (successText) {
             successText.innerText = netDifference === 0 
-              ? `সমমূল্যে সরাসরি পণ্য বিনিময় অনুমোদিত (কোনো অতিরিক্ত টাকা লাগবে না)।` 
-              : `শর্ত পূরণ হয়েছে: ভ্যাট ও ছাড় সমন্বয়ের পর অতিরিক্ত ৳${netDifference.toLocaleString()} প্রদেয়।`;
+              ? `সমমূল্যে সরাসরি পণ্য বিনিময় অনুমোদিত (${totalReturnQty}টি পণ্যের জন্য কোনো অতিরিক্ত টাকা লাগবে না)।` 
+              : `শর্ত পূরণ হয়েছে: ${totalReturnQty}টি পণ্যের বিপরীতে ভ্যাট ও ছাড় সমন্বয়ের পর অতিরিক্ত ৳${netDifference.toLocaleString()} প্রদেয়।`;
           }
         }
         if (confirmBtn) {
@@ -9463,25 +9558,30 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         Swal.fire('Invoice Missing', 'অনুগ্রহ করে প্রথমে মূল ইনভয়েস সার্চ করে পণ্য সিলেক্ট করুন।', 'warning');
         return;
       }
-      if (!exchangeSelectedReturnItem) {
-        Swal.fire('Return Item Missing', 'গ্রাহক যে পণ্যটি ফেরত দিতে চায় তা সিলেক্ট করুন।', 'warning');
+
+      const selectedReturns = getSelectedReturnItemsList();
+      if (selectedReturns.length === 0) {
+        Swal.fire('Return Item Missing', 'গ্রাহক যে পণ্যটি বা পণ্যগুলো ফেরত দিতে চায় তা টিক দিয়ে সিলেক্ট করুন।', 'warning');
         return;
       }
+
       if (!exchangeSelectedNewProduct) {
         Swal.fire('New Product Missing', 'নতুন রিপ্লেসমেন্ট পণ্য সিলেক্ট বা স্ক্যান করুন।', 'warning');
         return;
       }
 
-      const returnCredit = exchangeSelectedReturnItem.price;
+      const totalReturnCredit = selectedReturns.reduce((sum, s) => sum + (s.returnQty * s.unitPrice), 0);
+      const totalReturnQty = selectedReturns.reduce((sum, s) => sum + s.returnQty, 0);
+
       const newUnitPrice = exchangeSelectedNewProduct.sale_price;
       const newQty = Math.max(1, Number(document.getElementById('exchange-new-qty')?.value) || 1);
       const newSubtotal = newUnitPrice * newQty;
 
-      if (newSubtotal < returnCredit) {
+      if (newSubtotal < totalReturnCredit) {
         Swal.fire({
           icon: 'error',
           title: 'Exchange Policy Violation',
-          text: 'নতুন পণ্যের মূল্য অবশ্যই ফেরত পণ্যের মূল্যের সমান বা বেশি হতে হবে।',
+          text: 'নতুন পণ্যের মূল্য অবশ্যই ফেরত পণ্যের মোট মূল্যের সমান বা বেশি হতে হবে।',
           confirmButtonText: 'ঠিক আছে'
         });
         return;
@@ -9494,7 +9594,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const exDiscountTaka = (exchangeDiscountType === 'percent') ? Math.round((newSubtotal * rawExDisc) / 100) : rawExDisc;
 
       const totalNewPayable = Math.max(0, newSubtotal - exDiscountTaka + newVatAmount);
-      const differenceToPay = Math.max(0, totalNewPayable - returnCredit);
+      const differenceToPay = Math.max(0, totalNewPayable - totalReturnCredit);
 
       const paidAmount = Number(document.getElementById('exchange-paid-amount')?.value) || (differenceToPay > 0 ? 0 : 0);
       const payMethod = document.getElementById('exchange-pay-method')?.value || 'Cash';
@@ -9517,6 +9617,13 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const effectiveBranchId = (currentBranchId === 'ALL' || !currentBranchId) ? 1 : currentBranchId;
       const effectiveBranchName = getBranchName(effectiveBranchId);
 
+      const returnItemsHtml = selectedReturns.map(r => `
+        <div class="flex justify-between text-rose-700 text-xs">
+          <span>(-) ফেরত: ${r.name} (${r.returnQty} pcs):</span>
+          <b class="font-mono">-৳ ${(r.returnQty * r.unitPrice).toLocaleString()}</b>
+        </div>
+      `).join('');
+
       const confirmRes = await Swal.fire({
         title: 'Confirm Product Exchange (পণ্য বিনিময় নিশ্চিতকরণ)',
         html: `
@@ -9525,11 +9632,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
               <span>মূল ইনভয়েস:</span>
               <b class="font-mono text-indigo-700">${exchangeSelectedInvoice.invoice_no}</b>
             </div>
-            <div class="flex justify-between text-rose-700">
-              <span>(-) ফেরত পণ্য (Return Credit):</span>
-              <b>${exchangeSelectedReturnItem.name} (-৳${returnCredit.toLocaleString()})</b>
-            </div>
-            <div class="flex justify-between text-indigo-700">
+            ${returnItemsHtml}
+            <div class="flex justify-between text-indigo-700 font-semibold pt-1 border-t border-amber-100">
               <span>(+) নতুন পণ্য (New ${newQty} pcs):</span>
               <b>${exchangeSelectedNewProduct.product_name} (+৳${newSubtotal.toLocaleString()})</b>
             </div>
@@ -9565,15 +9669,17 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       if (!confirmRes.isConfirmed) return;
 
       // 1. Stock Adjustments:
-      // Return Product stock in current branch: +1
-      const retProd = productsData.find(p => p.id === exchangeSelectedReturnItem.id || p.product_code === exchangeSelectedReturnItem.code);
-      if (retProd) {
-        const curRetBStock = getProductBranchStock(retProd, effectiveBranchId);
-        setProductBranchStock(retProd, effectiveBranchId, curRetBStock + 1);
-        if (supabaseClient) {
-          supabaseClient.from('products').update({ stock: retProd.stock, branch_stocks: retProd.branch_stocks }).eq('id', retProd.id).then();
+      // Return Products stock in current branch: +returnQty for each selected item
+      selectedReturns.forEach(r => {
+        const retProd = productsData.find(p => p.id === r.id || p.product_code === r.code);
+        if (retProd) {
+          const curRetBStock = getProductBranchStock(retProd, effectiveBranchId);
+          setProductBranchStock(retProd, effectiveBranchId, curRetBStock + r.returnQty);
+          if (supabaseClient) {
+            supabaseClient.from('products').update({ stock: retProd.stock, branch_stocks: retProd.branch_stocks }).eq('id', retProd.id).then();
+          }
         }
-      }
+      });
 
       // New Replacement Product stock in current branch: -newQty
       const newProd = productsData.find(p => p.id === exchangeSelectedNewProduct.id);
@@ -9592,6 +9698,29 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         formattedPay += ` (Change: ৳${(paidAmount - differenceToPay).toLocaleString()})`;
       }
 
+      const invoiceItems = [];
+      selectedReturns.forEach(r => {
+        invoiceItems.push({
+          product_id: r.id,
+          product_name: r.name,
+          product_code: r.code,
+          price: -r.unitPrice,
+          qty: r.returnQty,
+          total: -(r.unitPrice * r.returnQty),
+          is_return: true
+        });
+      });
+
+      invoiceItems.push({
+        product_id: exchangeSelectedNewProduct.id,
+        product_name: exchangeSelectedNewProduct.product_name,
+        product_code: exchangeSelectedNewProduct.product_code,
+        price: newUnitPrice,
+        qty: newQty,
+        total: newSubtotal,
+        is_exchange_new: true
+      });
+
       const exchangeSaleRecord = {
         id: Date.now(),
         invoice_no: exchangeInvoiceNo,
@@ -9609,26 +9738,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         tax: newVatAmount,
         payment_method: formattedPay,
         sale_date: new Date().toISOString(),
-        items: [
-          {
-            product_id: exchangeSelectedReturnItem.id,
-            product_name: exchangeSelectedReturnItem.name,
-            product_code: exchangeSelectedReturnItem.code,
-            price: -returnCredit,
-            qty: 1,
-            total: -returnCredit,
-            is_return: true
-          },
-          {
-            product_id: exchangeSelectedNewProduct.id,
-            product_name: exchangeSelectedNewProduct.product_name,
-            product_code: exchangeSelectedNewProduct.product_code,
-            price: newUnitPrice,
-            qty: newQty,
-            total: newSubtotal,
-            is_exchange_new: true
-          }
-        ],
+        items: invoiceItems,
         branch_id: effectiveBranchId,
         branch_name: effectiveBranchName,
         cashier_name: currentUser ? currentUser.name : 'Admin'
