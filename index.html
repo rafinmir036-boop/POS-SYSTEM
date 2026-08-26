@@ -3273,6 +3273,75 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
   </div>
 
 
+  <!-- 11. UNIVERSAL MULTI-BRANCH STOCK FINDER MODAL -->
+  <div id="modal-global-stock" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg shadow-sm border border-indigo-100">
+            <i class="fa-solid fa-magnifying-glass-location"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 font-heading">Multi-Branch Live Stock Finder (সকল ব্রাঞ্চে স্টক খুঁজুন)</h3>
+            <p class="text-[11px] text-slate-500 font-medium">যেকোনো পণ্যের কোড বা নাম দিয়ে জানুন কোন ব্রাঞ্চ বা ওয়্যারহাউজে কত পিস স্টক রয়েছে</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-global-stock')" class="text-slate-400 hover:text-slate-700 cursor-pointer text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Search Box & Dropdown Selector -->
+      <div class="space-y-2">
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-indigo-400 text-xs"></i>
+            <input type="text" id="gstock-search-input" oninput="handleGlobalStockSearchInput()" placeholder="পণ্য স্ক্যান করুন বা নাম/কোড লিখুন (e.g. PRD-101)..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <select id="gstock-product-select" onchange="onGlobalStockProductSelectChange()" class="max-w-[220px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:bg-white">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Selected Product Info Banner -->
+      <div id="gstock-product-info-banner" class="bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-slate-50 p-3.5 rounded-2xl border border-indigo-100 flex items-center justify-between gap-3">
+        <div class="flex items-center space-x-3">
+          <img id="gstock-prod-img" src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=120" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=6366f1&color=fff'">
+          <div>
+            <h4 id="gstock-prod-name" class="font-black text-slate-900 text-sm font-heading">Product Name</h4>
+            <div class="text-[11px] font-semibold text-slate-500 flex items-center space-x-2 mt-0.5">
+              <span id="gstock-prod-code" class="font-mono text-indigo-600 font-bold bg-indigo-100/60 px-1.5 py-0.5 rounded">PRD-101</span>
+              <span>•</span>
+              <span id="gstock-prod-category">Clothing</span>
+              <span>•</span>
+              <span id="gstock-prod-price" class="font-bold text-slate-800">৳ 650</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] font-bold text-slate-400 block uppercase">Enterprise Total</span>
+          <b id="gstock-prod-total-stock" class="text-base font-black text-indigo-600">0 pcs</b>
+        </div>
+      </div>
+
+      <!-- Branch Cards List (Scrollable) -->
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="gstock-branches-container">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Footer -->
+      <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+        <span class="text-[11px] text-slate-400 font-medium">💡 অন্য ব্রাঞ্চে স্টক থাকলে সরাসরি ট্রান্সফার রিকোয়েস্ট তৈরি করা যায়</span>
+        <button type="button" onclick="closeModal('modal-global-stock')" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer">
+          Close (বন্ধ করুন)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
   <!-- Dedicated Hidden Print Containers for Reports & Transfers -->
   <div id="printable-report-area" class="hidden"></div>
   <div id="printable-transfer-area" class="hidden"></div>
@@ -3608,10 +3677,20 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const invBranchSelect = document.getElementById('inv-branch-select');
 
       if (headerSelect) {
-        let headerOpts = '<option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>';
-        branchesData.forEach(b => {
-          headerOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
-        });
+        let headerOpts = '';
+        if (!currentUser || currentUser.role === 'Admin') {
+          headerOpts = '<option value="ALL">🌐 All Branches (সকল ব্রাঞ্চ)</option>';
+          branchesData.forEach(b => {
+            headerOpts += `<option value="${b.id}">${b.type === 'Warehouse' ? '🏭' : '🏬'} ${b.name}</option>`;
+          });
+          headerSelect.disabled = false;
+          headerSelect.classList.remove('cursor-not-allowed', 'opacity-80');
+        } else {
+          const userBranch = branchesData.find(b => b.id == currentUser.branch_id) || branchesData[0];
+          headerOpts = `<option value="${userBranch ? userBranch.id : 1}">🔒 ${userBranch ? userBranch.name : 'Assigned Branch'}</option>`;
+          headerSelect.disabled = true;
+          headerSelect.classList.add('cursor-not-allowed', 'opacity-80');
+        }
         headerSelect.innerHTML = headerOpts;
         headerSelect.value = String(currentBranchId);
       }
@@ -5611,6 +5690,132 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       }, 1000);
     }
 
+    // --- Universal Multi-Branch Stock Finder ---
+    function openGlobalStockModal(initialQuery = '') {
+      const select = document.getElementById('gstock-product-select');
+      const searchInput = document.getElementById('gstock-search-input');
+      if (select) {
+        select.innerHTML = productsData.map(p => `
+          <option value="${p.id}">${p.product_code} - ${p.product_name}</option>
+        `).join('');
+      }
+
+      if (initialQuery) {
+        if (searchInput) searchInput.value = initialQuery;
+        const matched = productsData.find(p => p.product_code.toLowerCase() === String(initialQuery).toLowerCase() || p.product_name.toLowerCase().includes(String(initialQuery).toLowerCase()) || p.id == initialQuery);
+        if (matched && select) select.value = matched.id;
+      } else {
+        if (searchInput) searchInput.value = '';
+        if (select && productsData.length > 0) select.value = productsData[0].id;
+      }
+
+      renderGlobalStockDetails();
+      openModal('modal-global-stock');
+    }
+
+    function onGlobalStockProductSelectChange() {
+      const select = document.getElementById('gstock-product-select');
+      const searchInput = document.getElementById('gstock-search-input');
+      const selId = Number(select?.value);
+      const prod = productsData.find(p => p.id === selId);
+      if (prod && searchInput) {
+        searchInput.value = prod.product_code;
+      }
+      renderGlobalStockDetails();
+    }
+
+    function handleGlobalStockSearchInput() {
+      const search = (document.getElementById('gstock-search-input')?.value || '').trim().toLowerCase();
+      const select = document.getElementById('gstock-product-select');
+      if (!search) return;
+
+      const matched = productsData.find(p => 
+        p.product_code.toLowerCase().includes(search) || 
+        p.product_name.toLowerCase().includes(search)
+      );
+
+      if (matched && select) {
+        select.value = matched.id;
+        renderGlobalStockDetails();
+      }
+    }
+
+    function renderGlobalStockDetails() {
+      const selId = Number(document.getElementById('gstock-product-select')?.value) || (productsData[0] ? productsData[0].id : 0);
+      const prod = productsData.find(p => p.id === selId);
+      const container = document.getElementById('gstock-branches-container');
+      if (!prod || !container) return;
+
+      // Update Banner
+      if (document.getElementById('gstock-prod-name')) document.getElementById('gstock-prod-name').innerText = prod.product_name;
+      if (document.getElementById('gstock-prod-code')) document.getElementById('gstock-prod-code').innerText = prod.product_code;
+      if (document.getElementById('gstock-prod-category')) document.getElementById('gstock-prod-category').innerText = prod.category;
+      if (document.getElementById('gstock-prod-price')) document.getElementById('gstock-prod-price').innerText = `৳ ${prod.sale_price}`;
+      if (document.getElementById('gstock-prod-img')) document.getElementById('gstock-prod-img').src = prod.image_url || 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=120';
+      
+      const totalStock = getProductBranchStock(prod, 'ALL');
+      if (document.getElementById('gstock-prod-total-stock')) document.getElementById('gstock-prod-total-stock').innerText = `${totalStock} pcs`;
+
+      // Render Each Branch Card
+      container.innerHTML = branchesData.map(b => {
+        const bStock = getProductBranchStock(prod, b.id);
+        const isCurrentBranch = (currentBranchId == b.id);
+        const isOutOfStock = bStock <= 0;
+        const isLow = bStock > 0 && bStock <= 5;
+
+        return `
+          <div class="p-3.5 bg-white rounded-2xl border ${isCurrentBranch ? 'border-indigo-400 ring-2 ring-indigo-50 shadow-xs' : 'border-slate-200/80'} hover:border-slate-300 transition flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl ${b.type === 'Warehouse' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'} flex items-center justify-center text-base font-bold shrink-0">
+                ${b.type === 'Warehouse' ? '<i class="fa-solid fa-warehouse"></i>' : '<i class="fa-solid fa-store"></i>'}
+              </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h5 class="font-bold text-slate-900 text-xs">${b.name}</h5>
+                  ${isCurrentBranch ? '<span class="text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.2 rounded-full">Your Active Branch</span>' : ''}
+                  <span class="text-[9px] font-bold text-slate-400 font-mono">${b.code}</span>
+                </div>
+                <div class="text-[10px] text-slate-500 font-medium mt-0.5">
+                  Branch In-Charge: <b class="text-slate-700">${b.manager || 'Manager'}</b> • 📞 <a href="tel:${b.phone}" class="text-indigo-600 font-semibold hover:underline">${b.phone || 'N/A'}</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+              <div class="text-right">
+                <span class="text-[9px] text-slate-400 font-bold block uppercase">Live Stock</span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-black ${isOutOfStock ? 'bg-rose-50 text-rose-700 border border-rose-200' : isLow ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
+                  ${isOutOfStock ? '❌ 0 pcs (Out of Stock)' : isLow ? `⚠️ ${bStock} pcs (Low Stock)` : `✓ ${bStock} pcs in Stock`}
+                </span>
+              </div>
+
+              ${(!isCurrentBranch && bStock > 0 && currentUser && currentUser.permissions && currentUser.permissions.can_transfers) ? `
+                <button type="button" onclick="quickRequestTransferFromGlobalModal(${prod.id}, ${b.id})" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-2xs">
+                  <i class="fa-solid fa-truck-ramp-box"></i><span>Request Transfer</span>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function quickRequestTransferFromGlobalModal(productId, sourceBranchId) {
+      closeModal('modal-global-stock');
+      openCreateTransferModal();
+      
+      const fromSelect = document.getElementById('trf-form-from-branch');
+      const toSelect = document.getElementById('trf-form-to-branch');
+      if (fromSelect) fromSelect.value = String(sourceBranchId);
+      if (toSelect && currentBranchId !== 'ALL') toSelect.value = String(currentBranchId);
+
+      const prodSelect = document.getElementById('trf-form-product-select');
+      if (prodSelect) {
+        prodSelect.value = String(productId);
+        onTransferProductDropdownChange();
+      }
+    }
+
     // --- Employees CRUD ---
     function renderEmployeesTable() {
       const tbody = document.getElementById('employees-table-body');
@@ -5783,6 +5988,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       const pay = document.getElementById('sales-filter-payment')?.value || 'ALL';
 
       const filtered = salesData.filter(s => {
+        const matchBranch = (currentBranchId === 'ALL' || s.branch_id == currentBranchId);
         const matchSearch = s.invoice_no.toLowerCase().includes(search) || 
                             (s.customer_name && s.customer_name.toLowerCase().includes(search)) ||
                             (s.salesperson_name && s.salesperson_name.toLowerCase().includes(search));
@@ -5790,7 +5996,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         if (pay === 'ALL') matchPay = true;
         else if (pay === 'Split') matchPay = s.payment_method && s.payment_method.startsWith('Split');
         else matchPay = s.payment_method && s.payment_method.includes(pay);
-        return matchSearch && matchPay;
+        return matchBranch && matchSearch && matchPay;
       });
 
       tbody.innerHTML = filtered.map(s => {
@@ -5838,7 +6044,9 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       let totalIncome = 0;
       let totalExpense = 0;
 
-      accountsData.forEach(t => {
+      const branchAccounts = accountsData.filter(t => currentBranchId === 'ALL' || !t.branch_id || t.branch_id == currentBranchId);
+
+      branchAccounts.forEach(t => {
         const amt = Number(t.amount) || 0;
         if (t.type === 'Income') totalIncome += amt;
         else totalExpense += amt;
@@ -5848,7 +6056,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       document.getElementById('acc-total-expense').innerText = `৳ ${totalExpense.toLocaleString()}`;
       document.getElementById('acc-net-balance').innerText = `৳ ${(totalIncome - totalExpense).toLocaleString()}`;
 
-      const filtered = accountsData.filter(t => typeFilter === 'ALL' || t.type === typeFilter);
+      const filtered = branchAccounts.filter(t => typeFilter === 'ALL' || t.type === typeFilter);
 
       tbody.innerHTML = filtered.map(t => `
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
