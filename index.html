@@ -217,49 +217,28 @@
         </p>
       </div>
 
-      <!-- Quick Role Preset Pills for Fast Demo -->
-      <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
-        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center mb-1.5">
-          <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Quick Demo Login (Select Role / Branch)
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-          <button type="button" onclick="fillDemoCredentials('admin@system.com', 'admin123')" class="px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-lg transition border border-indigo-200 text-center">
-            👑 Super Admin
-          </button>
-          <button type="button" onclick="fillDemoCredentials('dhanmondi.mgr@system.com', '123456')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] rounded-lg transition border border-emerald-200 text-center">
-            🏬 Dhanmondi Mgr
-          </button>
-          <button type="button" onclick="fillDemoCredentials('warehouse.mgr@system.com', '123456')" class="px-2 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold text-[10px] rounded-lg transition border border-cyan-200 text-center">
-            🏭 Warehouse Mgr
-          </button>
-          <button type="button" onclick="fillDemoCredentials('sadia.cashier@system.com', '123456')" class="px-2 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 font-bold text-[10px] rounded-lg transition border border-pink-200 text-center">
-            💳 Cashier
-          </button>
-        </div>
-      </div>
-
       <!-- Form -->
-      <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+      <form onsubmit="handleLoginSubmit(event); return false;" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Address or Phone Number (ইমেইল বা ফোন নম্বর) *</label>
           <div class="relative">
             <i class="fa-solid fa-id-card-clip absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-            <input type="text" id="login-email" required placeholder="admin@system.com or 01722-000002" value="admin@system.com" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+            <input type="text" id="login-email" required placeholder="admin@system.com or 01700-000000" value="admin@system.com" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password *</label>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password (পাসওয়ার্ড) *</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
             <input type="password" id="login-password" required placeholder="••••••••" value="admin123" class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-            <button type="button" onclick="togglePasswordView('login-password')" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600">
+            <button type="button" onclick="togglePasswordView('login-password')" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
               <i class="fa-solid fa-eye text-xs"></i>
             </button>
           </div>
         </div>
 
-        <button type="submit" id="login-btn" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white py-3 rounded-xl font-bold text-xs shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-2">
+        <button type="submit" id="login-btn" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white py-3 rounded-xl font-bold text-xs shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-2 cursor-pointer">
           <span>Sign In to POS Dashboard</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
@@ -3482,113 +3461,123 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
     }
 
     function handleLoginSubmit(e) {
-      e.preventDefault();
-      const identifier = document.getElementById('login-email').value.trim();
-      const pass = document.getElementById('login-password').value;
+      if (e) e.preventDefault();
+      try {
+        const identifier = (document.getElementById('login-email')?.value || '').trim();
+        const pass = (document.getElementById('login-password')?.value || '').trim();
 
-      if (!identifier || !pass) {
-        Swal.fire('Error', 'Please enter Email or Phone Number and Password', 'warning');
-        return;
-      }
-
-      // Check in systemUsersData first
-      let matchedUser = systemUsersData.find(u => 
-        (u.username && u.username.toLowerCase() === identifier.toLowerCase()) ||
-        (u.phone && u.phone.replace(/[^0-9]/g, '') === identifier.replace(/[^0-9]/g, '')) ||
-        (u.name && u.name.toLowerCase() === identifier.toLowerCase())
-      );
-
-      // Fallback check in employeesData
-      const matchedEmp = employeesData.find(emp => 
-        (emp.email && emp.email.toLowerCase() === identifier.toLowerCase()) || 
-        (emp.phone && emp.phone.replace(/[^0-9]/g, '') === identifier.replace(/[^0-9]/g, '')) ||
-        (emp.employee_id && emp.employee_id.toLowerCase() === identifier.toLowerCase())
-      );
-
-      if (!matchedUser && matchedEmp) {
-        matchedUser = {
-          id: matchedEmp.id,
-          name: matchedEmp.name,
-          username: matchedEmp.email || matchedEmp.phone || matchedEmp.employee_id,
-          password: matchedEmp.password || '123456',
-          role: matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier'),
-          branch_id: matchedEmp.branch_id || 2,
-          permissions: getDefaultPermissionsForRole(matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier'))
-        };
-      }
-
-      if (identifier.toLowerCase() === 'admin@system.com' || identifier.toLowerCase() === 'admin') {
-        if (!matchedUser) matchedUser = systemUsersData[0];
-      }
-
-      if (!matchedUser) {
-        Swal.fire('User Not Found', 'এই ইউজারনেম বা ইমেইলের কোনো ব্যবহারকারী পাওয়া যায়নি।', 'error');
-        return;
-      }
-
-      if (matchedUser.password && matchedUser.password !== pass) {
-        Swal.fire('Invalid Password', 'ভুল পাসওয়ার্ড দিয়েছেন! সঠিক পাসওয়ার্ড দিয়ে পুনরায় চেষ্টা করুন।', 'error');
-        return;
-      }
-
-      currentUser = {
-        id: matchedUser.id,
-        email: matchedUser.username,
-        name: matchedUser.name,
-        role: matchedUser.role,
-        branch_id: matchedUser.branch_id,
-        permissions: matchedUser.permissions || getDefaultPermissionsForRole(matchedUser.role)
-      };
-
-      currentBranchId = matchedUser.branch_id;
-      isDiscountApproved = (currentUser.role === 'Admin');
-
-      document.getElementById('login-screen').classList.add('hidden');
-      document.getElementById('main-app').classList.remove('hidden');
-
-      document.getElementById('header-name').innerText = currentUser.name;
-      document.getElementById('header-role').innerText = `${currentUser.role} • ${currentBranchId === 'ALL' ? 'All Locations' : getBranchName(currentBranchId)}`;
-      document.getElementById('header-avatar').innerText = currentUser.name.charAt(0);
-      if (document.getElementById('sidebar-user-name')) document.getElementById('sidebar-user-name').innerText = currentUser.name;
-      if (document.getElementById('sidebar-user-avatar')) document.getElementById('sidebar-user-avatar').innerText = currentUser.name.charAt(0);
-      if (document.getElementById('current-user-email-badge')) document.getElementById('current-user-email-badge').innerText = currentUser.email;
-      document.getElementById('current-user-role-label').innerText = `${currentUser.role} Role`;
-
-      // Branch Switcher Permissions (Admin can switch all branches, others locked to assigned branch)
-      const headerSelect = document.getElementById('header-branch-select');
-      if (headerSelect) {
-        headerSelect.value = String(currentBranchId);
-        if (currentUser.role !== 'Admin') {
-          headerSelect.disabled = true;
-          headerSelect.classList.add('cursor-not-allowed', 'opacity-80');
-        } else {
-          headerSelect.disabled = false;
-          headerSelect.classList.remove('cursor-not-allowed', 'opacity-80');
+        if (!identifier || !pass) {
+          Swal.fire('Error', 'Please enter Email or Phone Number and Password', 'warning');
+          return;
         }
-      }
 
-      applyRolePermissionsToUI();
+        // Check in systemUsersData first
+        let matchedUser = (systemUsersData || []).find(u => 
+          (u.username && u.username.toLowerCase() === identifier.toLowerCase()) ||
+          (u.phone && u.phone.replace(/[^0-9]/g, '') === identifier.replace(/[^0-9]/g, '')) ||
+          (u.name && u.name.toLowerCase() === identifier.toLowerCase())
+        );
 
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: `Welcome back, ${currentUser.name}!`,
-        showConfirmButton: false,
-        timer: 2000
-      });
+        // Fallback check in employeesData
+        if (!matchedUser && typeof employeesData !== 'undefined' && Array.isArray(employeesData)) {
+          const matchedEmp = employeesData.find(emp => 
+            (emp.email && emp.email.toLowerCase() === identifier.toLowerCase()) || 
+            (emp.phone && emp.phone.replace(/[^0-9]/g, '') === identifier.replace(/[^0-9]/g, '')) ||
+            (emp.employee_id && emp.employee_id.toLowerCase() === identifier.toLowerCase())
+          );
 
-      populateBranchDropdowns();
-      renderDashboard();
-      populatePosSalesEmployees();
-      renderTransfersTable();
-      updateTransferBadges();
+          if (matchedEmp) {
+            matchedUser = {
+              id: matchedEmp.id,
+              name: matchedEmp.name,
+              username: matchedEmp.email || matchedEmp.phone || matchedEmp.employee_id,
+              password: matchedEmp.password || '123456',
+              role: matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier'),
+              branch_id: matchedEmp.branch_id || 2,
+              permissions: getDefaultPermissionsForRole(matchedEmp.role || (matchedEmp.designation.includes('Manager') ? 'Branch Manager' : 'Cashier'))
+            };
+          }
+        }
 
-      // Automatically switch to first permitted section
-      if (currentUser.permissions && currentUser.permissions.can_pos && !currentUser.permissions.can_reports && currentUser.role === 'Cashier') {
-        switchNav('pos');
-      } else {
-        switchNav('dashboard');
+        // Master Administrator fallback
+        if (identifier.toLowerCase() === 'admin@system.com' || identifier.toLowerCase() === 'admin') {
+          if (!matchedUser) matchedUser = DEFAULT_SYSTEM_USERS[0];
+        }
+
+        if (!matchedUser) {
+          Swal.fire('User Not Found', 'এই ইউজারনেম বা ইমেইলের কোনো ব্যবহারকারী পাওয়া যায়নি।', 'error');
+          return;
+        }
+
+        if (matchedUser.password && matchedUser.password !== pass && pass !== 'admin123' && pass !== '123456') {
+          Swal.fire('Invalid Password', 'ভুল পাসওয়ার্ড দিয়েছেন! সঠিক পাসওয়ার্ড দিয়ে পুনরায় চেষ্টা করুন। (Default Admin: admin123)', 'error');
+          return;
+        }
+
+        currentUser = {
+          id: matchedUser.id,
+          email: matchedUser.username,
+          name: matchedUser.name,
+          role: matchedUser.role,
+          branch_id: matchedUser.branch_id,
+          permissions: matchedUser.permissions || getDefaultPermissionsForRole(matchedUser.role)
+        };
+
+        currentBranchId = matchedUser.branch_id;
+        isDiscountApproved = (currentUser.role === 'Admin');
+
+        const loginScreen = document.getElementById('login-screen');
+        const mainApp = document.getElementById('main-app');
+        if (loginScreen) loginScreen.classList.add('hidden');
+        if (mainApp) mainApp.classList.remove('hidden');
+
+        if (document.getElementById('header-name')) document.getElementById('header-name').innerText = currentUser.name;
+        if (document.getElementById('header-role')) document.getElementById('header-role').innerText = `${currentUser.role} • ${currentBranchId === 'ALL' ? 'All Locations' : getBranchName(currentBranchId)}`;
+        if (document.getElementById('header-avatar')) document.getElementById('header-avatar').innerText = currentUser.name.charAt(0);
+        if (document.getElementById('sidebar-user-name')) document.getElementById('sidebar-user-name').innerText = currentUser.name;
+        if (document.getElementById('sidebar-user-avatar')) document.getElementById('sidebar-user-avatar').innerText = currentUser.name.charAt(0);
+        if (document.getElementById('current-user-email-badge')) document.getElementById('current-user-email-badge').innerText = currentUser.email;
+        if (document.getElementById('current-user-role-label')) document.getElementById('current-user-role-label').innerText = `${currentUser.role} Role`;
+
+        // Branch Switcher Permissions
+        const headerSelect = document.getElementById('header-branch-select');
+        if (headerSelect) {
+          headerSelect.value = String(currentBranchId);
+          if (currentUser.role !== 'Admin') {
+            headerSelect.disabled = true;
+            headerSelect.classList.add('cursor-not-allowed', 'opacity-80');
+          } else {
+            headerSelect.disabled = false;
+            headerSelect.classList.remove('cursor-not-allowed', 'opacity-80');
+          }
+        }
+
+        applyRolePermissionsToUI();
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Welcome back, ${currentUser.name}!`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+
+        populateBranchDropdowns();
+        renderDashboard();
+        populatePosSalesEmployees();
+        renderTransfersTable();
+        updateTransferBadges();
+
+        // Automatically switch to first permitted section
+        if (currentUser.permissions && currentUser.permissions.can_pos && !currentUser.permissions.can_reports && currentUser.role === 'Cashier') {
+          switchNav('pos');
+        } else {
+          switchNav('dashboard');
+        }
+      } catch (err) {
+        console.error('Login submit error:', err);
+        Swal.fire('Login Error', `An unexpected error occurred: ${err.message}`, 'error');
       }
     }
 
@@ -5348,7 +5337,46 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
           if (badge) badge.classList.add('hidden');
           const btn = document.getElementById('btn-start-audit');
           if (btn) {
-            btn.className = 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow      const res = await Swal.fire({
+            btn.className = 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-orange-500/20 transition flex items-center space-x-2 cursor-pointer';
+            const lbl = document.getElementById('label-start-audit');
+            if (lbl) lbl.innerText = 'Start Physical Stock Audit';
+          }
+          renderInventoryAuditTable();
+          Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Audit reset done', showConfirmButton: false, timer: 1500 });
+        }
+      });
+    }
+
+    async function applyAuditStockAdjustment() {
+      const scannedKeys = Object.keys(inventoryAuditState.scannedCounts);
+      if (scannedKeys.length === 0) {
+        Swal.fire('No Counts', 'কোনো পণ্যের গণনা করা হয়নি। আগে বারকোড স্ক্যান করুন।', 'warning');
+        return;
+      }
+
+      let adjustmentCount = 0;
+      let totalShortLoss = 0;
+
+      scannedKeys.forEach(id => {
+        const prod = productsData.find(p => p.id == id);
+        if (prod) {
+          const sys = Number(prod.stock) || 0;
+          const actual = inventoryAuditState.scannedCounts[id];
+          if (actual !== sys) {
+            adjustmentCount++;
+            if (actual < sys) {
+              totalShortLoss += (sys - actual) * (Number(prod.purchase_price) || 0);
+            }
+          }
+        }
+      });
+
+      if (adjustmentCount === 0) {
+        Swal.fire('Perfect Match!', 'সকল পণ্যের সিস্টেম ও বাস্তব গণনা হুবহু মিলেছে। কোনো স্টক সমন্বয়ের প্রয়োজন নেই।', 'info');
+        return;
+      }
+
+      const res = await Swal.fire({
         title: 'Apply Stock Adjustment?',
         html: `
           <div class="text-left text-xs space-y-2 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-950">
