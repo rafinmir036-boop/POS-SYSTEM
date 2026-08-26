@@ -385,8 +385,8 @@
             </div>
           </div>
 
-          <!-- PostgreSQL / Supabase Live Pill -->
-          <div onclick="openSupabaseSettingsModal()" class="cursor-pointer flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition">
+          <!-- PostgreSQL / Supabase Live Pill (Only visible to Admin) -->
+          <div id="header-db-pill" onclick="openSupabaseSettingsModal()" class="cursor-pointer flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition">
             <span class="w-2 h-2 rounded-full bg-emerald-500" id="header-db-dot"></span>
             <span class="text-[11px] font-bold text-slate-700" id="header-db-label">PostgreSQL: Active</span>
           </div>
@@ -3638,6 +3638,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     window.addEventListener('DOMContentLoaded', () => {
       loadStoredCredentialsAndSupabase();
       populateBranchDropdowns();
+      applyRolePermissionsToUI();
       updateTransferBadges();
       renderDashboard();
       renderBranchesTable();
@@ -4104,7 +4105,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         'nav-transfers': isAdmin || p.can_transfers,
         'nav-new-transfer': isAdmin || p.can_transfers,
         'nav-reports': isAdmin || p.can_reports,
-        'nav-settings': isAdmin || p.can_settings
+        'nav-settings': isAdmin || p.can_settings,
+        'nav-database': isAdmin // Strictly restricted to Super Admin only
       };
 
       Object.entries(navMap).forEach(([navId, isAllowed]) => {
@@ -4113,6 +4115,12 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           el.style.display = isAllowed ? '' : 'none';
         }
       });
+
+      // Top Header PostgreSQL DB Pill (Only visible to Super Admin)
+      const headerDbPill = document.getElementById('header-db-pill');
+      if (headerDbPill) {
+        headerDbPill.style.display = isAdmin ? 'flex' : 'none';
+      }
 
       const roleBadge = document.getElementById('settings-current-role-badge');
       if (roleBadge) {
@@ -5453,6 +5461,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         return matchSearch && matchCat;
       });
 
+      const isAdmin = !currentUser || currentUser.role === 'Admin';
+
       tbody.innerHTML = filtered.map(p => {
         const branchStock = getProductBranchStock(p, currentBranchId);
         const isOutOfStock = branchStock <= 0;
@@ -5486,7 +5496,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
               <button onclick="openCreateTransferModal(1, ${p.id})" title="Transfer Product (পণ্য স্থানান্তর)" class="p-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs transition"><i class="fa-solid fa-truck-ramp-box"></i></button>
               <button onclick="openSingleBarcodeModal(${p.id})" title="Print Barcode (বারকোড প্রিন্ট)" class="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs transition"><i class="fa-solid fa-barcode"></i></button>
               <button onclick="openEditProductModal(${p.id})" title="Edit Product" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="deleteProduct(${p.id})" title="Delete Product" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
+              ${isAdmin ? `<button onclick="deleteProduct(${p.id})" title="Delete Product" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>` : ''}
             </td>
           </tr>
         `;
@@ -5857,6 +5867,8 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
         return matchSearch && matchDept;
       });
 
+      const isAdmin = !currentUser || currentUser.role === 'Admin';
+
       tbody.innerHTML = filtered.map(e => `
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
           <td class="px-6 py-3.5 flex items-center space-x-3">
@@ -5888,7 +5900,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
           </td>
           <td class="px-6 py-3.5 text-right space-x-1">
             <button onclick="openEditEmployeeModal(${e.id})" class="p-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteEmployee(${e.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
+            ${isAdmin ? `<button onclick="deleteEmployee(${e.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>` : ''}
           </td>
         </tr>
       `).join('') || '<tr><td colspan="9" class="text-center py-6 text-slate-400">কোনো কর্মী পাওয়া যায়নি</td></tr>';
@@ -6019,6 +6031,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
 
       const search = (document.getElementById('sales-search-input')?.value || '').toLowerCase().trim();
       const pay = document.getElementById('sales-filter-payment')?.value || 'ALL';
+      const isAdmin = !currentUser || currentUser.role === 'Admin';
 
       const filtered = salesData.filter(s => {
         const matchBranch = (currentBranchId === 'ALL' || s.branch_id == currentBranchId);
@@ -6062,10 +6075,90 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
               <button onclick="previewInvoiceReceipt('${s.invoice_no}')" class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs font-bold transition">
                 <i class="fa-solid fa-receipt mr-1"></i>Receipt
               </button>
+              ${isAdmin ? `
+                <button onclick="deleteSaleInvoice('${s.invoice_no}', ${s.id})" title="Delete Invoice (ইনভয়েস মুছে ফেলুন)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition">
+                  <i class="fa-solid fa-trash-can mr-1"></i>Delete
+                </button>
+              ` : ''}
             </td>
           </tr>
         `;
       }).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No invoices recorded</td></tr>';
+    }
+
+    async function deleteSaleInvoice(invoiceNo, saleId) {
+      if (!checkAdminDeletePermission('ইনভয়েস বা সেলস রেকর্ড ডিলিট')) return;
+
+      const sale = salesData.find(s => s.invoice_no === invoiceNo || s.id == saleId);
+      if (!sale) return;
+
+      const res = await Swal.fire({
+        title: 'Delete Sales Invoice?',
+        html: `
+          <div class="text-left text-xs space-y-2 p-3 bg-rose-50 rounded-xl border border-rose-200 text-rose-950">
+            <p>ইনভয়েস নম্বর: <b class="font-mono text-rose-700">${invoiceNo}</b></p>
+            <p>মোট মূল্য: <b>৳${(Number(sale.total_amount) || 0).toLocaleString()}</b></p>
+            <p class="text-slate-600 font-medium">⚠️ আপনি কি এই ইনভয়েসটি স্থায়ীভাবে মুছে ফেলতে চান এবং বিক্রিত পণ্যের স্টক পূর্বের ব্রাঞ্চে ফেরত (Restock) পাঠাতে চান?</p>
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: 'Yes, Delete & Restock',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (res.isConfirmed) {
+        // Restock items back to branch
+        if (Array.isArray(sale.items)) {
+          sale.items.forEach(item => {
+            const prod = productsData.find(p => p.id === item.product_id || p.product_code === item.product_code);
+            if (prod) {
+              const bId = sale.branch_id || 1;
+              const currentBStock = getProductBranchStock(prod, bId);
+              setProductBranchStock(prod, bId, currentBStock + (Number(item.qty) || 1));
+              if (supabaseClient) {
+                try {
+                  supabaseClient.from('products').update({
+                    stock: prod.stock,
+                    branch_stocks: prod.branch_stocks
+                  }).eq('id', prod.id).then();
+                } catch (e) {}
+              }
+            }
+          });
+        }
+
+        // Remove from salesData
+        salesData = salesData.filter(s => s.invoice_no !== invoiceNo && s.id != saleId);
+        localStorage.setItem('apex_sales', JSON.stringify(salesData));
+        localStorage.setItem('apex_products', JSON.stringify(productsData));
+
+        // Delete from Supabase
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('sales').delete().eq('invoice_no', invoiceNo);
+          } catch (err) {
+            console.warn('Supabase delete sale error:', err);
+          }
+        }
+
+        renderSalesTable();
+        renderProductsTable();
+        renderPosProducts();
+        renderDashboard();
+        if (document.getElementById('sec-reports') && !document.getElementById('sec-reports').classList.contains('hidden')) {
+          applyReportFilters();
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Invoice Deleted!',
+          text: `ইনভয়েস ${invoiceNo} সফলভাবে মুছে ফেলা হয়েছে এবং স্টক পুনরায় সমন্বয় করা হয়েছে।`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
     }
 
     // --- Accounts & Transactions ---
@@ -6090,6 +6183,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
       document.getElementById('acc-net-balance').innerText = `৳ ${(totalIncome - totalExpense).toLocaleString()}`;
 
       const filtered = branchAccounts.filter(t => typeFilter === 'ALL' || t.type === typeFilter);
+      const isAdmin = !currentUser || currentUser.role === 'Admin';
 
       tbody.innerHTML = filtered.map(t => `
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
@@ -6106,7 +6200,7 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
             ${t.type === 'Income' ? '+' : '-'}৳ ${(Number(t.amount) || 0).toLocaleString()}
           </td>
           <td class="px-6 py-3.5 text-right">
-            <button onclick="deleteTransaction(${t.id})" class="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>
+            ${isAdmin ? `<button onclick="deleteTransaction(${t.id})" class="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>` : ''}
           </td>
         </tr>
       `).join('') || '<tr><td colspan="7" class="text-center py-6 text-slate-400">No account entries found</td></tr>';
@@ -8503,6 +8597,15 @@ CREATE POLICY "Allow all access to branches" ON branches FOR ALL USING (true) WI
     }
 
     function openSupabaseSettingsModal() {
+      if (!currentUser || currentUser.role !== 'Admin') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Restricted',
+          text: 'ডাটাবেস কনফিগারেশন এবং ক্লাউড কানেকশন শুধুমাত্র Super Admin দেখতে ও পরিবর্তন করতে পারবেন।',
+          confirmButtonColor: '#4f46e5'
+        });
+        return;
+      }
       openModal('modal-supabase');
     }
 
