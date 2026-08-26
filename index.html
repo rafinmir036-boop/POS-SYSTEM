@@ -3877,6 +3877,11 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
       if (tabId === 'employees') renderEmployeesTable();
       if (tabId === 'accounts') renderAccountsTable();
       if (tabId === 'reports') initReportsSection();
+      if (tabId === 'inventory') renderInventorySection();
+      if (tabId === 'transfers') {
+        renderTransfersTable();
+        updateTransferBadges();
+      }
       if (tabId === 'settings') renderSystemUsersTable();
     }
 
@@ -4124,23 +4129,6 @@ CREATE POLICY "Allow all access to accounts" ON accounts FOR ALL USING (true) WI
         showConfirmButton: false,
         timer: 1500
       });
-    }
-
-      if (tabId === 'dashboard') renderDashboard();
-      if (tabId === 'pos') {
-        renderPosProducts();
-        populatePosSalesEmployees();
-      }
-      if (tabId === 'products') renderProductsTable();
-      if (tabId === 'sales') renderSalesTable();
-      if (tabId === 'employees') renderEmployeesTable();
-      if (tabId === 'accounts') renderAccountsTable();
-      if (tabId === 'reports') initReportsSection();
-      if (tabId === 'inventory') renderInventorySection();
-      if (tabId === 'transfers') {
-        renderTransfersTable();
-        updateTransferBadges();
-      }
     }
 
     // --- Dashboard Rendering ---
